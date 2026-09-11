@@ -1,0 +1,2184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>SCORPIO UNIVERSE</title>
+<style>
+  :root{
+    --rust:#c1521f; --rust-dark:#8a3a15; --sand:#d8c9a3; --charcoal:#181410;
+    --panel:rgba(20,16,12,0.78); --panel-line:rgba(216,201,163,0.25);
+    --accent:#e8b84b; --ok:#6fae53; --warn:#d24b3a;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+  html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#0a0a0a;
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;}
+  #canvasWrap{position:fixed;inset:0;}
+  canvas#gameCanvas{display:block;width:100%;height:100%;touch-action:none;}
+
+  /* ---------- Loading / Menu ---------- */
+  #bootScreen{position:fixed;inset:0;z-index:50;background:radial-gradient(ellipse at 50% 30%, #3a2415 0%, #14100b 70%);
+    display:flex;align-items:center;justify-content:center;flex-direction:column;color:var(--sand);}
+  #bootScreen h1{font-size:clamp(2.2rem,8vw,4rem);letter-spacing:.08em;margin:0;color:var(--rust);
+    text-shadow:0 0 30px rgba(193,82,31,.5); font-weight:800;}
+  #bootScreen .tag{color:var(--sand);opacity:.75;letter-spacing:.15em;font-size:.85rem;margin-top:.4rem;}
+  #bootBar{width:min(320px,70vw);height:6px;background:rgba(255,255,255,.12);border-radius:4px;margin-top:2.2rem;overflow:hidden;}
+  #bootFill{height:100%;width:0%;background:linear-gradient(90deg,var(--rust-dark),var(--accent));transition:width .2s;}
+  #bootMsg{margin-top:.7rem;font-size:.78rem;opacity:.6;letter-spacing:.05em;}
+
+  #menuScreen{position:fixed;inset:0;z-index:40;display:none;flex-direction:column;align-items:center;justify-content:center;
+    background:linear-gradient(180deg, rgba(10,8,6,.55), rgba(10,8,6,.85)), var(--menuBg,#000) center/cover;color:var(--sand);}
+  #menuScreen.show{display:flex;}
+  #menuScreen h1{font-size:clamp(2rem,9vw,3.4rem);margin:0;letter-spacing:.06em;color:#fff;
+    text-shadow:0 4px 24px rgba(0,0,0,.6);}
+  #menuScreen .tag{margin:.3rem 0 2.2rem;color:var(--accent);letter-spacing:.12em;font-size:.85rem;}
+  .menuBtn{width:min(260px,72vw);padding:.9rem 1rem;margin:.35rem 0;border-radius:10px;border:1px solid var(--panel-line);
+    background:var(--panel);color:var(--sand);font-size:1rem;letter-spacing:.04em;text-align:center;backdrop-filter:blur(6px);}
+  .menuBtn.primary{background:linear-gradient(180deg,var(--rust),var(--rust-dark));border-color:transparent;color:#fff;font-weight:600;}
+  .menuBtn:active{transform:scale(.97);}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;inset:0;z-index:20;pointer-events:none;display:none;}
+  #hud.show{display:block;}
+  .hud-panel{background:var(--panel);border:1px solid var(--panel-line);border-radius:10px;backdrop-filter:blur(4px);}
+
+  #topBar{position:absolute;top:calc(8px + env(safe-area-inset-top));left:8px;right:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  #missionBox{flex:1;max-width:60%;padding:8px 12px;color:var(--sand);font-size:.78rem;line-height:1.35;}
+  #missionBox b{color:var(--accent);display:block;font-size:.68rem;letter-spacing:.1em;margin-bottom:2px;}
+  #topRightCluster{display:flex;gap:6px;pointer-events:auto;}
+  .iconBtn{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;color:var(--sand);}
+  .iconBtn.active{background:linear-gradient(180deg,var(--rust),var(--rust-dark));color:#fff;}
+
+  #minimapWrap{position:absolute;top:calc(58px + env(safe-area-inset-top));right:8px;width:118px;height:118px;padding:4px;pointer-events:auto;}
+  #minimap{width:100%;height:100%;border-radius:6px;display:block;}
+
+  #clusterBottomLeft{position:absolute;left:10px;bottom:calc(10px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:6px;width:150px;pointer-events:auto;}
+  .gauge{padding:6px 9px;display:flex;align-items:center;gap:7px;}
+  .gauge .lbl{font-size:.62rem;letter-spacing:.08em;color:var(--sand);opacity:.7;width:34px;}
+  .barTrack{flex:1;height:7px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden;}
+  .barFill{height:100%;border-radius:4px;transition:width .15s;}
+  #fuelFill{background:linear-gradient(90deg,var(--warn),var(--accent));}
+  #rpmFill{background:linear-gradient(90deg,#6fae53,var(--accent),var(--warn));}
+
+  #speedCluster{position:absolute;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));display:flex;align-items:flex-end;gap:10px;pointer-events:none;}
+  #gearBadge{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:1.1rem;color:#fff;background:var(--panel);border:1px solid var(--panel-line);margin-bottom:6px;}
+  #speedBox{padding:6px 16px 8px;text-align:right;}
+  #speedVal{font-size:2.2rem;font-weight:800;color:#fff;line-height:1;}
+  #speedUnit{font-size:.62rem;color:var(--sand);opacity:.7;letter-spacing:.1em;}
+  #statusRow{display:flex;gap:4px;justify-content:flex-end;margin-top:3px;}
+  .statusChip{font-size:.55rem;padding:2px 5px;border-radius:4px;color:var(--sand);opacity:.4;letter-spacing:.05em;}
+  .statusChip.on{opacity:1;background:var(--rust);color:#fff;}
+
+  #toast{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);padding:10px 22px;border-radius:10px;
+    color:#fff;font-size:1rem;font-weight:600;letter-spacing:.03em;opacity:0;transition:opacity .3s, transform .3s;text-align:center;}
+  #toast.show{opacity:1;}
+
+  /* ---------- Controls ---------- */
+  #controls{position:absolute;inset:0;pointer-events:none;}
+  .ctrlBtn{position:absolute;pointer-events:auto;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:var(--panel);border:1px solid var(--panel-line);color:var(--sand);font-size:1.4rem;}
+  .ctrlBtn:active, .ctrlBtn.pressed{background:linear-gradient(180deg,var(--rust),var(--rust-dark));color:#fff;}
+
+  /* Real-looking steering wheel: rim + 3 spokes + hub, drag anywhere on it to steer */
+  #wheelWrap{position:absolute;overscroll-behavior:none;left:8px;bottom:calc(4px + env(safe-area-inset-bottom));width:172px;height:172px;pointer-events:auto;touch-action:none;}
+  #wheelSvg{width:100%;height:100%;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5));}
+  #wheelWrap.gripped #wheelRim{stroke:var(--accent);}
+
+  /* Pedal-shaped accelerator / brake, side by side like a mobile racer's pedal cluster */
+  #pedalCluster{position:absolute;right:10px;bottom:calc(4px + env(safe-area-inset-bottom));display:flex;align-items:flex-end;gap:10px;pointer-events:auto;}
+  .pedal{width:64px;height:118px;border-radius:14px 14px 8px 8px;position:relative;overflow:hidden;
+    border:1px solid var(--panel-line);background:linear-gradient(180deg,rgba(40,34,26,.85),rgba(20,16,12,.85));
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:8px;touch-action:none;}
+  .pedal .padSurface{position:absolute;inset:6px 6px 6px 6px;border-radius:9px 9px 5px 5px;background:repeating-linear-gradient(180deg,rgba(255,255,255,.05) 0 3px, transparent 3px 9px);}
+  .pedal .fillBar{position:absolute;left:0;right:0;bottom:0;height:0%;transition:height .06s linear;}
+  #pedalAccel .fillBar{background:linear-gradient(180deg,rgba(111,174,83,.15),rgba(111,174,83,.85));}
+  #pedalBrake .fillBar{background:linear-gradient(180deg,rgba(210,75,58,.15),rgba(210,75,58,.85));}
+  .pedal .pedalLbl{position:relative;z-index:2;font-size:.62rem;font-weight:800;letter-spacing:.08em;color:var(--sand);text-shadow:0 1px 3px rgba(0,0,0,.8);}
+  .pedal.pressed{transform:translateY(3px) scale(0.98);}
+  .pedal.pressed .pedalLbl{color:#fff;}
+
+  #btnHand{position:absolute;right:14px;bottom:calc(130px + env(safe-area-inset-bottom));width:54px;height:30px;border-radius:8px;font-size:.62rem;font-weight:700;pointer-events:auto;}
+  #smallCtrlRow{position:absolute;left:50%;bottom:calc(6px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:6px;pointer-events:auto;}
+  .smallBtn{width:40px;height:40px;border-radius:9px;font-size:1rem;}
+
+
+  #pauseOverlay{position:fixed;inset:0;z-index:45;background:rgba(8,6,4,.86);display:none;align-items:center;justify-content:center;flex-direction:column;color:var(--sand);}
+  #pauseOverlay.show{display:flex;}
+  #pauseOverlay h2{letter-spacing:.1em;color:#fff;margin-bottom:1.4rem;}
+
+  .hint{position:fixed;bottom:6px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.35);font-size:.62rem;z-index:60;letter-spacing:.04em;}
+  @media (min-width:900px){ .hint{display:block;} }
+  @media (max-width:899px){ .hint{display:none;} }
+
+  /* ---------- Premium driving dashboard ---------- */
+  #speedCluster{gap:6px;}
+  #speedBox{min-width:170px;padding:5px 9px 7px;display:grid;grid-template-columns:86px 52px;grid-template-rows:auto auto auto;gap:4px 7px;align-items:center;}
+  .gaugeDial{width:86px;height:86px;border-radius:50%;position:relative;grid-row:1/4;background:
+    radial-gradient(circle at 50% 50%,#171717 0 48%,#0a0a0a 49% 64%,#34302a 65% 69%,#111 70%);
+    border:2px solid #5c5347;box-shadow:inset 0 0 12px #000,0 4px 14px rgba(0,0,0,.55);}
+  .gaugeDial:before{content:'';position:absolute;inset:7px;border-radius:50%;border:1px dashed rgba(232,184,75,.35);}
+  .dialTicks{position:absolute;inset:5px;border-radius:50%;background:repeating-conic-gradient(from -130deg,rgba(255,255,255,.75) 0deg 1deg,transparent 1deg 13deg);mask:radial-gradient(circle,transparent 0 63%,#000 64% 67%,transparent 68%);}
+  .needle{position:absolute;left:50%;bottom:50%;width:2px;height:30px;background:#e8b84b;transform-origin:50% 100%;transform:rotate(-130deg);box-shadow:0 0 5px rgba(232,184,75,.65);}
+  .hubDot{position:absolute;width:8px;height:8px;left:calc(50% - 4px);top:calc(50% - 4px);border-radius:50%;background:#ddd;border:2px solid #111;}
+  .dialValue{position:absolute;left:0;right:0;bottom:12px;text-align:center;color:#fff;font-weight:800;line-height:1;}
+  .dialValue span{font-size:1.25rem}.dialValue small{display:block;font-size:.45rem;color:#c9c1b3;letter-spacing:.08em;margin-top:2px;}
+  .gearReadout{background:rgba(0,0,0,.55);border:1px solid rgba(232,184,75,.28);border-radius:7px;text-align:center;padding:5px 2px;}
+  .gearReadout span{display:block;font-size:1.35rem;font-weight:900;color:#fff}.gearReadout small,.rpmReadout small{display:block;font-size:.42rem;letter-spacing:.1em;color:#aaa;}
+  .rpmReadout{padding:4px 5px;background:rgba(0,0,0,.38);border-radius:6px;color:#fff;text-align:center;}
+  .rpmReadout span{font-size:.72rem;font-weight:800;}
+  .rpmMini{height:3px;background:#222;border-radius:2px;margin-top:3px;overflow:hidden}.rpmMini #rpmFill{height:100%;width:10%;background:linear-gradient(90deg,#6fae53,#e8b84b,#d24b3a);}
+  #speedBox #statusRow{grid-column:1/3;}
+  @media(max-width:600px){#speedBox{min-width:145px}.gaugeDial{width:74px;height:74px}.needle{height:25px}}
+  #canvasWrap{cursor:crosshair;}
+
+/* ===== MOBILE LANDSCAPE SIMULATOR UI ===== */
+html,body{background:#050606;overscroll-behavior:none;touch-action:none;}
+html:fullscreen, html:-webkit-full-screen, body.immersive{width:100vw;height:100vh;background:#000;}
+body.immersive #canvasWrap{inset:0;width:100vw;height:100vh;}
+body.immersive canvas#gameCanvas{width:100vw;height:100vh;}
+body.immersive #hud{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);}
+
+body{overflow:hidden;}
+#desktopBlock,#portraitBlock{position:fixed;inset:0;z-index:999;background:radial-gradient(circle at 50% 35%,#26302d,#080a09 70%);display:none;align-items:center;justify-content:center;text-align:center;color:#fff;padding:24px;font-family:system-ui,sans-serif;}
+#desktopBlock .deviceCard,#portraitBlock .deviceCard{max-width:420px;background:rgba(10,12,11,.88);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:28px;box-shadow:0 20px 70px rgba(0,0,0,.55)}
+#desktopBlock h2,#portraitBlock h2{margin:0 0 8px;font-size:24px;letter-spacing:.03em}
+#desktopBlock p,#portraitBlock p{margin:0;color:#aeb7b2;line-height:1.5;font-size:14px}
+#portraitBlock .rotateIcon{font-size:44px;margin-bottom:12px;animation:rotatePhone 1.8s ease-in-out infinite alternate}
+@keyframes rotatePhone{from{transform:rotate(0)}to{transform:rotate(90deg)}}
+@media (min-width:700px) and (pointer:fine){#desktopBlock{display:flex!important}.deviceCard{display:block!important}#bootScreen,#menuScreen,#hud,#pauseOverlay{display:none!important}}
+@media (orientation:portrait) and (max-width:699px){#portraitBlock{display:flex!important}.deviceCard{display:block!important}#bootScreen,#menuScreen,#hud,#pauseOverlay{display:none!important}}
+@media (orientation:landscape) and (max-width:699px){#desktopBlock,#portraitBlock{display:none!important}}
+
+/* remove old scattered HUD positioning */
+#hud{inset:0;pointer-events:none;}
+#topBar{top:10px;left:12px;right:12px;align-items:flex-start;}
+#missionBox{max-width:none;width:auto;min-width:190px;padding:7px 11px;border-radius:12px;background:rgba(8,10,9,.62);border-color:rgba(255,255,255,.12);}
+#missionBox b{color:#e6c36c;font-size:9px;letter-spacing:.14em;}
+#missionText{font-size:11px;color:#d9dfdc;}
+#topRightCluster{gap:8px;}
+.iconBtn{width:40px;height:40px;border-radius:12px;background:rgba(8,10,9,.7);border-color:rgba(255,255,255,.13);}
+#minimapWrap{top:12px;right:62px;width:86px;height:86px;border-radius:50%;padding:3px;background:rgba(8,10,9,.72);border-color:rgba(255,255,255,.13);}
+#minimap{border-radius:50%;}
+
+/* dashboard: bottom-center, never overlaps pedals */
+#speedCluster{right:50%;bottom:10px;transform:translateX(50%);display:flex;align-items:flex-end;gap:7px;z-index:5;}
+#speedBox{min-width:158px;width:158px;padding:5px;grid-template-columns:82px 50px;gap:4px 6px;border-radius:15px;background:rgba(7,9,8,.82);border-color:rgba(255,255,255,.14);box-shadow:0 12px 28px rgba(0,0,0,.35);}
+.gaugeDial{width:82px;height:82px;}
+.dialValue span{font-size:18px;}
+#gearBadge{width:38px;height:38px;border-radius:10px;margin-bottom:4px;font-size:14px;background:rgba(7,9,8,.86);border-color:rgba(230,195,108,.3);}
+.gearReadout{padding:4px 2px;}
+.gearReadout span{font-size:20px;}
+.rpmReadout span{font-size:10px;}
+#clusterBottomLeft{left:12px;bottom:12px;width:116px;z-index:4;}
+#clusterBottomLeft .gauge{padding:5px 7px;border-radius:9px;background:rgba(7,9,8,.68);}
+#fuelFill{background:linear-gradient(90deg,#c85b45,#e6c36c)!important;}
+
+/* steering wheel */
+#wheelWrap{left:12px;bottom:8px;width:min(25vw,145px);height:min(25vw,145px);z-index:8;}
+#wheelSvg{filter:drop-shadow(0 10px 14px rgba(0,0,0,.55));}
+#controls{pointer-events:none;}
+
+/* pedal cluster is a true driver pedal bank */
+#pedalCluster{right:12px;bottom:10px;gap:8px;z-index:8;}
+.pedal{width:55px;height:min(19vh,105px);min-height:76px;border-radius:11px 11px 7px 7px;background:linear-gradient(180deg,#353734,#171a18);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 9px 20px rgba(0,0,0,.38);}
+.pedal .padSurface{inset:5px;border-radius:7px;background:repeating-linear-gradient(180deg,rgba(255,255,255,.08) 0 2px,transparent 2px 8px);}
+.pedal .pedalLbl{font-size:8px;letter-spacing:.12em;}
+#pedalBrake{order:1}#pedalAccel{order:2}
+#btnHand{right:135px;bottom:112px;width:62px;height:32px;border-radius:10px;background:rgba(7,9,8,.82);border-color:rgba(255,255,255,.14);z-index:9;}
+#smallCtrlRow{left:auto;right:12px;bottom:calc(10px + min(19vh,105px) + 10px);transform:none;gap:7px;z-index:9;}
+.smallBtn{width:37px;height:37px;border-radius:11px;font-size:15px;background:rgba(7,9,8,.75);}
+#btn4wd{font-size:9px;font-weight:800;}
+
+/* camera drag area hint */
+#cameraHint{position:absolute;left:50%;top:58px;transform:translateX(-50%);font-size:9px;color:rgba(255,255,255,.35);letter-spacing:.12em;pointer-events:none;z-index:3;}
+
+/* hide non-simulator mission marker / toast style */
+#toast{top:47%;padding:9px 16px;border-radius:12px;background:rgba(7,9,8,.85);font-size:13px;}
+
+@media (max-height:420px){
+  #topBar{top:7px} #minimapWrap{top:8px;width:72px;height:72px;right:57px}
+  #speedCluster{bottom:7px} #wheelWrap{bottom:5px;width:120px;height:120px}
+  #pedalCluster{bottom:7px}.pedal{height:86px;width:49px}
+  #btnHand{bottom:96px;right:118px}.smallBtn{width:32px;height:32px}.smallCtrlRow{bottom:103px}
+  #clusterBottomLeft{bottom:7px;left:8px;width:105px}
+  #speedBox{transform:scale(.9);transform-origin:bottom center}
+}
+
+
+/* V6 realism controls */
+#extraVehicleControls{position:absolute;right:12px;bottom:92px;display:flex;gap:6px;z-index:9;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end;max-width:330px}
+#extraVehicleControls .ctrlBtn{min-width:48px;height:38px;padding:4px 7px;font-size:9px;line-height:1.05}
+.ctrlBtn.active{outline:2px solid var(--accent);box-shadow:0 0 14px rgba(232,184,75,.32)}
+@media (max-width:700px){#extraVehicleControls{right:6px;bottom:78px;max-width:245px}.hint{display:none}}
+@media (orientation:portrait){#extraVehicleControls{display:none}}
+</style>
+</head>
+<body>
+
+
+<div id="desktopBlock"><div class="deviceCard"><h2>Mobile Simulator Only</h2><p>SCORPIO UNIVERSE is designed for touch controls on a mobile phone. Open this game on an Android/iPhone in landscape mode.</p></div></div>
+<div id="portraitBlock"><div class="deviceCard"><div class="rotateIcon">↻</div><h2>Rotate Your Phone</h2><p>Please rotate your phone to landscape mode. The simulator is locked to a wide driving view.</p></div></div>
+<div id="canvasWrap"><canvas id="gameCanvas"></canvas></div>
+
+<div id="bootScreen">
+  <h1>SCORPIO UNIVERSE</h1>
+  <div class="tag">Own the Road. Conquer the Village.</div>
+  <div id="bootBar"><div id="bootFill"></div></div>
+  <div id="bootMsg">Loading village...</div>
+</div>
+
+<div id="menuScreen">
+  <h1>SCORPIO UNIVERSE</h1>
+  <div class="tag">OWN THE ROAD · CONQUER THE VILLAGE</div>
+  <button class="menuBtn primary" id="btnPlay">PLAY</button>
+  <button class="menuBtn" id="btnHowTo">HOW TO DRIVE</button>
+</div>
+
+<div id="hud">
+  <div id="cameraHint">DRAG CENTER AREA · CAMERA ORBIT</div>
+  <div id="topBar">
+    <div id="missionBox" class="hud-panel"><b id="missionLabel">SCORPIO S11 · DRIVING SIMULATOR</b><span id="missionText">FREE ROAM · Rural roads only · Traffic OFF</span></div>
+    <div id="topRightCluster">
+      <div class="iconBtn hud-panel" id="btnPause">⏸</div>
+    </div>
+  </div>
+
+  <div id="minimapWrap" class="hud-panel"><canvas id="minimap" width="220" height="220"></canvas></div>
+
+  <div id="clusterBottomLeft">
+    <div class="gauge hud-panel"><span class="lbl">FUEL</span><div class="barTrack"><div class="barFill" id="fuelFill" style="width:82%"></div></div></div>
+  </div>
+
+  <div id="speedCluster">
+    <div id="gearBadge">N</div>
+    <div class="hud-panel" id="speedBox">
+      <div class="gaugeDial">
+        <div class="dialTicks"></div>
+        <div class="needle" id="speedNeedle"></div>
+        <div class="hubDot"></div>
+        <div class="dialValue"><span id="speedVal">0</span><small>KM/H</small></div>
+      </div>
+      <div class="gearReadout"><span id="gearText">N</span><small>AUTO</small></div>
+      <div class="rpmReadout"><span id="rpmValue">850</span><small>RPM</small><div class="rpmMini"><div id="rpmFill"></div></div></div>
+      <div id="statusRow">
+        <div class="statusChip" id="chip4wd">4WD</div>
+        <div class="statusChip" id="chipLights">LIGHTS</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="hud-panel"></div>
+
+  <div id="controls">
+    <div id="wheelWrap">
+      <svg id="wheelSvg" viewBox="0 0 200 200">
+        <circle id="wheelRim" cx="100" cy="100" r="86" fill="none" stroke="#1c1c1c" stroke-width="16"/>
+        <circle cx="100" cy="100" r="86" fill="none" stroke="#3a3a3a" stroke-width="3"/>
+        <g stroke="#2a2a2a" stroke-width="14" stroke-linecap="round">
+          <line x1="100" y1="100" x2="100" y2="26"/>
+          <line x1="100" y1="100" x2="30" y2="140"/>
+          <line x1="100" y1="100" x2="170" y2="140"/>
+        </g>
+        <circle cx="100" cy="100" r="26" fill="#171717" stroke="#3a3a3a" stroke-width="3"/>
+        <circle cx="100" cy="100" r="6" fill="#e8b84b"/>
+        <circle cx="100" cy="32" r="4" fill="#8a8a8a"/>
+      </svg>
+    </div>
+    <div id="pedalCluster">
+      <div class="pedal" id="pedalBrake"><div class="padSurface"></div><div class="fillBar" id="brakeFill"></div><span class="pedalLbl">BRAKE</span></div>
+      <div class="pedal" id="pedalAccel"><div class="padSurface"></div><div class="fillBar" id="accelFill"></div><span class="pedalLbl">GAS</span></div>
+    </div>
+    <div class="ctrlBtn" id="btnHand">HAND<br>BRAKE</div>
+    <div id="smallCtrlRow">
+      <div class="ctrlBtn smallBtn" id="btnEngine">ENGINE</div>
+      <div class="ctrlBtn smallBtn" id="btnLights">💡</div>
+      <div class="ctrlBtn smallBtn" id="btnHorn">📯</div>
+      <div class="ctrlBtn smallBtn" id="btnCam">🎥</div>
+      <div class="ctrlBtn smallBtn" id="btn4wd">4x4</div>
+      <div class="ctrlBtn smallBtn" id="btnWeather">☁</div>
+      <div class="ctrlBtn smallBtn" id="btnWiper">🧹</div>
+      <div class="ctrlBtn smallBtn" id="btnSeatbelt">BELT</div>
+    </div>
+    <div id="extraVehicleControls">
+      <div class="ctrlBtn" id="btnLeftInd">◀ IND</div>
+      <div class="ctrlBtn" id="btnHazard">⚠ HAZ</div>
+      <div class="ctrlBtn" id="btnRightInd">IND ▶</div>
+      <div class="ctrlBtn" id="btnDoors">🚪 DOORS</div>
+      <div class="ctrlBtn" id="btnTailgate">▣ GATE</div>
+    </div>
+  </div>
+</div>
+
+<div id="pauseOverlay">
+  <h2>PAUSED</h2>
+  <button class="menuBtn primary" id="btnResume">RESUME</button>
+  <button class="menuBtn" id="btnQuit">EXIT TO MENU</button>
+</div>
+
+<div class="hint">TOUCH CONTROLS · STEER LEFT · GAS / BRAKE RIGHT · DRAG CENTER TO LOOK</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* =========================================================================
+   SCORPIO UNIVERSE V7 — Realistic Indian SUV Simulator
+   Scorpio-inspired fictional procedural SUV for the simulator prototype.
+   ========================================================================= */
+
+/* ---------------- Utility: seeded value noise ---------------- */
+function hash2(x,y){ let s=Math.sin(x*127.1+y*311.7)*43758.5453123; return s-Math.floor(s); }
+function smooth(t){ return t*t*(3-2*t); }
+function valueNoise(x,y){
+  const xi=Math.floor(x), yi=Math.floor(y), xf=x-xi, yf=y-yi;
+  const a=hash2(xi,yi), b=hash2(xi+1,yi), c=hash2(xi,yi+1), d=hash2(xi+1,yi+1);
+  const u=smooth(xf), v=smooth(yf);
+  return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v;
+}
+function fbm(x,y,oct){ let f=0,amp=.5,fr=1; for(let i=0;i<oct;i++){ f+=valueNoise(x*fr,y*fr)*amp; amp*=.5; fr*=2.1;} return f; }
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function lerp(a,b,t){return a+(b-a)*t;}
+function smoothstep(e0,e1,x){ x=clamp((x-e0)/(e1-e0),0,1); return x*x*(3-2*x); }
+
+/* ---------------- Road path definition ---------------- */
+// Loop of control points forming the village + farm road network (single connected loop for the vertical slice).
+const roadPts = [
+  [0,0],[18,4],[34,14],[42,32],[38,54],[20,68],[-4,74],[-28,68],
+  [-46,52],[-50,28],[-40,8],[-22,-6],[-2,-10],[16,-6],[8,-2],[0,0]
+].map(p=>new THREE.Vector3(p[0],0,p[1]));
+const roadCurve = new THREE.CatmullRomCurve3(roadPts,true,'catmullrom',0.5);
+const ROAD_SAMPLES = 400;
+const roadSamples = []; // {pos, tangent, t}
+for(let i=0;i<=ROAD_SAMPLES;i++){
+  const t=i/ROAD_SAMPLES;
+  roadSamples.push({ pos: roadCurve.getPointAt(t), tan: roadCurve.getTangentAt(t), t });
+}
+// Surface-type bands along t (asphalt / dirt) — village core is patchy asphalt, farm loop is dirt.
+function surfaceBandAt(t){
+  if(t>0.08 && t<0.22) return 'asphalt';
+  if(t>0.55 && t<0.63) return 'bridge';
+  if(t>0.68 && t<0.86) return 'mud';
+  return 'dirt';
+}
+// Potholes: fixed positions along the road (t, lateral offset, radius, depth)
+const potholes = [];
+(function genPotholes(){
+  const rnd = (n)=>{ let x=Math.sin(n*999.7)*10000; return x-Math.floor(x); };
+  for(let i=0;i<26;i++){
+    const t = (i/26 + rnd(i)*0.02) % 1;
+    potholes.push({ t, lat:(rnd(i+50)-0.5)*3.2, r: 0.6+rnd(i+90)*1.1, d: 0.06+rnd(i+30)*0.16 });
+  }
+})();
+const ROAD_WIDTH = 7.2;
+function nearestRoadSample(x,z){
+  // coarse search (samples precomputed, road is a loop, small dataset -> linear scan is fine, called only at build time / occasionally)
+  let best=1e9, bi=0;
+  for(let i=0;i<roadSamples.length;i++){
+    const s=roadSamples[i];
+    const dx=x-s.pos.x, dz=z-s.pos.z, d=dx*dx+dz*dz;
+    if(d<best){best=d;bi=i;}
+  }
+  return {sample:roadSamples[bi], distSq:best};
+}
+function terrainInfoAt(x,z){
+  const {sample,distSq} = nearestRoadSample(x,z);
+  const dist = Math.sqrt(distSq);
+  const band = surfaceBandAt(sample.t);
+  const onRoad = dist < ROAD_WIDTH*0.5;
+  let surface = onRoad ? band : 'grass';
+  // river crossing zone visual (independent of "bridge" road band)
+  let baseH = fbm(x*0.045,z*0.045,3)*2.2 - 1.0; // gentle rolling hills
+  let roughness = 0;
+  if(onRoad){
+    if(band==='asphalt') roughness = fbm(x*1.4,z*1.4,2)*0.05;
+    else if(band==='dirt') roughness = fbm(x*0.9,z*0.9,3)*0.16;
+    else if(band==='mud')  roughness = fbm(x*0.8,z*0.8,3)*0.10 - 0.06;
+    else if(band==='bridge') roughness = 0; // flat deck, handled below
+    baseH = lerp(baseH*0.15, baseH, smoothstep(0,ROAD_WIDTH*0.5,dist)); // flatten road bed vs surroundings
+    baseH += roughness;
+  } else {
+    baseH += fbm(x*0.25,z*0.25,3)*0.35; // rougher off-road terrain
+  }
+  // potholes (only apply on-road, not on bridge)
+  if(onRoad && band!=='bridge'){
+    const lat = signedLateral(x,z,sample);
+    for(let i=0;i<potholes.length;i++){
+      const p = potholes[i];
+      const ps = roadSamples[Math.round(p.t*ROAD_SAMPLES)];
+      const dx=x-ps.pos.x, dz=z-ps.pos.z;
+      const d2 = dx*dx+dz*dz;
+      if(d2 < (p.r*p.r*4)){
+        const dd = Math.sqrt(d2);
+        const fall = smoothstep(p.r,0,dd);
+        baseH -= p.d*fall;
+      }
+    }
+  }
+  // bridge deck: fixed flat elevated plane across the river zone
+  let isBridgeDeck=false;
+  if(band==='bridge'){
+    const riverCenterT = 0.59;
+    const distT = Math.min(Math.abs(sample.t-riverCenterT), 1-Math.abs(sample.t-riverCenterT));
+    if(onRoad){ baseH = 1.35; isBridgeDeck=true; }
+  }
+  // river channel (visual water strip near t~0.59 regardless of lateral offset near path)
+  return { surface, dist, onRoad, height: baseH, band, isBridgeDeck, sampleT: sample.t };
+}
+function signedLateral(x,z,sample){
+  const tx=sample.tan.x, tz=sample.tan.z;
+  const nx=-tz, nz=tx;
+  return (x-sample.pos.x)*nx + (z-sample.pos.z)*nz;
+}
+function heightAt(x,z){ return terrainInfoAt(x,z).height; }
+
+/* ---------------- Renderer / Scene ---------------- */
+const canvas = document.getElementById('gameCanvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, powerPreference:'high-performance'});
+const initialDpr = Math.min(window.devicePixelRatio || 1, /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? 1.35 : 1.75);
+renderer.setPixelRatio(initialDpr);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+// Filmic tone mapping + slightly boosted exposure for punchier, less "flat" arcade-racer colors
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.08;
+if('useLegacyLights' in renderer) renderer.useLegacyLights=false;
+renderer.outputEncoding = THREE.sRGBEncoding;
+// Cheap cinematic color grade (contrast/saturation) — no post-processing pipeline needed
+canvas.style.filter = 'contrast(1.08) saturate(1.22) brightness(1.02)';
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(58, innerWidth/innerHeight, 0.1, 900);
+
+function resize(){
+  renderer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+
+/* ---------------- Lighting / Sky ---------------- */
+const hemi = new THREE.HemisphereLight(0xbcd6f0, 0x3a3225, 0.55);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, 1.1);
+sun.castShadow = true;
+sun.shadow.mapSize.set(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? 1024 : 2048, /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? 1024 : 2048);
+sun.shadow.camera.left=-60; sun.shadow.camera.right=60; sun.shadow.camera.top=60; sun.shadow.camera.bottom=-60;
+sun.shadow.camera.far=200; sun.shadow.bias=-0.0006; sun.shadow.normalBias=0.02;
+scene.add(sun); scene.add(sun.target);
+const moonAmbient = new THREE.AmbientLight(0x1a2440, 0.0);
+scene.add(moonAmbient);
+scene.fog = new THREE.Fog(0xbfd6e6, 60, 260);
+
+// Gradient sky dome (replaces a flat background color with a horizon gradient, like an arcade racer skybox)
+const skyGeo = new THREE.SphereGeometry(400,24,16);
+const skyMat = new THREE.ShaderMaterial({
+  side: THREE.BackSide,
+  uniforms:{ topColor:{value:new THREE.Color(0x4d8fd6)}, bottomColor:{value:new THREE.Color(0xdce8ef)}, offset:{value:20}, exponent:{value:0.7} },
+  vertexShader:`varying vec3 vWorldPos; void main(){ vec4 wp=modelMatrix*vec4(position,1.0); vWorldPos=wp.xyz; gl_Position=projectionMatrix*viewMatrix*wp; }`,
+  fragmentShader:`uniform vec3 topColor; uniform vec3 bottomColor; uniform float offset; uniform float exponent; varying vec3 vWorldPos;
+    void main(){ float h=normalize(vWorldPos+vec3(0.0,offset,0.0)).y; gl_FragColor=vec4(mix(bottomColor,topColor,max(pow(max(h,0.0),exponent),0.0)),1.0); }`
+});
+const sky = new THREE.Mesh(skyGeo, skyMat);
+scene.add(sky);
+
+// Sun glow sprite (cheap glare/bloom stand-in — no post-processing pipeline available via CDN core build)
+const glowCanvas = document.createElement('canvas'); glowCanvas.width=glowCanvas.height=256;
+{
+  const gctx=glowCanvas.getContext('2d');
+  const grad=gctx.createRadialGradient(128,128,0,128,128,128);
+  grad.addColorStop(0,'rgba(255,244,214,0.95)'); grad.addColorStop(0.35,'rgba(255,230,170,0.35)'); grad.addColorStop(1,'rgba(255,230,170,0)');
+  gctx.fillStyle=grad; gctx.fillRect(0,0,256,256);
+}
+const glowTex = new THREE.CanvasTexture(glowCanvas);
+const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending}));
+sunGlow.scale.set(60,60,1);
+scene.add(sunGlow);
+
+// Procedural environment reflections (glossy paint/glass/chrome) — built once from a simple gradient sky, no external HDRI needed
+const pmrem = new THREE.PMREMGenerator(renderer);
+pmrem.compileEquirectangularShader();
+const envScene = new THREE.Scene();
+envScene.add(sky.clone());
+envScene.add(new THREE.Mesh(new THREE.PlaneGeometry(800,800), new THREE.MeshBasicMaterial({color:0x6b7a55})).rotateX(-Math.PI/2).translateZ(-2));
+const envRT = pmrem.fromScene(envScene, 0.04);
+scene.environment = envRT.texture;
+
+/* ---------------- Procedural surface textures (canvas-generated, tileable, no external images) ---------------- */
+function makeNoiseTexture(size, baseRGB, variance, roughGrain){
+  const c=document.createElement('canvas'); c.width=c.height=size;
+  const ctx=c.getContext('2d');
+  const img=ctx.createImageData(size,size);
+  for(let i=0;i<size*size;i++){
+    const n=(Math.random()-0.5)*variance;
+    img.data[i*4]=clamp(baseRGB[0]+n,0,255);
+    img.data[i*4+1]=clamp(baseRGB[1]+n,0,255);
+    img.data[i*4+2]=clamp(baseRGB[2]+n,0,255);
+    img.data[i*4+3]=255;
+  }
+  ctx.putImageData(img,0,0);
+  if(roughGrain){
+    ctx.globalAlpha=0.12;
+    for(let i=0;i<size*1.4;i++){
+      ctx.fillStyle = Math.random()<0.5?'#000':'#fff';
+      ctx.fillRect(Math.random()*size,Math.random()*size,1+Math.random()*2,1+Math.random()*2);
+    }
+    ctx.globalAlpha=1;
+  }
+  const tex=new THREE.CanvasTexture(c);
+  tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+  return tex;
+}
+const groundDetailTex = makeNoiseTexture(256,[150,140,120],26,true);
+groundDetailTex.repeat.set(60,60);
+
+
+const GROUND_SIZE = 220, GROUND_SEG = 140;
+const groundGeo = new THREE.PlaneGeometry(GROUND_SIZE,GROUND_SIZE,GROUND_SEG,GROUND_SEG);
+groundGeo.rotateX(-Math.PI/2);
+{
+  const pos = groundGeo.attributes.position;
+  const colors = new Float32Array(pos.count*3);
+  const cGrass1=new THREE.Color(0x5a7d3c), cGrass2=new THREE.Color(0x74965a);
+  const cDirt=new THREE.Color(0x8a6a45), cAsphalt=new THREE.Color(0x4b4844), cMud=new THREE.Color(0x4a3826), cBridge=new THREE.Color(0x8a7256);
+  for(let i=0;i<pos.count;i++){
+    const x=pos.getX(i), z=pos.getZ(i);
+    const info = terrainInfoAt(x,z);
+    pos.setY(i, info.height);
+    let col;
+    if(info.onRoad){
+      if(info.band==='asphalt') col=cAsphalt;
+      else if(info.band==='mud') col=cMud;
+      else if(info.band==='bridge') col=cBridge;
+      else col=cDirt;
+      col = col.clone().lerp(cGrass2, smoothstep(ROAD_WIDTH*0.35,ROAD_WIDTH*0.55,info.dist));
+    } else {
+      col = cGrass1.clone().lerp(cGrass2, fbm(x*0.08,z*0.08,3));
+    }
+    colors[i*3]=col.r; colors[i*3+1]=col.g; colors[i*3+2]=col.b;
+  }
+  groundGeo.setAttribute('color', new THREE.BufferAttribute(colors,3));
+  groundGeo.computeVertexNormals();
+}
+const groundMat = new THREE.MeshStandardMaterial({vertexColors:true, roughness:1, metalness:0, map:groundDetailTex});
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.receiveShadow = true;
+scene.add(ground);
+
+// river water plane through the bridge zone
+const riverGeo = new THREE.PlaneGeometry(10,26);
+riverGeo.rotateX(-Math.PI/2);
+const riverMat = new THREE.MeshStandardMaterial({color:0x2f5b74, roughness:0.15, metalness:0.3, transparent:true, opacity:0.85});
+const riverSampleIdx = Math.round(0.59*ROAD_SAMPLES);
+const riverSample = roadSamples[riverSampleIdx];
+const river = new THREE.Mesh(riverGeo, riverMat);
+river.position.set(riverSample.pos.x, 0.55, riverSample.pos.z);
+river.rotation.y = Math.atan2(riverSample.tan.x, riverSample.tan.z);
+scene.add(river);
+// bridge railings
+{
+  const railMat = new THREE.MeshStandardMaterial({color:0x6b5a3f, roughness:0.9});
+  for(const side of [-1,1]){
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.15,0.5,9), railMat);
+    const off = new THREE.Vector3(-riverSample.tan.z, 0, riverSample.tan.x).multiplyScalar(side*ROAD_WIDTH*0.42);
+    rail.position.set(riverSample.pos.x+off.x, 1.65, riverSample.pos.z+off.z);
+    rail.rotation.y = river.rotation.y;
+    rail.castShadow = true;
+    scene.add(rail);
+  }
+}
+
+/* ---------------- Instanced vegetation ---------------- */
+function makeTree(){
+  const g = new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.22,1.6,6), new THREE.MeshStandardMaterial({color:0x6b4a2c,roughness:1}));
+  trunk.position.y=0.8; trunk.castShadow=true; g.add(trunk);
+  const leafColors=[0x3f6b2e,0x4d7a35,0x37602a];
+  for(let i=0;i<3;i++){
+    const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.9-i*0.15,7,6), new THREE.MeshStandardMaterial({color:leafColors[i],roughness:1}));
+    leaf.position.set((Math.random()-.5)*0.4, 1.7+i*0.55, (Math.random()-.5)*0.4);
+    leaf.castShadow=true;
+    g.add(leaf);
+  }
+  return g;
+}
+function makeCoconutTree(){
+  const g=new THREE.Group();
+  const h=2.6+Math.random()*1.2;
+  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.16,h,6), new THREE.MeshStandardMaterial({color:0x8a7350,roughness:1}));
+  trunk.position.y=h/2; trunk.rotation.z=(Math.random()-.5)*0.15; trunk.castShadow=true; g.add(trunk);
+  for(let i=0;i<6;i++){
+    const frond=new THREE.Mesh(new THREE.ConeGeometry(0.12,1.6,4), new THREE.MeshStandardMaterial({color:0x3d7a3a,roughness:1}));
+    frond.position.y=h; frond.rotation.z=Math.PI/2.4; frond.rotation.y=(i/6)*Math.PI*2;
+    frond.castShadow=true; g.add(frond);
+  }
+  return g;
+}
+const vegRoot = new THREE.Group(); scene.add(vegRoot);
+(function scatterVeg(){
+  const rnd=(n)=>{let x=Math.sin(n*77.7)*10000;return x-Math.floor(x);};
+  let n=0;
+  for(let i=0;i<170;i++){
+    const x=(rnd(i*3+1)-0.5)*GROUND_SIZE*0.92, z=(rnd(i*3+2)-0.5)*GROUND_SIZE*0.92;
+    const info = terrainInfoAt(x,z);
+    if(info.onRoad) continue;
+    if(rnd(i*3+3) < 0.5) continue; // sparser
+    const t = rnd(i*7) < 0.15 ? makeCoconutTree() : makeTree();
+    t.position.set(x, info.height, z);
+    t.scale.setScalar(0.8+rnd(i*11)*0.7);
+    t.rotation.y = rnd(i*13)*Math.PI*2;
+    vegRoot.add(t);
+    n++; if(n>110) break;
+  }
+})();
+
+/* ---------------- Village props ---------------- */
+const villageRoot = new THREE.Group(); scene.add(villageRoot);
+function pointOnRoad(t, lateral, yLift){
+  const s = roadSamples[Math.round(((t%1)+1)%1*ROAD_SAMPLES)];
+  const nx=-s.tan.z, nz=s.tan.x;
+  const x=s.pos.x+nx*lateral, z=s.pos.z+nz*lateral;
+  const h=heightAt(x,z);
+  return {x,y:h+(yLift||0),z, heading:Math.atan2(s.tan.x,s.tan.z)};
+}
+function makeHouse(w,h,d,wallColor,roofColor,roofType){
+  // More life-like rural Indian house: plaster walls, recessed doorway, glass windows,
+  // sill, roof overhang, fascia, vents and a small porch. Kept procedural for mobile performance.
+  const g=new THREE.Group();
+  const wallMat=new THREE.MeshStandardMaterial({color:wallColor,roughness:0.88,metalness:0.02});
+  const wall=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),wallMat);
+  wall.position.y=h/2; wall.castShadow=true; wall.receiveShadow=true; g.add(wall);
+
+  const trim=new THREE.MeshStandardMaterial({color:0x9b8a70,roughness:0.9});
+  const dark=new THREE.MeshStandardMaterial({color:0x24211d,roughness:0.45});
+  const glass=new THREE.MeshStandardMaterial({color:0x19313a,roughness:0.18,metalness:0.12});
+  const wood=new THREE.MeshStandardMaterial({color:0x68472e,roughness:0.78});
+
+  // roof with overhang and fascia
+  const roofMat=new THREE.MeshStandardMaterial({color:roofColor,roughness:roofType==='tiled'?0.72:0.82,metalness:roofType==='tiled'?0.02:0.15});
+  if(roofType==='tiled'){
+    const roof=new THREE.Mesh(new THREE.ConeGeometry(Math.max(w,d)*0.76,h*0.62,4),roofMat);
+    roof.rotation.y=Math.PI/4; roof.position.y=h+h*0.27; roof.castShadow=true; g.add(roof);
+  }else{
+    const roof=new THREE.Mesh(new THREE.BoxGeometry(w*1.12,0.13,d*1.12),roofMat);
+    roof.position.y=h+0.08; roof.castShadow=true; g.add(roof);
+    const fascia=new THREE.Mesh(new THREE.BoxGeometry(w*1.13,0.10,0.10),trim);
+    fascia.position.set(0,h+0.01,d*0.55); g.add(fascia);
+  }
+
+  // Front facade: centered door + two windows. Objects are offset toward +Z and
+  // the house rotation later determines which side faces the road.
+  const doorW=Math.min(0.72,w*0.25), doorH=Math.min(1.55,h*0.76);
+  const door=new THREE.Mesh(new THREE.BoxGeometry(doorW,doorH,0.055),wood);
+  door.position.set(0,doorH/2,d/2+0.035); door.castShadow=true; g.add(door);
+  const knob=new THREE.Mesh(new THREE.SphereGeometry(0.035,8,6),chromeMat);
+  knob.position.set(doorW*0.30,doorH*0.48,d/2+0.07); g.add(knob);
+
+  const wins=[];
+  [-w*0.28,w*0.28].forEach(x=>{
+    const frame=new THREE.Mesh(new THREE.BoxGeometry(w*0.25,h*0.30,0.07),trim);
+    frame.position.set(x,h*0.55,d/2+0.025); g.add(frame);
+    const win=new THREE.Mesh(new THREE.BoxGeometry(w*0.19,h*0.23,0.035),glass);
+    win.position.set(x,h*0.55,d/2+0.07); g.add(win);
+    // cross bars make windows read as real village windows instead of a flat plane
+    const barV=new THREE.Mesh(new THREE.BoxGeometry(0.025,h*0.23,0.02),dark);
+    barV.position.set(x,h*0.55,d/2+0.095); g.add(barV);
+    const barH=new THREE.Mesh(new THREE.BoxGeometry(w*0.19,0.025,0.02),dark);
+    barH.position.set(x,h*0.55,d/2+0.095); g.add(barH);
+    win.userData.isWindow=true; wins.push(win);
+  });
+
+  // Small porch/slab and two columns
+  const porch=new THREE.Mesh(new THREE.BoxGeometry(Math.min(w*0.72,2.8),0.10,0.48),trim);
+  porch.position.set(0,0.05,d/2+0.23); porch.receiveShadow=true; g.add(porch);
+  [-0.42,0.42].forEach(x=>{
+    const col=new THREE.Mesh(new THREE.BoxGeometry(0.10,1.45,0.10),trim);
+    col.position.set(x,0.73,d/2+0.38); col.castShadow=true; g.add(col);
+  });
+  // Roof vent / small water-tank-like chimney
+  const vent=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.14,0.34,10),dark);
+  vent.position.set(-w*0.22,h+0.22,0); g.add(vent);
+
+  g.userData.windows=wins;
+  return g;
+}
+const houseWindows=[];
+(function buildVillageCluster(){
+  const wallColors=[0xd8c9a3,0xe3d3ab,0xc9b58e,0xefe6cf,0xb7a074];
+  const roofColorsTin=[0x7a8085,0x8a5a3d];
+  const roofColorsTile=[0x9a4a2f,0xb05a35];
+  const spots = [
+    [0.03,6],[0.05,-6.5],[0.10,5.5],[0.12,-5],[0.16,6.2],[0.02,-9],
+    [0.90,6],[0.93,-6],[0.96,5.5],[0.30,7],[0.32,-6],[0.86,-7]
+  ];
+  spots.forEach((s,i)=>{
+    const p = pointOnRoad(s[0], s[1]);
+    const w=2.6+Math.random()*1.4, h=2.0+Math.random()*0.8, d=2.6+Math.random()*1.4;
+    const tiled = Math.random()<0.45;
+    const house = makeHouse(w,h,d, wallColors[i%wallColors.length], (tiled?roofColorsTile:roofColorsTin)[i%2], tiled?'tiled':'tin');
+    house.position.set(p.x,p.y,p.z);
+    house.rotation.y = p.heading + (s[1]>0? Math.PI/2 : -Math.PI/2) + (Math.random()-0.5)*0.3;
+    villageRoot.add(house);
+    house.userData.windows.forEach(w2=>houseWindows.push(w2));
+  });
+
+  // small temple
+  {
+    const p = pointOnRoad(0.005, -9.5);
+    const g=new THREE.Group();
+    const base=new THREE.Mesh(new THREE.BoxGeometry(3.2,1.6,3.2), new THREE.MeshStandardMaterial({color:0xf2e9d0,roughness:0.9}));
+    base.position.y=0.8; base.castShadow=true; g.add(base);
+    const tower=new THREE.Mesh(new THREE.ConeGeometry(1.5,2.6,6), new THREE.MeshStandardMaterial({color:0xe8c15a,roughness:0.7,metalness:0.15}));
+    tower.position.y=1.6+1.3; tower.castShadow=true; g.add(tower);
+    const flag=new THREE.Mesh(new THREE.ConeGeometry(0.18,0.5,4), new THREE.MeshStandardMaterial({color:0xc1521f}));
+    flag.position.y=1.6+2.6+0.25; g.add(flag);
+    g.position.set(p.x,p.y,p.z); g.rotation.y=p.heading;
+    villageRoot.add(g);
+    window.__templeMarker = new THREE.Vector3(p.x,p.y,p.z);
+  }
+  // tea stall / shop
+  {
+    const p = pointOnRoad(0.045, 3.6);
+    const shop = makeHouse(2.4,1.7,1.8,0xdec38a,0x6e5030,'tin');
+    shop.position.set(p.x,p.y,p.z); shop.rotation.y=p.heading+Math.PI/2;
+    villageRoot.add(shop);
+    const canopy = new THREE.Mesh(new THREE.BoxGeometry(3.2,0.1,1.6), new THREE.MeshStandardMaterial({color:0xb0432c}));
+    canopy.position.set(p.x + Math.cos(p.heading)*1.4, p.y+1.9, p.z - Math.sin(p.heading)*1.4);
+    canopy.rotation.y = shop.rotation.y;
+    villageRoot.add(canopy);
+    window.__shopMarker = new THREE.Vector3(p.x,p.y,p.z);
+  }
+  // well
+  {
+    const p = pointOnRoad(0.07,-4);
+    const well = new THREE.Mesh(new THREE.CylinderGeometry(0.7,0.75,0.8,10), new THREE.MeshStandardMaterial({color:0x8b7a5c,roughness:1}));
+    well.position.set(p.x,p.y+0.4,p.z); well.castShadow=true; villageRoot.add(well);
+  }
+  // fuel station
+  {
+    const p = pointOnRoad(0.25, 8);
+    const g=new THREE.Group();
+    const canopy=new THREE.Mesh(new THREE.BoxGeometry(6,0.25,4), new THREE.MeshStandardMaterial({color:0xd24b3a}));
+    canopy.position.y=3.2; canopy.castShadow=true; g.add(canopy);
+    const pillarMat=new THREE.MeshStandardMaterial({color:0xcccccc});
+    [[-2.6,-1.6],[2.6,-1.6],[-2.6,1.6],[2.6,1.6]].forEach(o=>{
+      const p2=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,3.2,6), pillarMat);
+      p2.position.set(o[0],1.6,o[1]); g.add(p2);
+    });
+    const pump=new THREE.Mesh(new THREE.BoxGeometry(0.6,1.3,0.4), new THREE.MeshStandardMaterial({color:0x2e6b4a}));
+    pump.position.set(0,0.65,0); g.add(pump);
+    g.position.set(p.x,p.y,p.z); g.rotation.y=p.heading;
+    villageRoot.add(g);
+    window.__fuelStation = new THREE.Vector3(p.x,p.y,p.z);
+  }
+  // garage
+  {
+    const p = pointOnRoad(0.20,-8);
+    const garage = makeHouse(4.4,2.3,4.0,0x5a5a5a,0x3a3a3a,'tin');
+    garage.position.set(p.x,p.y,p.z); garage.rotation.y=p.heading;
+    villageRoot.add(garage);
+    window.__garageMarker = new THREE.Vector3(p.x,p.y,p.z);
+  }
+  // electricity poles along road every ~0.03 t
+  const poleMat=new THREE.MeshStandardMaterial({color:0x9a8f78,roughness:0.9});
+  for(let t=0;t<1;t+=0.028){
+    const p = pointOnRoad(t, ROAD_WIDTH*0.5+1.1);
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.11,4.4,6), poleMat);
+    pole.position.set(p.x,p.y+2.2,p.z); pole.castShadow=true; villageRoot.add(pole);
+  }
+  // farm elements in the dirt-loop area
+  const fenceMat=new THREE.MeshStandardMaterial({color:0x7a5a35,roughness:1});
+  for(let t=0.68;t<0.88;t+=0.02){
+    const p = pointOnRoad(t, ROAD_WIDTH*0.5+2.2);
+    const fence=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.7,1.6), fenceMat);
+    fence.position.set(p.x,p.y+0.35,p.z); fence.rotation.y=p.heading; villageRoot.add(fence);
+  }
+  {
+    const p = pointOnRoad(0.75, -7);
+    const hay=new THREE.Mesh(new THREE.CylinderGeometry(0.9,0.9,1.4,10), new THREE.MeshStandardMaterial({color:0xd6b34a,roughness:1}));
+    hay.rotation.z=Math.PI/2; hay.position.set(p.x,p.y+0.9,p.z); hay.castShadow=true; villageRoot.add(hay);
+  }
+})();
+
+/* ---------------- Collision bodies ----------------
+   Derived generically from each prop's own world-space bounding box, rather than
+   hand-tagging every mesh — houses, the temple/shop/garage/fuel-station, poles, fences
+   and trees all become simple circle colliders the SUV can't drive through. */
+scene.updateMatrixWorld(true);
+function collectCollidables(root, minR, shrink){
+  const list=[];
+  root.children.forEach(obj=>{
+    const box = new THREE.Box3().setFromObject(obj);
+    const size = new THREE.Vector3(); box.getSize(size);
+    const center = new THREE.Vector3(); box.getCenter(center);
+    const r = Math.max(size.x,size.z)/2*shrink;
+    if(r>minR) list.push({x:center.x, z:center.z, r});
+  });
+  return list;
+}
+const collidables = [
+  ...collectCollidables(villageRoot, 0.12, 0.82),
+  ...collectCollidables(vegRoot, 0.18, 0.55), // trees: shrink more so canopy overhang doesn't block driving under it
+];
+
+/* ---------------- Simple ambient village NPCs (cows, a walking villager) ---------------- */
+const npcRoot = new THREE.Group(); scene.add(npcRoot);
+function makeCow(){
+  const g=new THREE.Group();
+  const bodyMat=new THREE.MeshStandardMaterial({color: Math.random()<0.5?0xffffff:0x8a7060, roughness:1});
+  const body=new THREE.Mesh(new THREE.BoxGeometry(1.1,0.6,0.5), bodyMat); body.position.y=0.6; body.castShadow=true; g.add(body);
+  const head=new THREE.Mesh(new THREE.BoxGeometry(0.35,0.35,0.35), bodyMat); head.position.set(0.68,0.62,0); g.add(head);
+  const legMat=new THREE.MeshStandardMaterial({color:0x3a3a3a});
+  [[-0.4,-0.2],[-0.4,0.2],[0.4,-0.2],[0.4,0.2]].forEach(o=>{
+    const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.55,5), legMat);
+    leg.position.set(o[0],0.28,o[1]); g.add(leg);
+  });
+  return g;
+}
+const cows=[];
+[[0.72,-5.5],[0.78,4.5],[0.80,-3]].forEach(s=>{
+  const p=pointOnRoad(s[0],s[1]);
+  const c=makeCow(); c.position.set(p.x,p.y,p.z); c.rotation.y=Math.random()*Math.PI*2;
+  c.userData.wander=Math.random()*100;
+  npcRoot.add(c); cows.push(c);
+});
+
+
+/* ---------------- Roadside detail + lightweight traffic ---------------- */
+const detailRoot=new THREE.Group(); scene.add(detailRoot);
+function makeRock(){
+  const g=new THREE.Mesh(new THREE.DodecahedronGeometry(0.10+Math.random()*0.18,0),new THREE.MeshStandardMaterial({color:0x6d6659,roughness:1}));
+  g.scale.y=.55+Math.random()*.5; g.castShadow=true; return g;
+}
+function makeGrassTuft(){
+  const g=new THREE.Group();
+  const mat=new THREE.MeshStandardMaterial({color:0x4d7436,roughness:1});
+  for(let i=0;i<4;i++){
+    const blade=new THREE.Mesh(new THREE.ConeGeometry(.025,.35+Math.random()*.25,4),mat);
+    blade.position.set((Math.random()-.5)*.18,.18,(Math.random()-.5)*.18);
+    blade.rotation.z=(Math.random()-.5)*.35; g.add(blade);
+  }
+  return g;
+}
+(function scatterDetails(){
+  const rnd=n=>{let x=Math.sin(n*71.13)*43758.5453;return x-Math.floor(x);};
+  for(let i=0;i<260;i++){
+    const x=(rnd(i*2+1)-.5)*GROUND_SIZE*.9,z=(rnd(i*2+2)-.5)*GROUND_SIZE*.9;
+    const info=terrainInfoAt(x,z);
+    if(info.onRoad||info.dist<5.5)continue;
+    const obj=rnd(i*4)<.45?makeRock():makeGrassTuft();
+    obj.position.set(x,info.height,z); obj.rotation.y=rnd(i*9)*Math.PI*2; detailRoot.add(obj);
+  }
+  /* mud puddles in the farm loop */
+  for(let i=0;i<14;i++){
+    const t=.68+rnd(i*20)*.20, p=pointOnRoad(t,(rnd(i*21)-.5)*2.5,.01);
+    const puddle=new THREE.Mesh(new THREE.CircleGeometry(.25+rnd(i*22)*.55,16),
+      new THREE.MeshStandardMaterial({color:0x2b332e,roughness:.12,metalness:.15,transparent:true,opacity:.78}));
+    puddle.rotation.x=-Math.PI/2; puddle.scale.y=.55; puddle.position.set(p.x,p.y+.015,p.z); detailRoot.add(puddle);
+  }
+})();
+
+/* ---------------- Static real-world village objects ---------------- */
+(function addRealWorldVillageObjects(){
+  const metal=new THREE.MeshStandardMaterial({color:0x62676a,metalness:0.72,roughness:0.34});
+  const concrete=new THREE.MeshStandardMaterial({color:0xaaa79b,roughness:0.96});
+  const wood=new THREE.MeshStandardMaterial({color:0x694a2d,roughness:0.9});
+  const blue=new THREE.MeshStandardMaterial({color:0x315d72,roughness:0.34,metalness:0.15});
+  const clay=new THREE.MeshStandardMaterial({color:0x9b5d35,roughness:1});
+
+  function addTank(p,scale=1){
+    const g=new THREE.Group();
+    const tank=new THREE.Mesh(new THREE.CylinderGeometry(.58*scale,.58*scale,.72*scale,20),blue);
+    tank.position.y=.72*scale; tank.castShadow=true; g.add(tank);
+    const lid=new THREE.Mesh(new THREE.CylinderGeometry(.20*scale,.20*scale,.07*scale,16),metal);
+    lid.position.y=1.12*scale; g.add(lid);
+    for(let i=0;i<4;i++){
+      const leg=new THREE.Mesh(new THREE.CylinderGeometry(.045*scale,.055*scale,1.0*scale,8),metal);
+      const a=i*Math.PI/2; leg.position.set(Math.cos(a)*.42*scale,.35*scale,Math.sin(a)*.42*scale); g.add(leg);
+    }
+    g.position.set(p.x,p.y,p.z); villageRoot.add(g);
+  }
+  function addCharpai(p){
+    const g=new THREE.Group();
+    const frame=new THREE.Mesh(new THREE.BoxGeometry(1.25,.10,.58),wood); frame.position.y=.43; g.add(frame);
+    [[-.53,-.22],[-.53,.22],[.53,-.22],[.53,.22]].forEach(o=>{
+      const leg=new THREE.Mesh(new THREE.CylinderGeometry(.035,.045,.45,8),wood); leg.position.set(o[0],.22,o[1]); g.add(leg);
+    });
+    const rope=new THREE.Mesh(new THREE.BoxGeometry(1.08,.035,.45),new THREE.MeshStandardMaterial({color:0xb6a47c,roughness:1})); rope.position.y=.50; g.add(rope);
+    g.position.set(p.x,p.y,p.z); g.rotation.y=Math.random()*Math.PI; villageRoot.add(g);
+  }
+  function addHandPump(p){
+    const g=new THREE.Group();
+    const base=new THREE.Mesh(new THREE.CylinderGeometry(.24,.28,.18,12),concrete); base.position.y=.09; g.add(base);
+    const pipe=new THREE.Mesh(new THREE.CylinderGeometry(.045,.055,1.25,10),metal); pipe.position.y=.70; g.add(pipe);
+    const spout=new THREE.Mesh(new THREE.CylinderGeometry(.035,.04,.52,8),metal); spout.rotation.z=Math.PI/2; spout.position.set(.20,.95,0); g.add(spout);
+    const handle=new THREE.Mesh(new THREE.BoxGeometry(.55,.045,.055),wood); handle.position.set(.02,1.10,0); handle.rotation.z=-.18; g.add(handle);
+    g.position.set(p.x,p.y,p.z); villageRoot.add(g);
+  }
+  function addPotCluster(p){
+    const g=new THREE.Group();
+    for(let i=0;i<3;i++){
+      const pot=new THREE.Mesh(new THREE.SphereGeometry(.16+Math.random()*.07,12,8),clay);
+      pot.scale.y=.85; pot.position.set((i-1)*.24,.16,Math.sin(i)*.15); g.add(pot);
+    }
+    g.position.set(p.x,p.y,p.z); villageRoot.add(g);
+  }
+  function addBoundary(p,len=2.8){
+    const wall=new THREE.Mesh(new THREE.BoxGeometry(len,.55,.16),concrete);
+    wall.position.set(p.x,p.y+.275,p.z); wall.rotation.y=p.heading; wall.castShadow=true; wall.receiveShadow=true; villageRoot.add(wall);
+    for(let i=0;i<4;i++){
+      const post=new THREE.Mesh(new THREE.BoxGeometry(.13,.72,.22),concrete);
+      const along=-len/2+i*len/3; post.position.set(p.x+Math.sin(p.heading)*along,p.y+.36,p.z+Math.cos(p.heading)*along); post.castShadow=true; villageRoot.add(post);
+    }
+  }
+
+  const spots=[
+    [0.015,8.0],[0.055,-8.0],[0.11,7.5],[0.15,-7.8],[0.29,7.4],
+    [0.34,-7.3],[0.88,7.8],[0.93,-7.6],[0.975,7.0]
+  ];
+  spots.forEach((s,i)=>{
+    const p=pointOnRoad(s[0],s[1],0);
+    if(i%3===0) addTank(p,.78);
+    if(i%3===1) addCharpai(p);
+    if(i%3===2) addPotCluster(p);
+  });
+  addHandPump(pointOnRoad(.035,-7.0,0));
+  addHandPump(pointOnRoad(.915,6.6,0));
+  addBoundary(pointOnRoad(.12,6.9,0),2.6);
+  addBoundary(pointOnRoad(.31,-6.8,0),3.0);
+  addBoundary(pointOnRoad(.90,6.7,0),2.4);
+
+  // A few parked/static farm objects: no moving traffic.
+  const tractorMat=new THREE.MeshStandardMaterial({color:0x65713a,roughness:.72,metalness:.25});
+  const wheelBlack=new THREE.MeshStandardMaterial({color:0x121212,roughness:1});
+  const tp=pointOnRoad(.73,5.8,.03);
+  const tractor=new THREE.Group();
+  const tb=new THREE.Mesh(new THREE.BoxGeometry(1.35,.62,.85),tractorMat); tb.position.y=.52; tractor.add(tb);
+  const tc=new THREE.Mesh(new THREE.BoxGeometry(.62,.65,.76),tractorMat); tc.position.set(-.18,1.08,0); tractor.add(tc);
+  [-.48,.48].forEach(z=>{const tw=new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,.22,16),wheelBlack);tw.rotation.x=Math.PI/2;tw.position.set(.38,.35,z);tractor.add(tw);});
+  tractor.position.set(tp.x,tp.y,tp.z); tractor.rotation.y=tp.heading+Math.PI/2; villageRoot.add(tractor);
+})();
+
+// Traffic intentionally removed: this is a quiet rural driving simulator.
+// The village is populated with static, detailed props instead of moving vehicles.
+
+/* ---------------- Rain particles ---------------- */
+const rainCount=600;
+const rainGeo = new THREE.BufferGeometry();
+const rainPos = new Float32Array(rainCount*3);
+for(let i=0;i<rainCount;i++){
+  rainPos[i*3]=(Math.random()-0.5)*60; rainPos[i*3+1]=Math.random()*30; rainPos[i*3+2]=(Math.random()-0.5)*60;
+}
+rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos,3));
+const rainMat = new THREE.PointsMaterial({color:0xaac4d8, size:0.12, transparent:true, opacity:0.55});
+const rain = new THREE.Points(rainGeo, rainMat);
+rain.visible=false;
+scene.add(rain);
+
+
+/* =========================================================================
+   SCORPIO-CLASS SUV — detailed procedural model
+   ========================================================================= */
+const car = new THREE.Group();
+scene.add(car);
+const bodyTilt = new THREE.Group();
+car.add(bodyTilt);
+
+const paintMat = new THREE.MeshStandardMaterial({color:0x20242a, metalness:0.72, roughness:0.24});
+const paintDarkMat = new THREE.MeshStandardMaterial({color:0x0b0d10, metalness:0.45, roughness:0.42});
+const trimMat = new THREE.MeshStandardMaterial({color:0x111315, roughness:0.72, metalness:0.15});
+const glassMat = new THREE.MeshStandardMaterial({color:0x0b151c, metalness:0.15, roughness:0.08, transparent:true, opacity:0.88});
+const chromeMat = new THREE.MeshStandardMaterial({color:0xd8dde2, metalness:0.92, roughness:0.16});
+const bumperMat = new THREE.MeshStandardMaterial({color:0x171a1d, roughness:0.8, metalness:0.12});
+const claddingMat = new THREE.MeshStandardMaterial({color:0x090b0d, roughness:0.9, metalness:0.05});
+const fenderMat = paintMat;
+const redMat = new THREE.MeshStandardMaterial({color:0x190204, emissive:0xff0505, emissiveIntensity:0.18});
+const amberMat = new THREE.MeshStandardMaterial({color:0x3a1800, emissive:0xff8a00, emissiveIntensity:0.2});
+const whiteLampMat = new THREE.MeshStandardMaterial({color:0xffffff, emissive:0xfff5d0, emissiveIntensity:0.25});
+
+const CAR_LEN=4.72, CAR_WID=1.92, CAR_H=1.86, RIDE_HEIGHT=0.62;
+
+function addMesh(g, mesh, cast=true, receive=true){
+  mesh.castShadow=cast; mesh.receiveShadow=receive; g.add(mesh); return mesh;
+}
+function extrudedProfile(points, depth, material, bevel=0.06){
+  const shape=new THREE.Shape();
+  points.forEach((p,i)=>i?shape.lineTo(p[0],p[1]):shape.moveTo(p[0],p[1]));
+  shape.closePath();
+  const geo=new THREE.ExtrudeGeometry(shape,{
+    depth, bevelEnabled:true, bevelSegments:2, steps:1,
+    bevelSize:bevel, bevelThickness:bevel, curveSegments:2
+  });
+  geo.translate(0,0,-depth/2);
+  return new THREE.Mesh(geo,material);
+}
+
+/* Lower body: slightly tapered, rounded SUV silhouette */
+const lowerProfile=[
+  [-2.34,0.34],[-2.30,0.70],[-2.12,0.84],[1.84,0.84],
+  [2.22,0.73],[2.38,0.52],[2.30,0.32]
+];
+const lowerBody=extrudedProfile(lowerProfile,CAR_WID*0.98,paintMat,0.09);
+addMesh(bodyTilt,lowerBody);
+
+/* Main upper body / shoulder */
+const upperProfile=[
+  [-2.08,0.72],[-1.95,1.28],[-1.63,1.48],[0.72,1.50],
+  [1.60,1.40],[2.08,1.12],[2.22,0.78]
+];
+const upperBody=extrudedProfile(upperProfile,CAR_WID*0.91,paintMat,0.075);
+addMesh(bodyTilt,upperBody);
+
+/* Black lower cladding and bumpers */
+addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(4.35,0.18,2.0),claddingMat)).position.set(0,0.48,0);
+const frontBumper=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.34,0.42,2.02),bumperMat));
+frontBumper.position.set(2.27,0.56,0);
+const rearBumper=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.30,0.42,2.0),bumperMat));
+rearBumper.position.set(-2.25,0.55,0);
+
+const skid=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.30,0.12,1.58),chromeMat));
+skid.position.set(2.37,0.34,0);
+
+/* Roof/cabin volume with sloped windscreen */
+const cabinProfile=[
+  [-1.55,1.25],[-1.36,1.82],[-1.04,2.02],[0.78,2.02],
+  [1.32,1.82],[1.66,1.28]
+];
+const cabin=extrudedProfile(cabinProfile,1.72,paintMat,0.07);
+addMesh(bodyTilt,cabin);
+
+/* Large dark window panels on both sides */
+function sideWindow(points,z){
+  const shape=new THREE.Shape();
+  points.forEach((p,i)=>i?shape.lineTo(p[0],p[1]):shape.moveTo(p[0],p[1]));
+  shape.closePath();
+  const geo=new THREE.ShapeGeometry(shape);
+  const m=new THREE.Mesh(geo,glassMat);
+  m.position.z=z; m.rotation.y=(z>0?0:Math.PI);
+  return addMesh(bodyTilt,m,false,false);
+}
+const frontSideWin=[[-1.20,1.47],[-1.03,1.82],[-0.30,1.91],[-0.30,1.50]];
+const rearSideWin=[[-0.20,1.50],[-0.20,1.91],[0.73,1.90],[1.23,1.75],[1.43,1.49]];
+[-1,1].forEach(s=>{
+  sideWindow(frontSideWin,s*0.875);
+  sideWindow(rearSideWin,s*0.875);
+});
+
+/* Window pillars */
+[-0.27,0.82].forEach(x=>{
+  [-1,1].forEach(s=>{
+    const p=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.075,0.55,0.045),trimMat));
+    p.position.set(x,1.73,s*0.89); p.rotation.z=(x<0?0.04:-0.10);
+  });
+});
+
+/* Windshield, rear glass */
+const windshield=addMesh(bodyTilt,new THREE.Mesh(new THREE.PlaneGeometry(0.95,0.62),glassMat),false,false);
+windshield.position.set(1.30,1.70,0);
+windshield.rotation.y=Math.PI/2;
+windshield.rotation.z=-0.24;
+const rearGlass=addMesh(bodyTilt,new THREE.Mesh(new THREE.PlaneGeometry(0.78,0.58),glassMat),false,false);
+rearGlass.position.set(-1.43,1.68,0);
+rearGlass.rotation.y=Math.PI/2;
+rearGlass.rotation.z=0.10;
+
+/* Roof, rails and spoiler */
+const roof=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(2.25,0.10,1.74),paintDarkMat));
+roof.position.set(-0.05,2.02,0);
+[-1,1].forEach(s=>{
+  const rail=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(2.45,0.06,0.055),chromeMat));
+  rail.position.set(-0.10,2.12,s*0.68);
+});
+const spoiler=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.46,0.10,1.68),trimMat));
+spoiler.position.set(-1.95,1.92,0);
+
+/* Hood and bonnet lines */
+const hood=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(1.15,0.11,1.70),paintMat));
+hood.position.set(1.78,1.12,0);
+const hoodLineMat=new THREE.MeshStandardMaterial({color:0x4a4f55,metalness:0.55,roughness:0.25});
+[-0.53,0.53].forEach(z=>{
+  const line=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.92,0.018,0.018),hoodLineMat),false,false);
+  line.position.set(1.80,1.18,z);
+});
+
+/* Front fascia: grille + seven vertical slats + headlamp clusters */
+const grille=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.10,0.55,1.08),trimMat),false,false);
+grille.position.set(2.36,1.03,0);
+for(let i=0;i<7;i++){
+  const z=-0.48+i*0.16;
+  const sl=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.035,0.50,0.045),chromeMat),false,false);
+  sl.position.set(2.42,1.04,z);
+}
+function lampCluster(z){
+  const g=new THREE.Group(); bodyTilt.add(g);
+  const outer=addMesh(g,new THREE.Mesh(new THREE.BoxGeometry(0.13,0.32,0.47),trimMat),false,false);
+  outer.position.set(2.28,1.17,z);
+  const lamp=addMesh(g,new THREE.Mesh(new THREE.CylinderGeometry(0.11,0.11,0.025,16),whiteLampMat),false,false);
+  lamp.rotation.x=Math.PI/2; lamp.position.set(2.355,1.20,z+0.08);
+  const led=addMesh(g,new THREE.Mesh(new THREE.BoxGeometry(0.035,0.035,0.30),whiteLampMat),false,false);
+  led.position.set(2.36,1.02,z-0.03);
+}
+lampCluster(0.62); lampCluster(-0.62);
+
+/* Indicators */
+const indL=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.06,0.08,0.22),amberMat),false,false); indL.position.set(2.40,0.88,0.82);
+const indR=indL.clone(); indR.position.z=-0.82; bodyTilt.add(indR);
+
+/* Rear lights */
+const tailL=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.09,0.38,0.25),redMat),false,false); tailL.position.set(-2.30,1.05,0.78);
+const tailR=tailL.clone(); tailR.material=redMat.clone(); tailR.position.z=-0.78; bodyTilt.add(tailR);
+const reverseL=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.095,0.13,0.18),whiteLampMat),false,false); reverseL.position.set(-2.36,0.88,0.78);
+const reverseR=reverseL.clone(); reverseR.position.z=-0.78; bodyTilt.add(reverseR);
+const rearHandle=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.08,0.06,0.45),chromeMat),false,false); rearHandle.position.set(-2.34,1.40,0);
+// Rear-mounted spare wheel and center badge: gives the SUV a much more believable silhouette.
+const spareMount=addMesh(bodyTilt,new THREE.Mesh(new THREE.CylinderGeometry(.50,.50,.16,28),trimMat));
+spareMount.rotation.x=Math.PI/2; spareMount.position.set(-2.48,.86,0);
+const spareTire=addMesh(bodyTilt,new THREE.Mesh(new THREE.TorusGeometry(.43,.085,10,30),tireMat));
+spareTire.rotation.x=Math.PI/2; spareTire.position.set(-2.57,.86,0);
+const badge=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.22,.07,.44),chromeMat),false,false); badge.position.set(2.47,1.37,0);
+
+
+/* Side mirrors, door handles, running boards */
+[-1,1].forEach(s=>{
+  const mirror=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.22,0.14,0.28),trimMat));
+  mirror.position.set(1.08,1.45,s*1.00);
+  const mirrorGlass=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.025,0.09,0.20),glassMat),false,false);
+  mirrorGlass.position.set(1.20,1.46,s*1.01);
+  [-0.86,0.15,0.93].forEach(x=>{
+    const h=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.12,0.025,0.035),chromeMat),false,false);
+    h.position.set(x,1.27,s*0.98);
+  });
+  const step=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(2.55,0.07,0.18),claddingMat));
+  step.position.set(-0.25,0.30,s*1.00);
+});
+
+/* Functional side doors: visual panels + glass, animated around hinge pivots. */
+const doorState={FL:false,FR:false,RL:false,RR:false};
+const doorGroups={};
+function makeDoor(name,x,z,side){
+  const g=new THREE.Group();
+  // hinge at the front edge for front doors, rear edge for rear doors
+  const hingeX = name[1]==='L' ? x+0.46 : x+0.46;
+  g.position.set(hingeX,0,z);
+  const leaf=new THREE.Group(); g.add(leaf);
+  const panel=addMesh(leaf,new THREE.Mesh(new THREE.BoxGeometry(0.92,0.78,0.055),paintMat));
+  panel.position.set(-0.46,1.05,0);
+  const glass=addMesh(leaf,new THREE.Mesh(new THREE.BoxGeometry(0.72,0.38,0.028),glassMat),false,false);
+  glass.position.set(-0.46,1.56,0);
+  const belt=addMesh(leaf,new THREE.Mesh(new THREE.BoxGeometry(0.84,0.035,0.065),trimMat),false,false);
+  belt.position.set(-0.46,1.29,0);
+  const handle=addMesh(leaf,new THREE.Mesh(new THREE.BoxGeometry(0.15,0.035,0.035),chromeMat),false,false);
+  handle.position.set(-0.08,1.28,side>0?0.035:-0.035);
+  const seam=addMesh(leaf,new THREE.Mesh(new THREE.BoxGeometry(0.018,0.76,0.018),trimMat),false,false);
+  seam.position.set(-0.90,1.05,0);
+  bodyTilt.add(g);
+  doorGroups[name]={g,leaf,side,baseX:hingeX,open:0};
+}
+makeDoor('FL',0.72,0.985,1); makeDoor('FR',0.72,-0.985,-1);
+makeDoor('RL',-0.45,0.985,1); makeDoor('RR',-0.45,-0.985,-1);
+function setDoorOpen(name,open){ if(doorGroups[name]) doorState[name]=open; }
+let tailgateOpen=false, tailgateAnim=0;
+const tailgate=new THREE.Group(); tailgate.position.set(-2.50,0.85,0); bodyTilt.add(tailgate);
+const tailPanel=addMesh(tailgate,new THREE.Mesh(new THREE.BoxGeometry(0.06,1.02,1.28),paintMat)); tailPanel.position.set(0,0.15,0);
+function toggleTailgate(){ tailgateOpen=!tailgateOpen; toast(tailgateOpen?'TAILGATE OPEN':'TAILGATE CLOSED'); }
+function updateTailgate(dt){ const target=tailgateOpen?-1.15:0; tailgateAnim=lerp(tailgateAnim,target,1-Math.pow(.0007,dt)); tailgate.rotation.z=tailgateAnim; }
+
+function toggleDoors(){
+  const target=!(doorState.FL||doorState.FR||doorState.RL||doorState.RR);
+  Object.keys(doorState).forEach(k=>setDoorOpen(k,target));
+  document.getElementById('btnDoors').classList.toggle('active',target);
+  toast(target?'DOORS OPEN':'DOORS CLOSED');
+}
+function updateDoors(dt){
+  Object.keys(doorGroups).forEach(k=>{
+    const d=doorGroups[k], target=doorState[k]?0.72:0;
+    d.open=lerp(d.open,target,1-Math.pow(.0005,dt));
+    d.g.rotation.y=(d.side>0?1:-1)*d.open;
+  });
+}
+
+/* Wheel arches: black fender blocks + circular arch hints */
+[-1,1].forEach(s=>{
+  [-1,1].forEach(ax=>{
+    const arch=addMesh(bodyTilt,new THREE.Mesh(new THREE.TorusGeometry(0.50,0.085,8,28,Math.PI),claddingMat));
+    arch.rotation.x=Math.PI/2; arch.rotation.z=Math.PI/2;
+    arch.position.set(ax*1.55,0.72,s*0.98);
+  });
+});
+
+/* Interior */
+const interiorMat=new THREE.MeshStandardMaterial({color:0x0a0c0e,roughness:0.9});
+// Cockpit details: instrument hood, rear-view mirror and A-pillar trim.
+const dashTop=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.42,0.08,1.42),trimMat),false,false);
+dashTop.position.set(1.20,1.61,0);
+const rearMirror=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.07,0.12,0.46),new THREE.MeshStandardMaterial({color:0x151719,roughness:0.42,metalness:0.25})),false,false);
+rearMirror.position.set(1.02,1.78,0);
+const dash=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.58,0.36,1.46),interiorMat));
+dash.position.set(0.98,1.38,0);
+const seatMat=new THREE.MeshStandardMaterial({color:0x17191c,roughness:0.88});
+[-0.75,0.30].forEach(x=>{
+  [-0.42,0.42].forEach(z=>{
+    const seat=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.48,0.62,0.44),seatMat));
+    seat.position.set(x,1.25,z);
+  });
+});
+const beltMat=new THREE.MeshStandardMaterial({color:0x151515,roughness:0.9});
+const belt=new THREE.Mesh(new THREE.BoxGeometry(0.035,0.58,0.035),beltMat); belt.position.set(0.53,1.48,0.49); belt.rotation.z=-0.30; bodyTilt.add(belt);
+const wheel3d=addMesh(bodyTilt,new THREE.Mesh(new THREE.TorusGeometry(0.17,0.035,10,24),trimMat));
+wheel3d.position.set(0.68,1.42,0.48); wheel3d.rotation.x=Math.PI/2.2;
+
+/* Windshield wipers: simple animated arms visible from exterior/cockpit. */
+const wiperRoot=new THREE.Group();
+wiperRoot.position.set(1.05,1.53,0);
+bodyTilt.add(wiperRoot);
+const wiperMat=new THREE.MeshStandardMaterial({color:0x111315,roughness:0.75,metalness:0.45});
+[-0.34,0.34].forEach(z=>{
+  const arm=new THREE.Group(); arm.position.set(0,0,z);
+  const bar=addMesh(arm,new THREE.Mesh(new THREE.BoxGeometry(0.68,0.025,0.035),wiperMat),false,false);
+  bar.position.x=0.28;
+  const blade=addMesh(arm,new THREE.Mesh(new THREE.BoxGeometry(0.52,0.018,0.055),wiperMat),false,false);
+  blade.position.x=0.57;
+  wiperRoot.add(arm);
+});
+let wipersOn=false,wiperPhase=0;
+function toggleWipers(){
+  wipersOn=!wipersOn;
+  document.getElementById('btnWiper').classList.toggle('active',wipersOn);
+  toast(wipersOn?'WIPERS ON':'WIPERS OFF');
+}
+function updateWipers(dt){
+  if(!wipersOn)return;
+  wiperPhase+=dt*5.4;
+  const sweep=Math.sin(wiperPhase)*0.62;
+  wiperRoot.children.forEach((arm,i)=>arm.rotation.y=sweep*(i? -1:1));
+}
+
+/* Functional lights */
+const headlightSpotL=new THREE.SpotLight(0xfff2c8,0,34,Math.PI/8,0.5,1.4);
+const headlightSpotR=headlightSpotL.clone();
+const spotTarget=new THREE.Object3D(); spotTarget.position.set(8,0.5,0);
+bodyTilt.add(headlightSpotL,headlightSpotR,spotTarget);
+headlightSpotL.position.set(2.45,1.12,0.62); headlightSpotR.position.set(2.45,1.12,-0.62);
+headlightSpotL.target=spotTarget; headlightSpotR.target=spotTarget;
+
+/* Exterior lighting state: low/high beams, turn signals, hazards, brake and reverse lamps. */
+let indicatorLeft=false, indicatorRight=false, hazard=false, blinkClock=0, blinkOn=false;
+let seatbeltOn=false;
+function toggleSeatbelt(){ seatbeltOn=!seatbeltOn; document.getElementById('btnSeatbelt').classList.toggle('active',seatbeltOn); toast(seatbeltOn?'SEAT BELT FASTENED':'SEAT BELT UNFASTENED'); }
+function setIndicator(side,on){
+  if(side==='left') indicatorLeft=on;
+  if(side==='right') indicatorRight=on;
+  document.getElementById(side==='left'?'btnLeftInd':'btnRightInd').classList.toggle('active',on);
+}
+function toggleIndicator(side){
+  if(side==='left'){ indicatorLeft=!indicatorLeft; if(indicatorLeft) indicatorRight=false; }
+  else { indicatorRight=!indicatorRight; if(indicatorRight) indicatorLeft=false; }
+  document.getElementById('btnLeftInd').classList.toggle('active',indicatorLeft);
+  document.getElementById('btnRightInd').classList.toggle('active',indicatorRight);
+  document.getElementById('btnHazard').classList.remove('active'); hazard=false;
+}
+function toggleHazard(){
+  hazard=!hazard; if(hazard){indicatorLeft=false;indicatorRight=false;}
+  document.getElementById('btnHazard').classList.toggle('active',hazard);
+  document.getElementById('btnLeftInd').classList.toggle('active',indicatorLeft);
+  document.getElementById('btnRightInd').classList.toggle('active',indicatorRight);
+}
+function updateIndicators(dt){
+  blinkClock+=dt;
+  if(blinkClock>0.48){blinkClock=0;blinkOn=!blinkOn;}
+  const lOn=(hazard||indicatorLeft)&&blinkOn, rOn=(hazard||indicatorRight)&&blinkOn;
+  [indL,indR].forEach((m,i)=>{m.material.emissiveIntensity=(i===0?lOn:rOn)?2.7:0.08;});
+  const brakeOn=input.brake>0.05;
+  tailL.material.emissiveIntensity=brakeOn?2.2:0.22;
+  tailR.material.emissiveIntensity=brakeOn?2.2:0.22;
+  const reverseOn=vehicle && vehicle.speed < -0.08;
+  reverseL.material.emissiveIntensity=reverseOn?2.8:0.08;
+  reverseR.material.emissiveIntensity=reverseOn?2.8:0.08;
+}
+
+/* Wheels */
+const WHEEL_R=0.43, WHEEL_W=0.30;
+const tireMat=new THREE.MeshStandardMaterial({color:0x101112,roughness:0.94});
+const treadMat=new THREE.MeshStandardMaterial({color:0x050607,roughness:1});
+const rimMat=new THREE.MeshStandardMaterial({color:0xbfc4ca,metalness:0.88,roughness:0.22});
+const hubCapMat=new THREE.MeshStandardMaterial({color:0x22262a,metalness:0.65,roughness:0.32});
+function makeWheelMesh(){
+  const g=new THREE.Group();
+  const tire=new THREE.Mesh(new THREE.CylinderGeometry(WHEEL_R,WHEEL_R,WHEEL_W,32),tireMat);
+  tire.rotation.x=Math.PI/2; tire.castShadow=true; g.add(tire);
+  const side1=new THREE.Mesh(new THREE.TorusGeometry(WHEEL_R*0.82,0.022,7,28),tireMat); side1.position.z=WHEEL_W*0.51; g.add(side1);
+  const side2=side1.clone(); side2.position.z=-WHEEL_W*0.51; g.add(side2);
+  const rim=new THREE.Mesh(new THREE.CylinderGeometry(WHEEL_R*0.58,WHEEL_R*0.58,WHEEL_W*0.55,24),rimMat); rim.rotation.x=Math.PI/2; g.add(rim);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(WHEEL_R*0.58,0.035,8,28),rimMat); g.add(ring);
+  for(let i=0;i<6;i++){
+    const sg=new THREE.Group(); sg.rotation.z=i*Math.PI/3;
+    const spoke=new THREE.Mesh(new THREE.BoxGeometry(WHEEL_R*0.52,0.065,WHEEL_W*0.60),rimMat);
+    spoke.position.x=WHEEL_R*0.25; sg.add(spoke); g.add(sg);
+  }
+  const cap=new THREE.Mesh(new THREE.CylinderGeometry(WHEEL_R*0.13,WHEEL_R*0.13,WHEEL_W*0.7,16),hubCapMat); cap.rotation.x=Math.PI/2; g.add(cap);
+  return g;
+}
+const wheelDefs=[
+ {name:'FL',x:1.55,z:0.99,steer:true},{name:'FR',x:1.55,z:-0.99,steer:true},
+ {name:'RL',x:-1.55,z:0.99,steer:false},{name:'RR',x:-1.55,z:-0.99,steer:false}
+];
+const wheels=wheelDefs.map(def=>{
+  const susPivot=new THREE.Group(); susPivot.position.set(def.x,0,def.z);
+  const steerPivot=new THREE.Group(); susPivot.add(steerPivot);
+  const mesh=makeWheelMesh(); steerPivot.add(mesh); car.add(susPivot);
+  return {def,susPivot,steerPivot,mesh,susOffset:0,susVel:0,spin:0};
+});
+
+
+/* =========================================================================
+   Input handling (keyboard + touch) — realistic wheel drag + pedal cluster
+   ========================================================================= */
+const input = { throttle:0, brake:0, steer:0, handbrake:false, headlights:false, horn:false, engine:true,
+  _touchThrottle:0, _touchBrake:0, _touchSteer:0, _touchHand:false };
+
+// --- Pedals: press-and-hold, with a fill bar that animates like a real pedal travel ---
+function bindPedal(el, fillEl, onDown, onUp){
+  const down=(e)=>{
+    e.preventDefault(); el.setPointerCapture?.(e.pointerId);
+    el.classList.add('pressed'); fillEl.style.height='100%'; onDown();
+  };
+  const up=(e)=>{
+    if(e)e.preventDefault(); el.classList.remove('pressed'); fillEl.style.height='0%'; onUp();
+  };
+  el.addEventListener('pointerdown',down);
+  el.addEventListener('pointerup',up);
+  el.addEventListener('pointercancel',up);
+  el.addEventListener('lostpointercapture',up);
+}
+bindPedal(document.getElementById('pedalAccel'), document.getElementById('accelFill'), ()=>input._touchThrottle=1, ()=>input._touchThrottle=0);
+bindPedal(document.getElementById('pedalBrake'), document.getElementById('brakeFill'), ()=>input._touchBrake=1, ()=>input._touchBrake=0);
+
+function bindHold(el, onDown, onUp){
+  const down=(e)=>{e.preventDefault(); el.classList.add('pressed'); onDown();};
+  const up=(e)=>{ if(e) e.preventDefault(); el.classList.remove('pressed'); onUp();};
+  el.addEventListener('touchstart',down,{passive:false});
+  el.addEventListener('touchend',up,{passive:false});
+  el.addEventListener('touchcancel',up,{passive:false});
+  el.addEventListener('mousedown',down);
+  window.addEventListener('mouseup',up);
+}
+bindHold(document.getElementById('btnHand'), ()=>input._touchHand=true, ()=>input._touchHand=false);
+document.getElementById('btnEngine').addEventListener('click', toggleEngine);
+document.getElementById('btnLights').addEventListener('click', toggleLights);
+document.getElementById('btnHorn').addEventListener('touchstart', playHorn,{passive:true});
+document.getElementById('btnHorn').addEventListener('mousedown', playHorn);
+document.getElementById('btnCam').addEventListener('click', cycleCamera);
+document.getElementById('btn4wd').addEventListener('click', toggle4wd);
+document.getElementById('btnWeather').addEventListener('click', cycleWeather);
+document.getElementById('btnWiper').addEventListener('click', toggleWipers);
+document.getElementById('btnSeatbelt').addEventListener('click', toggleSeatbelt);
+document.getElementById('btnLeftInd').addEventListener('click', ()=>toggleIndicator('left'));
+document.getElementById('btnRightInd').addEventListener('click', ()=>toggleIndicator('right'));
+document.getElementById('btnHazard').addEventListener('click', toggleHazard);
+document.getElementById('btnDoors').addEventListener('click', toggleDoors);
+document.getElementById('btnTailgate').addEventListener('click', toggleTailgate);
+document.getElementById('btnPause').addEventListener('click', ()=>setPaused(true));
+document.getElementById('btnResume').addEventListener('click', ()=>setPaused(false));
+document.getElementById('btnQuit').addEventListener('click', ()=>{ setPaused(false); showMenu(); });
+
+// --- Real drag-to-steer wheel: grab anywhere on the wheel, rotate it like a real steering wheel ---
+const wheelWrap = document.getElementById('wheelWrap');
+const wheelSvg = document.getElementById('wheelSvg');
+const WHEEL_LOCK_DEG = 150;
+// Stable mobile steering: the wheel has a fixed steering position.
+// Dragging changes that position; releasing the finger immediately commands
+// the steering back toward center. We intentionally do NOT accumulate rotation
+// from successive touches, which was causing the wheel/car to keep turning.
+const wheelState = {
+  dragging:false, pointerId:null, startX:0, startWheelRot:0, rot:0
+};
+
+function setTouchSteerFromWheel(){
+  let n=wheelState.rot/WHEEL_LOCK_DEG;
+  // Small dead-zone prevents tiny finger jitter from making the car wander.
+  if(Math.abs(n)<0.035) n=0;
+  input._touchSteer=clamp(n,-1,1);
+}
+
+wheelWrap.addEventListener('pointerdown',(e)=>{
+  if(e.pointerType==='mouse' && e.button!==0) return;
+  e.preventDefault();
+  wheelState.dragging=true;
+  wheelState.pointerId=e.pointerId;
+  wheelState.startX=e.clientX;
+  wheelState.startWheelRot=wheelState.rot;
+  try{ wheelWrap.setPointerCapture(e.pointerId); }catch(_){}
+  wheelWrap.classList.add('gripped');
+});
+
+wheelWrap.addEventListener('pointermove',(e)=>{
+  if(!wheelState.dragging || e.pointerId!==wheelState.pointerId) return;
+  e.preventDefault();
+  // Relative horizontal drag. One 110px movement reaches near full lock.
+  const sensitivity = 1.35;
+  const deltaDeg=(e.clientX-wheelState.startX)*sensitivity;
+  wheelState.rot=clamp(wheelState.startWheelRot+deltaDeg,-WHEEL_LOCK_DEG,WHEEL_LOCK_DEG);
+  setTouchSteerFromWheel();
+});
+
+function releaseWheel(e){
+  if(e && wheelState.pointerId!==null && e.pointerId!==wheelState.pointerId) return;
+  wheelState.dragging=false;
+  wheelState.pointerId=null;
+  wheelWrap.classList.remove('gripped');
+  // IMPORTANT: release means no steering command. Do not leave the last
+  // steering value active while the wheel visually returns to center.
+  input._touchSteer=0;
+}
+wheelWrap.addEventListener('pointerup',releaseWheel);
+wheelWrap.addEventListener('pointercancel',releaseWheel);
+wheelWrap.addEventListener('lostpointercapture',()=>{
+  if(wheelState.dragging) releaseWheel();
+});
+
+function updateSteeringWheelVisual(){
+  if(!wheelState.dragging){
+    if(!keyboardSteering()){
+      // Stronger return-to-center so the vehicle straightens naturally.
+      wheelState.rot=lerp(wheelState.rot,0,1-Math.pow(0.000001,Math.min(0.05,1/60)));
+      if(Math.abs(wheelState.rot)<0.35) wheelState.rot=0;
+      input._touchSteer=0;
+    }else{
+      const keyTarget=(keyState['ArrowLeft']||keyState['KeyA']) ? -WHEEL_LOCK_DEG*0.72 :
+                      ((keyState['ArrowRight']||keyState['KeyD']) ? WHEEL_LOCK_DEG*0.72 : 0);
+      wheelState.rot=lerp(wheelState.rot,keyTarget,0.25);
+    }
+  }
+  wheelSvg.style.transform='rotate('+wheelState.rot+'deg)';
+}
+function keyboardSteering(){ return !!(keyState['ArrowLeft']||keyState['ArrowRight']||keyState['KeyA']||keyState['KeyD']); }
+
+const keyState={};
+window.addEventListener('keydown', e=>{
+  keyState[e.code]=true;
+  if(e.code==='KeyL') toggleLights();
+  if(e.code==='KeyH') playHorn();
+  if(e.code==='KeyC') cycleCamera();
+  if(e.code==='KeyV') toggle4wd();
+  if(e.code==='KeyI') toggleWipers();
+  if(e.code==='KeyB') toggleSeatbelt();
+  if(e.code==='KeyT') toggleTailgate();
+  if(e.code==='KeyP') setPaused(document.getElementById('pauseOverlay').classList.contains('show')?false:true);
+});
+window.addEventListener('keyup', e=>{ keyState[e.code]=false; });
+function pollKeyboard(){
+  const up = keyState['ArrowUp']||keyState['KeyW'];
+  const down = keyState['ArrowDown']||keyState['KeyS'];
+  const left = keyState['ArrowLeft']||keyState['KeyA'];
+  const right = keyState['ArrowRight']||keyState['KeyD'];
+  input.throttle = up?1:(input._touchThrottle||0);
+  input.brake = down?1:(input._touchBrake||0);
+  let ks=0; if(left) ks=-1; if(right) ks=1;
+  input.steer = ks!==0 ? ks : clamp(input._touchSteer||0,-1,1);
+  input.handbrake = !!keyState['Space'] || input._touchHand||false;
+}
+
+/* ---------------- Audio (WebAudio synth, no external files) ---------------- */
+let actx=null;
+function ensureAudio(){
+  if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)();
+  if(actx.state==='suspended') actx.resume();
+}
+let engineOsc=null, engineGain=null, engineFilter=null, hornBusy=false;
+function startEngine(){
+  engineRunning=true;
+  input.engine=true;
+  const b=document.getElementById('btnEngine'); if(b)b.classList.add('active');
+  ensureAudio();
+  if(engineOsc) return;
+  engineOsc = actx.createOscillator(); engineOsc.type='sawtooth';
+  engineGain = actx.createGain(); engineGain.gain.value=0.02;
+  const filt = actx.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=300; engineFilter=filt;
+  engineOsc.connect(filt); filt.connect(engineGain); engineGain.connect(actx.destination);
+  engineOsc.frequency.value=45; engineOsc.start();
+}
+
+function stopEngine(){
+  engineRunning=false; input.engine=false; input.throttle=0;
+  if(engineGain && actx) engineGain.gain.setTargetAtTime(0.0001,actx.currentTime,0.06);
+  const b=document.getElementById('btnEngine'); if(b)b.classList.remove('active');
+  toast('ENGINE OFF');
+}
+function toggleEngine(){
+  if(engineRunning){ stopEngine(); } else { startEngine(); toast('ENGINE STARTED'); }
+}
+function updateEngineAudio(){
+  if(!engineOsc || !vehicle)return;
+  const speed=Math.abs(vehicle.speed);
+  const rpm=vehicle.rpm||850;
+  engineOsc.frequency.setTargetAtTime(38 + rpm*0.075 + speed*1.2, actx.currentTime, 0.045);
+  engineGain.gain.setTargetAtTime(0.012 + input.throttle*0.035 + Math.min(0.012,speed*0.00035), actx.currentTime, 0.08);
+  if(engineFilter) engineFilter.frequency.setTargetAtTime(260 + input.throttle*900 + speed*8, actx.currentTime, 0.08);
+}
+
+function playHorn(){
+  ensureAudio();
+  if(hornBusy)return; hornBusy=true;
+  const o=actx.createOscillator(), g=actx.createGain();
+  o.type='square'; o.frequency.value=330;
+  g.gain.value=0.05;
+  o.connect(g); g.connect(actx.destination);
+  o.start(); g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime+0.5);
+  o.stop(actx.currentTime+0.55);
+  setTimeout(()=>hornBusy=false,560);
+}
+
+function playImpact(strength){
+  ensureAudio();
+  const o=actx.createOscillator(), g=actx.createGain(), filt=actx.createBiquadFilter();
+  o.type='triangle'; o.frequency.value=90; filt.type='lowpass'; filt.frequency.value=400;
+  g.gain.value=0.001;
+  o.connect(filt); filt.connect(g); g.connect(actx.destination);
+  o.start();
+  g.gain.setValueAtTime(Math.min(0.4,0.12+strength*0.3), actx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime+0.25);
+  o.stop(actx.currentTime+0.3);
+}
+
+/* =========================================================================
+   Camera modes
+   ========================================================================= */
+const CAM_MODES=['chase-medium','chase-close','chase-far','cockpit','hood','front','rear','left','right','wheel','overhead'];
+const CAM_LABELS={'chase-medium':'CHASE','chase-close':'CHASE CLOSE','chase-far':'CHASE FAR','cockpit':'COCKPIT','hood':'HOOD CAM',
+  'front':'FRONT CAM','rear':'REAR CAM','left':'LEFT CAM','right':'RIGHT CAM','wheel':'DRIVER WHEEL CAM','overhead':'OVERHEAD CAM'};
+let camIndex=0;
+const camPos=new THREE.Vector3(0,6,-10), camLook=new THREE.Vector3();
+let camShake=0; // decays each frame; bumped by potholes/hard braking/collisions
+function cycleCamera(){ camIndex=(camIndex+1)%CAM_MODES.length; toast(CAM_LABELS[CAM_MODES[camIndex]]); }
+function toggleLights(){
+  input.headlights=!input.headlights;
+  document.getElementById('chipLights').classList.toggle('on', input.headlights);
+  headL.material.emissiveIntensity = input.headlights?1.8:1.2;
+  headlightSpotL.intensity = input.headlights?1.2:0;
+  headlightSpotR.intensity = input.headlights?1.2:0;
+}
+let is4wd=false;
+function toggle4wd(){
+  is4wd=!is4wd;
+  document.getElementById('chip4wd').classList.toggle('on', is4wd);
+  document.getElementById('btn4wd').classList.toggle('pressed', is4wd);
+  toast(is4wd?'4WD ENGAGED':'2WD MODE');
+}
+const WEATHERS=['sunny','cloudy','rain'];
+let weatherIdx=0;
+function cycleWeather(){
+  weatherIdx=(weatherIdx+1)%WEATHERS.length;
+  applyWeather();
+  toast('WEATHER: '+WEATHERS[weatherIdx].toUpperCase());
+}
+function applyWeather(){
+  const w=WEATHERS[weatherIdx];
+  rain.visible = (w==='rain');
+  scene.fog.near = w==='rain'?25:60;
+  scene.fog.far = w==='rain'?150:260;
+}
+
+/* =========================================================================
+   Day / Night cycle
+   ========================================================================= */
+let timeOfDay = 9.0; // hours, 0-24
+const DAY_SPEED = 0.045; // hours per second (slow drift)
+function updateSky(){
+  const t = timeOfDay;
+  const dayA = smoothstep(5,7,t)*smoothstep(20,18,t); // daylight amount
+  const sunAngle = ((t-6)/24)*Math.PI*2;
+  const r=90;
+  sun.position.set(Math.cos(sunAngle)*r, Math.sin(sunAngle)*r*0.9+8, 30);
+  sun.target.position.copy(car.position);
+  const isNight = t<5.3 || t>19.2;
+  const isDawnDusk = (t>5.3&&t<7.2)||(t>17.5&&t<19.2);
+  let topColor, bottomColor, sunColor, sunI, hemiI, ambI;
+  if(isNight){ topColor=new THREE.Color(0x040714); bottomColor=new THREE.Color(0x121a2c); sunColor=new THREE.Color(0x8fa3d8); sunI=0.12; hemiI=0.12; ambI=0.18; }
+  else if(isDawnDusk){ topColor=new THREE.Color(0x4a6fa8); bottomColor=new THREE.Color(0xf3a86a); sunColor=new THREE.Color(0xffb066); sunI=0.85; hemiI=0.4; ambI=0.05; }
+  else { topColor=new THREE.Color(0x3f83d1); bottomColor=new THREE.Color(0xdcecf4); sunColor=new THREE.Color(0xfff3d8); sunI=1.25; hemiI=0.65; ambI=0.0; }
+  skyMat.uniforms.topColor.value.copy(topColor);
+  skyMat.uniforms.bottomColor.value.copy(bottomColor);
+  const fogColor = bottomColor.clone().lerp(topColor,0.35);
+  scene.fog.color = fogColor;
+  sun.color = sunColor; sun.intensity = sunI;
+  hemi.intensity = hemiI;
+  moonAmbient.intensity = ambI;
+  // sun glow sprite follows the sun and fades below the horizon
+  const sunDir = sun.position.clone().normalize();
+  sunGlow.position.copy(car.position).addScaledVector(sunDir, 180);
+  sunGlow.material.opacity = clamp(sunDir.y*2.2, 0, 1) * (isNight?0.1:1);
+  // village window lights & auto headlights at night
+  houseWindows.forEach(w=>{
+    w.material.emissive.set(isNight?0xffcf7a:0x000000);
+    w.material.emissiveIntensity = isNight?0.9:0.0;
+  });
+  document.getElementById('btnLights').style.opacity = isNight?1:0.6;
+}
+
+/* =========================================================================
+   Missions
+   ========================================================================= */
+const missionMarkerGeo = new THREE.CylinderGeometry(1.1,1.1,3,20,1,true);
+const missionMarkerMat = new THREE.MeshBasicMaterial({color:0xe8b84b, transparent:true, opacity:0.35, side:THREE.DoubleSide});
+const missionMarker = new THREE.Mesh(missionMarkerGeo, missionMarkerMat);
+missionMarker.position.y=1.5;
+scene.add(missionMarker);
+
+let missions=[];
+let missionIndex=0;
+function setupMissions(){
+  missions = [
+    {name:'Reach the tea stall', get pos(){return window.__shopMarker;}, hint:'Follow the road into the village core.'},
+    {name:'Deliver to the temple', get pos(){return window.__templeMarker;}, hint:'Careful on the broken asphalt near the courtyard.'},
+    {name:'Cross the rural bridge', get pos(){return river.position;}, hint:'Slow down — the deck is narrow.'},
+    {name:'Reach the fuel station', get pos(){return window.__fuelStation;}, hint:'Refuel before heading to the farm loop.'},
+    {name:'Return to the garage', get pos(){return window.__garageMarker;}, hint:'Long haul through the mud section — watch your traction.'}
+  ];
+  missionIndex=0;
+  showMission();
+}
+function showMission(){
+  const m = missions[missionIndex];
+  document.getElementById('missionLabel').textContent = 'MISSION '+(missionIndex+1)+'/'+missions.length;
+  document.getElementById('missionText').textContent = m.name+' — '+m.hint;
+  missionMarker.position.x=m.pos.x; missionMarker.position.z=m.pos.z; missionMarker.position.y=m.pos.y+1.5;
+}
+function checkMission(dt){ /* simulator mode: disabled */ }
+
+/* ---------------- Toast ---------------- */
+let toastTimer=null;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'), 1800);
+}
+
+/* =========================================================================
+   Vehicle simulation state
+   ========================================================================= */
+
+const vehicle={
+  pos:new THREE.Vector3(0,0,0),
+  heading:Math.atan2(roadSamples[0].tan.x,roadSamples[0].tan.z),
+  speed:0,
+  steerAngle:0,
+  fuel:82,
+  dirtiness:0,
+  bodyRoll:0, bodyPitch:0, bodyBounceY:RIDE_HEIGHT,
+  gear:'N', gearIndex:0, rpm:850, wheelSlip:0
+};
+{
+  const s=roadSamples[0];
+  vehicle.pos.set(s.pos.x,heightAt(s.pos.x,s.pos.z),s.pos.z);
+}
+const MAX_SPEED=23.0;
+const MAX_REVERSE=6.2;
+const ENGINE_FORCE=8.8;
+const BRAKE_DECEL=16.5;
+const ENGINE_BRAKE=1.9;
+const WHEEL_BASE=3.10;
+let engineRunning=true;
+const STEER_MAX=0.52;
+const GEAR_DATA=[
+  {name:'1',max:8.0,force:12.5},
+  {name:'2',max:15.0,force:9.8},
+  {name:'3',max:22.0,force:7.5},
+  {name:'4',max:30.0,force:5.7},
+  {name:'5',max:38.0,force:4.2},
+  {name:'6',max:48.0,force:3.0}
+];
+function frictionForSurface(surface){
+  if(surface==='asphalt')return 1.0;
+  if(surface==='bridge')return 0.94;
+  if(surface==='dirt')return 0.78;
+  if(surface==='mud')return 0.48;
+  return 0.62;
+}
+function autoGear(){
+  const v=Math.abs(vehicle.speed)*3.6;
+  if(vehicle.speed< -0.15){vehicle.gear='R'; return;}
+  if(Math.abs(vehicle.speed)<0.12 && input.throttle<0.05){vehicle.gear='N';return;}
+  if(Math.abs(v)<0.12 && input.throttle<0.05 && vehicle.gear!=='D'){vehicle.gear='N';return;}
+  if(v>=0 && input.throttle>=0.05 && vehicle.gear==='N') vehicle.gear='1';
+  let idx=0;
+  if(v>8)idx=1; if(v>15)idx=2; if(v>23)idx=3; if(v>32)idx=4; if(v>42)idx=5;
+  const target=GEAR_DATA[idx];
+  if(vehicle.gear!=='R') vehicle.gear=target.name;
+}
+function currentGearData(){
+  return GEAR_DATA.find(g=>g.name===vehicle.gear)||GEAR_DATA[0];
+}
+function updateVehicle(dt){
+  pollKeyboard();
+  if(!engineRunning){ input.throttle=0; input.brake=Math.max(input.brake,0); }
+  const info=terrainInfoAt(vehicle.pos.x,vehicle.pos.z);
+  let grip=frictionForSurface(info.onRoad?info.band:'grass');
+  if(is4wd)grip=Math.min(1.0,grip+0.18);
+  if(WEATHERS[weatherIdx]==='rain')grip*=0.82;
+
+  autoGear();
+  const throttle=engineRunning?input.throttle:0;
+  const brake=input.brake;
+  const v=vehicle.speed;
+  const forward=Math.sin(vehicle.heading), forwardZ=Math.cos(vehicle.heading);
+
+  if(throttle>0.01){
+    if(v< -0.2){
+      vehicle.speed=Math.min(0,v+BRAKE_DECEL*dt);
+    }else{
+      const gd=currentGearData();
+      const speedKmh=v*3.6;
+      const torqueFactor=clamp(1-speedKmh/(gd.max*1.05),0.12,1);
+      const hillFactor=1-clamp((heightAt(vehicle.pos.x+forward*2,vehicle.pos.z+forwardZ*2)-info.height)*0.25,-0.12,0.12);
+      vehicle.speed += gd.force*throttle*torqueFactor*grip*hillFactor*dt;
+    }
+  }else if(brake>0.01){
+    if(v>0.15) vehicle.speed=Math.max(0,v-BRAKE_DECEL*brake*dt);
+    else if(Math.abs(v)<=0.2) vehicle.speed-=5.8*brake*grip*dt;
+  }else{
+    const roll=ENGINE_BRAKE*(0.65+Math.abs(v)/MAX_SPEED);
+    if(v>0)vehicle.speed=Math.max(0,v-roll*dt);
+    else if(v<0)vehicle.speed=Math.min(0,v+roll*dt);
+  }
+
+  if(input.handbrake){
+    vehicle.speed*=Math.pow(0.92,dt*60);
+  }
+
+  const surfaceMax=info.band==='mud'?13:info.band==='dirt'?18:MAX_SPEED;
+  vehicle.speed=clamp(vehicle.speed,-MAX_REVERSE,Math.min(MAX_SPEED,surfaceMax));
+
+  /* Bicycle/Ackermann-like steering. This makes steering depend on wheelbase and speed. */
+  const speedAbs=Math.abs(vehicle.speed);
+  const steerInput=clamp(input.steer,-1,1);
+  // Progressive steering: controllable at low speed and calmer at high speed.
+  const speedKmh=speedAbs*3.6;
+  const speedSteerScale=clamp(1.08-speedKmh/120,0.38,1.08);
+  const targetSteer=steerInput*STEER_MAX*speedSteerScale;
+  // Fast but smooth steering response. When touch input returns to zero,
+  // the actual steering angle also returns to zero instead of staying latched.
+  const steerResponse=steerInput===0 ? 1-Math.pow(0.0000005,dt) : 1-Math.pow(0.00008,dt);
+  vehicle.steerAngle=lerp(vehicle.steerAngle,targetSteer,steerResponse);
+  // Kinematic bicycle model: yaw is generated only while the vehicle is moving.
+  // This prevents a stationary car from spinning in place.
+  const yawRate=Math.tan(vehicle.steerAngle)/WHEEL_BASE*vehicle.speed;
+  vehicle.heading += yawRate*dt;
+  vehicle.heading=(vehicle.heading+Math.PI*4)%(Math.PI*2);
+
+  const fwd=new THREE.Vector3(Math.sin(vehicle.heading),0,Math.cos(vehicle.heading));
+  const oldPos=vehicle.pos.clone();
+  vehicle.pos.addScaledVector(fwd,vehicle.speed*dt);
+
+  /* Basic prop collision with bounce/slide response. */
+  let hit=false;
+  for(let i=0;i<collidables.length;i++){
+    const c=collidables[i];
+    const dx=vehicle.pos.x-c.x,dz=vehicle.pos.z-c.z;
+    const minDist=c.r+0.86;
+    const d2=dx*dx+dz*dz;
+    if(d2<minDist*minDist){
+      const d=Math.sqrt(d2)||0.001;
+      const nx=dx/d,nz=dz/d;
+      vehicle.pos.x=c.x+nx*minDist;
+      vehicle.pos.z=c.z+nz*minDist;
+      vehicle.speed*= -0.18;
+      hit=true;
+      break;
+    }
+  }
+  if(hit){camShake=Math.max(camShake,0.9);playImpact(Math.min(1,Math.abs(v)/8));}
+
+  const groundH=heightAt(vehicle.pos.x,vehicle.pos.z);
+  vehicle.pos.y=groundH;
+
+  /* Independent wheel suspension */
+  const right=new THREE.Vector3(Math.cos(vehicle.heading),0,-Math.sin(vehicle.heading));
+  const wheelHeights=[];
+  wheels.forEach(w=>{
+    const wx=vehicle.pos.x+fwd.x*w.def.x+right.x*w.def.z;
+    const wz=vehicle.pos.z+fwd.z*w.def.x+right.z*w.def.z;
+    wheelHeights.push(heightAt(wx,wz));
+  });
+  const centerGH=groundH;
+  car.position.set(vehicle.pos.x,centerGH,vehicle.pos.z);
+  // Vehicle physics heading is measured along world +Z. The 3D Scorpio mesh was authored
+  // with its nose along local +X, so rotate the visual chassis by -90° to align
+  // the model's FRONT with the actual direction of travel. This fixes the
+  // previous sideways/backwards-looking movement bug.
+  car.rotation.y=vehicle.heading-Math.PI/2;
+
+  wheels.forEach((w,i)=>{
+    const targetOffset=wheelHeights[i]-centerGH;
+    const spring=78,damp=12;
+    const a=-spring*(w.susOffset-targetOffset)-damp*w.susVel;
+    w.susVel+=a*dt; w.susOffset+=w.susVel*dt;
+    w.susOffset=clamp(w.susOffset,-0.34,0.34);
+    w.susPivot.position.y=RIDE_HEIGHT*0.42+w.susOffset;
+    w.spin+=(vehicle.speed/WHEEL_R)*dt;
+    w.mesh.rotation.z=w.spin;
+    if(w.def.steer)w.steerPivot.rotation.y=lerp(w.steerPivot.rotation.y,vehicle.steerAngle,1-Math.pow(0.0002,dt));
+  });
+
+  const frontAvg=(wheels[0].susOffset+wheels[1].susOffset)/2;
+  const rearAvg=(wheels[2].susOffset+wheels[3].susOffset)/2;
+  const leftAvg=(wheels[0].susOffset+wheels[2].susOffset)/2;
+  const rightAvg=(wheels[1].susOffset+wheels[3].susOffset)/2;
+  const targetPitch=clamp((rearAvg-frontAvg)*0.8-(throttle-brake)*0.025,-0.18,0.18);
+  const targetRoll=clamp((leftAvg-rightAvg)*0.9+vehicle.steerAngle*speedAbs/20*0.10,-0.20,0.20);
+  vehicle.bodyPitch=lerp(vehicle.bodyPitch,targetPitch,1-Math.pow(0.0005,dt));
+  vehicle.bodyRoll=lerp(vehicle.bodyRoll,targetRoll,1-Math.pow(0.0005,dt));
+  bodyTilt.position.y=RIDE_HEIGHT*0.55+(frontAvg+rearAvg)*0.25;
+  bodyTilt.rotation.x=-vehicle.bodyPitch;
+  bodyTilt.rotation.z=vehicle.bodyRoll;
+
+  wheel3d.rotation.z=0.1-vehicle.steerAngle*3.2;
+
+  /* Pothole impact */
+  if(Math.abs(vehicle.speed)>4 && Math.abs(oldPos.y-groundH)>0.10)camShake=Math.max(camShake,0.28);
+
+  /* RPM tied to throttle + actual selected gear */
+  const gd=currentGearData();
+  const ratio=vehicle.gear==='R'?2.8:Math.max(1,8.5/(gd.max));
+  const targetRPM=vehicle.gear==='N'
+    ? 780+throttle*2100
+    : clamp(850+Math.abs(vehicle.speed)*ratio*260+throttle*2600,850,6200);
+  vehicle.rpm=lerp(vehicle.rpm,targetRPM,1-Math.pow(0.00001,dt));
+
+  vehicle.fuel=clamp(vehicle.fuel-(0.10+throttle*0.55+(info.band==='mud'?0.25:0))*dt,0,100);
+  const dirty=(info.band==='mud'||info.band==='dirt'||!info.onRoad)&&Math.abs(vehicle.speed)>1;
+  vehicle.dirtiness=clamp(vehicle.dirtiness+(dirty?dt*0.045:-dt*0.008),0,1);
+  fenderMat && fenderMat.color && fenderMat.color.lerpColors
+    ? fenderMat.color.lerpColors(new THREE.Color(0x1c2126),new THREE.Color(0x3a2b18),vehicle.dirtiness)
+    : null;
+  tireMat.color.lerpColors(new THREE.Color(0x101112),new THREE.Color(0x2c2013),vehicle.dirtiness*0.8);
+
+  /* Brake lamps */
+  const braking=brake>0.05||input.handbrake;
+  tailL.material.emissiveIntensity=braking?2.4:0.18;
+  tailR.material.emissiveIntensity=braking?2.4:0.18;
+
+  if(engineOsc){
+    const engineFreq=38+vehicle.rpm*0.025;
+    engineOsc.frequency.setTargetAtTime(engineFreq,actx.currentTime,0.05);
+    engineGain.gain.setTargetAtTime(0.012+throttle*0.055,actx.currentTime,0.08);
+  }
+  updateHUD(info,throttle);
+  // Simulator mode: no mission progression.
+}
+
+function updateHUD(info,throttle){
+  const kmh=Math.abs(vehicle.speed)*3.6;
+  document.getElementById('speedVal').textContent=Math.round(kmh);
+  document.getElementById('gearBadge').textContent=vehicle.gear;
+  document.getElementById('fuelFill').style.width=vehicle.fuel+'%';
+  const rpmPct=clamp((vehicle.rpm-700)/(6500-700)*100,0,100);
+  document.getElementById('rpmFill').style.width=rpmPct+'%';
+  const needle=document.getElementById('rpmNeedle'); if(needle)needle.style.transform='rotate('+(-130+rpmPct*2.6)+'deg)';
+  const speedNeedle=document.getElementById('speedNeedle'); if(speedNeedle)speedNeedle.style.transform='rotate('+(-130+clamp(kmh/180,0,1)*260)+'deg)';
+  const rpmText=document.getElementById('rpmValue'); if(rpmText)rpmText.textContent=Math.round(vehicle.rpm);
+  const gearText=document.getElementById('gearText'); if(gearText)gearText.textContent=vehicle.gear;
+  if(vehicle.fuel<12 && Math.random()<0.004)toast('LOW FUEL — head to the station');
+  // Physical steering wheel follows the simulated steering angle in cockpit view.
+  if(typeof wheel3d!=='undefined') wheel3d.rotation.z = -vehicle.steerAngle*1.85;
+}
+
+
+/* ---------------- Camera update ---------------- */
+let orbitYaw=0, orbitPitch=0.28;
+let camDragging=false, camPointerId=null, lastCamX=0,lastCamY=0;
+canvas.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='touch' && e.clientX>innerWidth*0.28 && e.clientX<innerWidth*0.72 && e.clientY>innerHeight*0.10 && e.clientY<innerHeight*0.78){
+    camDragging=true; camPointerId=e.pointerId; lastCamX=e.clientX; lastCamY=e.clientY;
+    canvas.setPointerCapture(e.pointerId);
+  }
+});
+canvas.addEventListener('pointermove',e=>{
+  if(!camDragging||e.pointerId!==camPointerId)return;
+  const dx=e.clientX-lastCamX,dy=e.clientY-lastCamY;
+  lastCamX=e.clientX;lastCamY=e.clientY;
+  orbitYaw-=dx*0.008; orbitPitch=clamp(orbitPitch-dy*0.005,-0.15,0.85);
+});
+function releaseCam(e){if(e&&e.pointerId!==camPointerId)return;camDragging=false;}
+canvas.addEventListener('pointerup',releaseCam);
+canvas.addEventListener('pointercancel',releaseCam);
+function updateCamera(dt){
+  const mode=CAM_MODES[camIndex];
+  const fwd=new THREE.Vector3(Math.sin(vehicle.heading),0,Math.cos(vehicle.heading));
+  const right=new THREE.Vector3(Math.cos(vehicle.heading),0,-Math.sin(vehicle.heading));
+  const up=new THREE.Vector3(0,1,0);
+  let desiredPos,desiredLook;
+  if(mode==='cockpit'){
+    desiredPos=vehicle.pos.clone().addScaledVector(fwd,.08).addScaledVector(right,-.34).addScaledVector(up,1.54);
+    desiredLook=vehicle.pos.clone().addScaledVector(fwd,25).addScaledVector(right,-.08).addScaledVector(up,1.35);
+  }else if(mode==='hood'){
+    desiredPos=vehicle.pos.clone().addScaledVector(fwd,1.2).addScaledVector(up,1.62);
+    desiredLook=vehicle.pos.clone().addScaledVector(fwd,24).addScaledVector(up,1.2);
+  }else if(mode==='front'){
+    desiredPos=vehicle.pos.clone().addScaledVector(fwd,7.8).addScaledVector(up,2);
+    desiredLook=vehicle.pos.clone().addScaledVector(up,1);
+  }else if(mode==='rear'){
+    desiredPos=vehicle.pos.clone().addScaledVector(fwd,-7.8).addScaledVector(up,2);
+    desiredLook=vehicle.pos.clone().addScaledVector(up,1);
+  }else if(mode==='left'||mode==='right'){
+    desiredPos=vehicle.pos.clone().addScaledVector(right,mode==='left'?-6.5:6.5).addScaledVector(up,2.2);
+    desiredLook=vehicle.pos.clone().addScaledVector(up,1);
+  }else if(mode==='wheel'){
+    desiredPos=vehicle.pos.clone().addScaledVector(fwd,.18).addScaledVector(right,-.48).addScaledVector(up,1.46);
+    desiredLook=vehicle.pos.clone().addScaledVector(fwd,12).addScaledVector(up,1.32);
+  }else if(mode==='overhead'){
+    desiredPos=vehicle.pos.clone().addScaledVector(up,8.8);
+    desiredLook=vehicle.pos.clone().addScaledVector(up,0.2);
+  }else{
+    const dist=mode==='chase-close'?5.4:mode==='chase-far'?14.5:8.8;
+    const height=mode==='chase-close'?2.45:mode==='chase-far'?6.1:3.75;
+    const a=vehicle.heading+orbitYaw;
+    const orbitFwd=new THREE.Vector3(Math.sin(a)*Math.cos(orbitPitch),Math.sin(orbitPitch),Math.cos(a)*Math.cos(orbitPitch));
+    desiredPos=vehicle.pos.clone().addScaledVector(orbitFwd,-dist);
+    desiredPos.y=vehicle.pos.y+height;
+    desiredLook=vehicle.pos.clone().addScaledVector(up,1.05).addScaledVector(fwd,1);
+  }
+  camPos.lerp(desiredPos,1-Math.pow(.00032,dt));
+  camLook.lerp(desiredLook,1-Math.pow(.00055,dt));
+  const floorH=heightAt(camPos.x,camPos.z);
+  if(camPos.y<floorH+.45)camPos.y=floorH+.45;
+  camShake=Math.max(0,camShake-dt*1.8);
+  if(camShake>0){camPos.x+=(Math.random()-.5)*camShake*.12;camPos.y+=(Math.random()-.5)*camShake*.08;}
+  camera.position.copy(camPos); camera.lookAt(camLook);
+  const targetFov=58+clamp(Math.abs(vehicle.speed)*3.6/140,0,1)*5;
+  camera.fov=lerp(camera.fov,targetFov,1-Math.pow(.0008,dt));
+  camera.updateProjectionMatrix();
+}
+/* ---------------- Minimap ---------------- */
+const mmCtx = document.getElementById('minimap').getContext('2d');
+function drawMinimap(){
+  const W=220,H=220;
+  mmCtx.clearRect(0,0,W,H);
+  mmCtx.fillStyle='rgba(30,40,20,0.9)'; mmCtx.fillRect(0,0,W,H);
+  const scale = W/(GROUND_SIZE*0.62);
+  const toXY=(x,z)=>[W/2+x*scale, H/2+z*scale];
+  mmCtx.strokeStyle='#c9b06a'; mmCtx.lineWidth=3; mmCtx.beginPath();
+  roadSamples.forEach((s,i)=>{ const [x,y]=toXY(s.pos.x,s.pos.z); if(i===0) mmCtx.moveTo(x,y); else mmCtx.lineTo(x,y); });
+  mmCtx.stroke();
+  // mission marker
+  if(missionIndex<missions.length){
+    const m=missions[missionIndex].pos; const [x,y]=toXY(m.x,m.z);
+    mmCtx.fillStyle='#e8b84b'; mmCtx.beginPath(); mmCtx.arc(x,y,4,0,7); mmCtx.fill();
+  }
+  // player
+  const [px,py]=toXY(vehicle.pos.x,vehicle.pos.z);
+  mmCtx.save(); mmCtx.translate(px,py); mmCtx.rotate(vehicle.heading);
+  mmCtx.fillStyle='#e14f2f';
+  mmCtx.beginPath(); mmCtx.moveTo(0,-7); mmCtx.lineTo(5,6); mmCtx.lineTo(-5,6); mmCtx.closePath(); mmCtx.fill();
+  mmCtx.restore();
+}
+
+
+/* =========================================================================
+   V8 REALISM LAYER — cinematic mobile-simulator presentation
+   Procedural only: designed to keep the game self-contained and mobile-friendly.
+   ========================================================================= */
+const realism={dust:[],dustTimer:0,roadVibe:0,engineVibe:0,turnVibe:0};
+const dustGroup=new THREE.Group(); scene.add(dustGroup);
+const dustGeo=new THREE.SphereGeometry(0.045,6,5);
+const dustMat=new THREE.MeshBasicMaterial({color:0xc7a56c,transparent:true,opacity:0.0,depthWrite:false});
+for(let i=0;i<90;i++){
+  const m=new THREE.Mesh(dustGeo,dustMat.clone()); m.visible=false; dustGroup.add(m);
+  realism.dust.push({m,v:new THREE.Vector3(),life:0,max:0});
+}
+function emitDust(dt,info){
+  const speed=Math.abs(vehicle.speed);
+  if(speed<2 || info.onRoad && info.band==='asphalt' || WEATHERS[weatherIdx]==='rain') return;
+  realism.dustTimer-=dt;
+  if(realism.dustTimer>0)return;
+  realism.dustTimer=0.035;
+  const fwd=new THREE.Vector3(Math.sin(vehicle.heading),0,Math.cos(vehicle.heading));
+  const right=new THREE.Vector3(Math.cos(vehicle.heading),0,-Math.sin(vehicle.heading));
+  for(const d of realism.dust){
+    if(d.life>0)continue;
+    const side=(Math.random()<0.5?-1:1);
+    d.life=d.max=0.35+Math.random()*0.5;
+    d.m.visible=true;
+    d.m.position.copy(vehicle.pos).addScaledVector(fwd,-1.55-Math.random()*0.6).addScaledVector(right,side*(0.55+Math.random()*0.35));
+    d.m.position.y=heightAt(d.m.position.x,d.m.position.z)+0.08;
+    d.v.copy(fwd).multiplyScalar(-0.25-Math.random()*0.45);
+    d.v.y=0.25+Math.random()*0.55;
+    d.v.addScaledVector(right,(Math.random()-0.5)*0.35);
+    break;
+  }
+}
+function updateDust(dt){
+  for(const d of realism.dust){
+    if(d.life<=0)continue;
+    d.life-=dt; const q=clamp(d.life/d.max,0,1);
+    d.m.position.addScaledVector(d.v,dt);
+    d.v.y*=0.985;
+    const sc=1+(1-q)*3.5; d.m.scale.setScalar(sc);
+    d.m.material.opacity=0.20*q;
+    if(d.life<=0)d.m.visible=false;
+  }
+}
+// Four subtle wheel-contact dust emitters make dirt roads feel physical without expensive particles.
+function updateVehiclePresentation(dt,info){
+  const speed=Math.abs(vehicle.speed);
+  const rough=(info.band==='dirt'||info.band==='mud'||!info.onRoad);
+  const pothole=rough ? Math.min(1,Math.abs(vehicle.speed)*0.035) : 0;
+  realism.roadVibe=lerp(realism.roadVibe,pothole,1-Math.pow(.002,dt));
+  realism.engineVibe=lerp(realism.engineVibe,engineRunning?(vehicle.rpm/6200)*0.012:0,1-Math.pow(.0005,dt));
+  // tiny chassis vibration, intentionally subtle so the camera still feels controlled
+  const vib=(Math.sin(performance.now()*0.037)*realism.roadVibe + Math.sin(performance.now()*0.091)*realism.engineVibe);
+  bodyTilt.position.y += vib;
+  if(camIndex===3 || camIndex===9){
+    camera.rotation.z += clamp(input.steer,-1,1)*speed*0.000015;
+  }
+}
+// Better night driving: headlights softly illuminate the road and the lamps themselves bloom by emissive intensity.
+function updateNightDriving(){
+  const night=timeOfDay<5.4||timeOfDay>19.0;
+  if(night && !input.headlights){
+    headlightSpotL.intensity=0.22; headlightSpotR.intensity=0.22;
+  }else if(input.headlights){
+    headlightSpotL.intensity=1.35; headlightSpotR.intensity=1.35;
+  }else{
+    headlightSpotL.intensity=0; headlightSpotR.intensity=0;
+  }
+  // Reverse lights and brake lamps are handled by updateIndicators().
+}
+
+/* ---------------- Mobile adaptive rendering ---------------- */
+let perfFrames=0, perfTime=0, perfCheck=performance.now();
+function adaptiveRenderQuality(now){
+  perfFrames++;
+  if(now-perfCheck<1800)return;
+  const fps=perfFrames/((now-perfCheck)/1000);
+  perfFrames=0; perfCheck=now;
+  const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if(!mobile)return;
+  const current=renderer.getPixelRatio();
+  let next=current;
+  if(fps<42) next=Math.max(0.9,current-0.15);
+  else if(fps>57) next=Math.min(1.45,current+0.08);
+  if(Math.abs(next-current)>0.01){ renderer.setPixelRatio(next); resize(); }
+}
+
+/* ---------------- Main loop ---------------- */
+let lastT=performance.now(), running=false, paused=false;
+function frame(now){
+  requestAnimationFrame(frame);
+  adaptiveRenderQuality(now);
+  const dt = Math.min(0.05,(now-lastT)/1000); lastT=now;
+  if(!running || paused) return;
+  timeOfDay = (timeOfDay + DAY_SPEED*dt) % 24;
+  updateSky();
+  updateVehicle(dt);
+  const realismInfo=terrainInfoAt(vehicle.pos.x,vehicle.pos.z);
+  emitDust(dt,realismInfo);
+  updateDust(dt);
+  updateVehiclePresentation(dt,realismInfo);
+  updateNightDriving();
+  updateDoors(dt);
+  updateTailgate(dt);
+  updateIndicators(dt);
+  updateWipers(dt);
+  updateEngineAudio();
+  updateCamera(dt);
+  sky.position.set(camera.position.x, 0, camera.position.z); // keep the sky dome centered on the viewer
+  updateSteeringWheelVisual();
+  // cow wander
+  cows.forEach(c=>{ c.userData.wander+=dt; c.position.y = heightAt(c.position.x,c.position.z); });
+  if(rain.visible){
+    const posAttr = rainGeo.attributes.position;
+    for(let i=0;i<rainCount;i++){
+      let y = posAttr.getY(i) - dt*22;
+      if(y<0) y=28+Math.random()*6;
+      posAttr.setY(i,y);
+    }
+    posAttr.needsUpdate=true;
+    rain.position.set(vehicle.pos.x, 0, vehicle.pos.z);
+  }
+  drawMinimap();
+  renderer.render(scene, camera);
+}
+requestAnimationFrame(frame);
+
+/* =========================================================================
+   Boot / Menu flow
+   ========================================================================= */
+function setPaused(p){
+  paused=p;
+  document.getElementById('pauseOverlay').classList.toggle('show',p);
+}
+function showMenu(){
+  document.getElementById('hud').classList.remove('show');
+  document.getElementById('menuScreen').classList.add('show');
+  running=false;
+}
+async function lockLandscape(){
+  try{ if(screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); }catch(e){}
+}
+async function enterImmersiveFullscreen(){
+  // Must be called from the Play button gesture. Fullscreen is supported on most
+  // Android browsers/WebViews; iOS may require the app to be installed to fullscreen.
+  try{
+    const el=document.documentElement;
+    if(document.fullscreenElement) return true;
+    if(el.requestFullscreen){ await el.requestFullscreen({navigationUI:'hide'}); return true; }
+    if(el.webkitRequestFullscreen){ el.webkitRequestFullscreen(); return true; }
+  }catch(e){ console.log('Fullscreen unavailable:',e); }
+  return false;
+}
+function syncImmersiveLayout(){
+  const fs=!!(document.fullscreenElement||document.webkitFullscreenElement);
+  document.body.classList.toggle('immersive',fs);
+  setTimeout(()=>{ resize(); },80);
+}
+document.addEventListener('fullscreenchange',syncImmersiveLayout);
+document.addEventListener('webkitfullscreenchange',syncImmersiveLayout);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden && running) paused=true; });
+
+async function startGame(){
+  await enterImmersiveFullscreen();
+  await lockLandscape();
+  ensureAudio(); startEngine(); applyWeather(); toggle4wdReset();
+  document.getElementById('menuScreen').classList.remove('show');
+  document.getElementById('hud').classList.add('show');
+  missionIndex=missions.length;
+  missionMarker.visible=false;
+  running=true;
+  ensureAudio(); startEngine(); paused=false;
+  toast('SIMULATOR MODE · FREE ROAM');
+}
+function toggle4wdReset(){ /* ensure clean state each start */ }
+
+document.getElementById('btnPlay').addEventListener('click', startGame);
+document.getElementById('btnHowTo').addEventListener('click', ()=>{
+  toast('Drag wheel to steer · pedals for throttle/brake · swipe center to look around · Play enters fullscreen');
+});
+
+/* ---------------- Boot sequence ---------------- */
+resize();
+updateSky();
+let bootPct=0;
+const bootFill=document.getElementById('bootFill'), bootMsg=document.getElementById('bootMsg');
+const bootMsgs=['Grading village roads...','Placing potholes...','Growing coconut trees...','Wiring electricity poles...','Warming up the engine...'];
+const bootTimer=setInterval(()=>{
+  bootPct+=8+Math.random()*14;
+  bootFill.style.width=Math.min(100,bootPct)+'%';
+  bootMsg.textContent = bootMsgs[Math.min(bootMsgs.length-1, Math.floor(bootPct/22))];
+  if(bootPct>=100){
+    clearInterval(bootTimer);
+    setTimeout(()=>{
+      document.getElementById('bootScreen').style.display='none';
+      document.getElementById('menuScreen').classList.add('show');
+    },250);
+  }
+},220);
+
+})();
+</script>
+</body>
+</html>
