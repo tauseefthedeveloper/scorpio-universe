@@ -1140,7 +1140,8 @@ const rearHandle=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.08,0.06
 // Rear-mounted spare wheel and center badge: gives the SUV a much more believable silhouette.
 const spareMount=addMesh(bodyTilt,new THREE.Mesh(new THREE.CylinderGeometry(.50,.50,.16,28),trimMat));
 spareMount.rotation.x=Math.PI/2; spareMount.position.set(-2.48,.86,0);
-const spareTire=addMesh(bodyTilt,new THREE.Mesh(new THREE.TorusGeometry(.43,.085,10,30),tireMat));
+const spareTireMat=new THREE.MeshStandardMaterial({color:0x101112,roughness:0.94});
+const spareTire=addMesh(bodyTilt,new THREE.Mesh(new THREE.TorusGeometry(.43,.085,10,30),spareTireMat));
 spareTire.rotation.x=Math.PI/2; spareTire.position.set(-2.57,.86,0);
 const badge=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.22,.07,.44),chromeMat),false,false); badge.position.set(2.47,1.37,0);
 
