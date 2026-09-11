@@ -215,6 +215,91 @@ body{overflow:hidden;}
 .ctrlBtn.active{outline:2px solid var(--accent);box-shadow:0 0 14px rgba(232,184,75,.32)}
 @media (max-width:700px){#extraVehicleControls{right:6px;bottom:78px;max-width:245px}.hint{display:none}}
 @media (orientation:portrait){#extraVehicleControls{display:none}}
+/* ===== V12 MOBILE UI: strict non-overlap zones ===== */
+#missionBox,#cameraHint{display:none!important;}
+#topBar{top:10px;left:10px;right:10px;height:42px;}
+#topRightCluster{margin-left:auto;}
+#minimapWrap{top:10px;right:58px;width:68px;height:68px;z-index:12;}
+#clusterBottomLeft{display:none!important;}
+
+#speedCluster{
+  right:50%; bottom:10px; transform:translateX(50%);
+  z-index:20; gap:5px;
+}
+#speedBox{
+  width:142px; min-width:142px;
+  grid-template-columns:72px 44px;
+  padding:4px; gap:3px 5px;
+  border-radius:13px;
+}
+.gaugeDial{width:72px;height:72px;}
+.dialValue span{font-size:17px;}
+#gearBadge{width:34px;height:34px;font-size:13px;margin-bottom:3px;}
+.gearReadout span{font-size:18px;}
+.rpmReadout span{font-size:9px;}
+
+#wheelWrap{
+  left:10px; bottom:10px;
+  width:clamp(104px,25vw,132px);
+  height:clamp(104px,25vw,132px);
+  z-index:30;
+}
+#pedalCluster{
+  right:10px; bottom:10px;
+  gap:6px; z-index:30;
+}
+.pedal{width:48px;height:92px;min-height:70px;border-radius:10px 10px 6px 6px;}
+.pedal .pedalLbl{font-size:7px;}
+
+#btnHand{
+  right:122px; bottom:108px;
+  width:58px;height:29px;
+  z-index:31;font-size:8px;
+}
+
+/* Secondary vehicle controls live in a dedicated upper-right dock. */
+#smallCtrlRow{
+  left:auto; right:10px; top:86px; bottom:auto;
+  transform:none;
+  width:154px;
+  display:grid;
+  grid-template-columns:repeat(4,35px);
+  gap:5px;
+  z-index:32;
+}
+.smallBtn{
+  width:35px;height:35px;
+  border-radius:9px;
+  font-size:12px;
+}
+
+#extraVehicleControls{
+  right:10px; top:132px; bottom:auto;
+  width:154px; max-width:none;
+  display:grid;
+  grid-template-columns:repeat(3,48px);
+  gap:5px;
+  justify-content:end;
+  z-index:32;
+}
+#extraVehicleControls .ctrlBtn{
+  min-width:48px;width:48px;height:32px;
+  border-radius:8px;
+  padding:2px 3px;
+  font-size:7px;
+}
+
+/* Keep all controls inside the landscape safe area on short phones. */
+@media(max-height:420px){
+  #minimapWrap{width:62px;height:62px;right:54px;}
+  #smallCtrlRow{top:76px;right:8px;transform:scale(.88);transform-origin:top right;}
+  #extraVehicleControls{top:116px;right:8px;transform:scale(.88);transform-origin:top right;}
+  #wheelWrap{width:112px;height:112px;bottom:8px;left:8px;}
+  #pedalCluster{right:8px;bottom:8px;}
+  .pedal{height:82px;width:45px;}
+  #btnHand{right:112px;bottom:96px;}
+  #speedCluster{bottom:8px;transform:translateX(50%) scale(.88);transform-origin:bottom center;}
+}
 </style>
 </head>
 <body>
@@ -227,6 +312,7 @@ body{overflow:hidden;}
 <div id="bootScreen">
   <h1>SCORPIO UNIVERSE</h1>
   <div class="tag">Own the Road. Conquer the Village.</div>
+  <div class="tag">Design and developed by TAUSEEF KHAN</div>
   <div id="bootBar"><div id="bootFill"></div></div>
   <div id="bootMsg">Loading village...</div>
 </div>
@@ -234,7 +320,7 @@ body{overflow:hidden;}
 <div id="menuScreen">
   <h1>SCORPIO UNIVERSE</h1>
   <div class="tag">OWN THE ROAD · CONQUER THE VILLAGE</div>
-  <div class="tag">Design and developed by <span style="color:red;">TAUSEEF KHAN</span></div>
+  <div class="tag">Design and developed by TAUSEEF KHAN</div>
   <button class="menuBtn primary" id="btnPlay">PLAY</button>
   <button class="menuBtn" id="btnHowTo">HOW TO DRIVE</button>
 </div>
@@ -242,7 +328,7 @@ body{overflow:hidden;}
 <div id="hud">
   <div id="cameraHint">DRAG CENTER AREA · CAMERA ORBIT</div>
   <div id="topBar">
-    <div id="missionBox" class="hud-panel"><b id="missionLabel">SCORPIO S11 · DRIVING SIMULATOR</b><span id="missionText">FREE ROAM · Rural roads only · Traffic OFF</span></div>
+    <div id="missionBox" class="hud-panel"><b id="missionLabel">SCORPIO CLASSIC S11 · FREE ROAM</b><span id="missionText">Indian village roads · Traffic OFF</span></div>
     <div id="topRightCluster">
       <div class="iconBtn hud-panel" id="btnPause">⏸</div>
     </div>
@@ -446,7 +532,8 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 // Filmic tone mapping + slightly boosted exposure for punchier, less "flat" arcade-racer colors
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.08;
+renderer.toneMappingExposure = 1.12;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 if('useLegacyLights' in renderer) renderer.useLegacyLights=false;
 renderer.outputEncoding = THREE.sRGBEncoding;
 // Cheap cinematic color grade (contrast/saturation) — no post-processing pipeline needed
@@ -993,7 +1080,7 @@ scene.add(car);
 const bodyTilt = new THREE.Group();
 car.add(bodyTilt);
 
-const paintMat = new THREE.MeshStandardMaterial({color:0x20242a, metalness:0.72, roughness:0.24});
+const paintMat = new THREE.MeshStandardMaterial({color:0x252a2f, metalness:0.78, roughness:0.20});
 const paintDarkMat = new THREE.MeshStandardMaterial({color:0x0b0d10, metalness:0.45, roughness:0.42});
 const trimMat = new THREE.MeshStandardMaterial({color:0x111315, roughness:0.72, metalness:0.15});
 const glassMat = new THREE.MeshStandardMaterial({color:0x0b151c, metalness:0.15, roughness:0.08, transparent:true, opacity:0.88});
@@ -1065,15 +1152,16 @@ function sideWindow(points,z){
   m.position.z=z; m.rotation.y=(z>0?0:Math.PI);
   return addMesh(bodyTilt,m,false,false);
 }
-const frontSideWin=[[-1.20,1.47],[-1.03,1.82],[-0.30,1.91],[-0.30,1.50]];
-const rearSideWin=[[-0.20,1.50],[-0.20,1.91],[0.73,1.90],[1.23,1.75],[1.43,1.49]];
+// Scorpio Classic-style side glazing: larger front door glass, shorter rear quarter glass.
+const frontSideWin=[[0.18,1.50],[0.34,1.86],[1.02,1.91],[1.39,1.74],[1.48,1.49]];
+const rearSideWin=[[-1.24,1.49],[-1.08,1.82],[-0.35,1.91],[0.06,1.83],[0.06,1.50]];
 [-1,1].forEach(s=>{
   sideWindow(frontSideWin,s*0.875);
   sideWindow(rearSideWin,s*0.875);
 });
 
 /* Window pillars */
-[-0.27,0.82].forEach(x=>{
+[-0.02,0.28].forEach(x=>{
   [-1,1].forEach(s=>{
     const p=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.075,0.55,0.045),trimMat));
     p.position.set(x,1.73,s*0.89); p.rotation.z=(x<0?0.04:-0.10);
@@ -1127,6 +1215,77 @@ function lampCluster(z){
   led.position.set(2.36,1.02,z-0.03);
 }
 lampCluster(0.62); lampCluster(-0.62);
+
+/* Premium S11 front details: projector rings, LED eyebrows, fog lamps, bonnet scoop and lower intake. */
+function addProjector(z){
+  const ringMat=new THREE.MeshStandardMaterial({color:0xcfd6dc,metalness:.65,roughness:.18,emissive:0x9fb8c7,emissiveIntensity:.08});
+  const ring=addMesh(bodyTilt,new THREE.Mesh(new THREE.TorusGeometry(.105,.018,10,28),ringMat),false,false);
+  ring.rotation.y=Math.PI/2; ring.position.set(2.365,1.22,z);
+  const lens=addMesh(bodyTilt,new THREE.Mesh(new THREE.SphereGeometry(.072,16,10),whiteLampMat),false,false);
+  lens.scale.set(.55,.75,.55); lens.position.set(2.39,1.22,z);
+}
+addProjector(.62); addProjector(-.62);
+
+[-1,1].forEach(s=>{
+  const eyebrow=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.30,.028,.055),whiteLampMat),false,false);
+  eyebrow.position.set(2.37,1.39,s*.62);
+  eyebrow.rotation.z=s*.05;
+  const fogOuter=addMesh(bodyTilt,new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.07,16),trimMat),false,false);
+  fogOuter.rotation.x=Math.PI/2; fogOuter.position.set(2.28,.72,s*.70);
+  const fog=addMesh(bodyTilt,new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,.075,16),whiteLampMat),false,false);
+  fog.rotation.x=Math.PI/2; fog.position.set(2.32,.72,s*.70);
+});
+
+const lowerIntake=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.10,.20,1.20),claddingMat),false,false);
+lowerIntake.position.set(2.40,.68,0);
+const scoopBase=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.68,.09,.72),paintDarkMat),false,false);
+scoopBase.position.set(1.58,1.22,0);
+const scoopTop=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.48,.055,.48),claddingMat),false,false);
+scoopTop.position.set(1.62,1.29,0);
+
+/* Side mirrors, door handles, S11-style side cladding and running board. */
+[-1,1].forEach(s=>{
+  const mirror=new THREE.Group(); bodyTilt.add(mirror);
+  const shell=addMesh(mirror,new THREE.Mesh(new THREE.BoxGeometry(.22,.15,.30),paintDarkMat),true,true);
+  shell.position.set(1.00,1.58,s*1.01);
+  const glass=addMesh(mirror,new THREE.Mesh(new THREE.BoxGeometry(.18,.08,.20),glassMat),false,false);
+  glass.position.set(1.08,1.59,s*1.025);
+  const indicator=addMesh(mirror,new THREE.Mesh(new THREE.BoxGeometry(.045,.025,.13),amberMat),false,false);
+  indicator.position.set(1.18,1.54,s*1.03);
+});
+
+[1.00,.15,-.70].forEach(x=>{
+  [-1,1].forEach(s=>{
+    const h=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.17,.035,.035),chromeMat),false,false);
+    h.position.set(x,1.27,s*.975);
+  });
+});
+
+[-1,1].forEach(s=>{
+  const sideTrim=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(2.65,.08,.055),trimMat),false,false);
+  sideTrim.position.set(-.10,.70,s*.975);
+  const step=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(2.70,.11,.16),claddingMat));
+  step.position.set(-.10,.39,s*1.02);
+  const stepTop=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(2.35,.035,.13),trimMat),false,false);
+  stepTop.position.set(-.10,.46,s*1.02);
+});
+
+/* S11 side badge / fender garnish. */
+[-1,1].forEach(s=>{
+  const garnish=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.12,.34,.035),chromeMat),false,false);
+  garnish.position.set(1.02,1.00,s*.992);
+  garnish.rotation.z=.12;
+});
+
+/* Rear vertical tower lamps and high-mounted stop lamp. */
+[-1,1].forEach(s=>{
+  const tower=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.12,.62,.20),redMat),false,false);
+  tower.position.set(-2.34,1.20,s*.79);
+  const clear=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.125,.13,.205),whiteLampMat),false,false);
+  clear.position.set(-2.405,1.02,s*.79);
+});
+const highStop=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.055,.09,.46),redMat),false,false);
+highStop.position.set(-1.92,1.91,0);
 
 /* Indicators */
 const indL=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.06,0.08,0.22),amberMat),false,false); indL.position.set(2.40,0.88,0.82);
