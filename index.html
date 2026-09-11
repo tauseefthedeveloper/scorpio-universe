@@ -636,6 +636,10 @@ const vegRoot = new THREE.Group(); scene.add(vegRoot);
   }
 })();
 
+/* ---------------- Shared materials ---------------- */
+// Declared before village construction because makeHouse() uses chromeMat during scene boot.
+const chromeMat = new THREE.MeshStandardMaterial({color:0xd8dde2, metalness:0.92, roughness:0.16});
+
 /* ---------------- Village props ---------------- */
 const villageRoot = new THREE.Group(); scene.add(villageRoot);
 function pointOnRoad(t, lateral, yLift){
@@ -992,7 +996,6 @@ const paintMat = new THREE.MeshStandardMaterial({color:0x20242a, metalness:0.72,
 const paintDarkMat = new THREE.MeshStandardMaterial({color:0x0b0d10, metalness:0.45, roughness:0.42});
 const trimMat = new THREE.MeshStandardMaterial({color:0x111315, roughness:0.72, metalness:0.15});
 const glassMat = new THREE.MeshStandardMaterial({color:0x0b151c, metalness:0.15, roughness:0.08, transparent:true, opacity:0.88});
-const chromeMat = new THREE.MeshStandardMaterial({color:0xd8dde2, metalness:0.92, roughness:0.16});
 const bumperMat = new THREE.MeshStandardMaterial({color:0x171a1d, roughness:0.8, metalness:0.12});
 const claddingMat = new THREE.MeshStandardMaterial({color:0x090b0d, roughness:0.9, metalness:0.05});
 const fenderMat = paintMat;
