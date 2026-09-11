@@ -300,6 +300,54 @@ body{overflow:hidden;}
   #btnHand{right:112px;bottom:96px;}
   #speedCluster{bottom:8px;transform:translateX(50%) scale(.88);transform-origin:bottom center;}
 }
+
+/* ===== V13 SIMULATOR UI / NON-OVERLAP LAYOUT ===== */
+#missionBox,#cameraHint{display:none!important;}
+#topBar{top:8px;left:auto;right:8px;width:42px;height:42px;z-index:60;}
+#topRightCluster{margin:0;}
+#minimapWrap{top:8px;left:8px;right:auto;width:78px;height:78px;z-index:45;}
+#clusterBottomLeft{display:none!important;}
+#hud{font-synthesis:none;}
+#controls{z-index:40;}
+#wheelWrap{left:10px;bottom:8px;width:clamp(138px,28vw,158px);height:clamp(138px,28vw,158px);z-index:55;}
+#pedalCluster{right:10px;bottom:8px;gap:7px;z-index:55;}
+.pedal{width:54px;height:104px;}
+#btnHand{right:122px;bottom:120px;width:58px;height:31px;z-index:56;}
+#speedCluster{right:50%;bottom:8px;transform:translateX(50%);z-index:55;}
+#speedBox{width:148px;min-width:148px;}
+#gearBadge{display:none;}
+#smallCtrlRow{position:absolute;right:56px;top:8px;left:auto;bottom:auto;width:158px;display:grid;grid-template-columns:repeat(4,36px);gap:5px;justify-content:end;z-index:56;}
+.smallBtn{width:36px;height:32px;border-radius:8px;font-size:7px;font-weight:800;letter-spacing:.03em;}
+#lightControls{position:absolute;right:10px;bottom:164px;width:164px;display:grid;grid-template-columns:repeat(4,38px);gap:5px;justify-content:end;z-index:56;pointer-events:auto;}
+.lightBtn{position:static!important;width:38px;height:32px;border-radius:8px;font-size:7px;font-weight:900;letter-spacing:.02em;}
+#doorControls{position:absolute;right:10px;top:102px;width:164px;display:grid;grid-template-columns:repeat(4,38px);gap:5px;justify-content:end;z-index:56;pointer-events:auto;}
+.doorBtn{position:static!important;width:38px;height:32px;border-radius:8px;font-size:7px;font-weight:900;}
+.doorBtn.wide{grid-column:span 2;width:81px;}
+#gearSelector{position:absolute;left:50%;bottom:112px;transform:translateX(-50%);display:flex;gap:6px;padding:5px;border-radius:11px;background:rgba(20,16,12,.78);border:1px solid var(--panel-line);backdrop-filter:blur(5px);z-index:57;pointer-events:auto;}
+.gearBtn{width:36px;height:32px;border:1px solid rgba(216,201,163,.22);border-radius:8px;background:rgba(10,10,10,.86);color:#ddd;font-weight:900;font-size:12px;}
+.gearBtn.active{background:linear-gradient(180deg,var(--rust),var(--rust-dark));color:#fff;box-shadow:0 0 10px rgba(193,82,31,.28);}
+.gearBtn:disabled{opacity:.38;}
+#toast{top:32%;z-index:80;}
+.hint{display:none!important;}
+@media(max-height:430px){
+  #minimapWrap{width:62px;height:62px;top:8px;left:8px;}
+  #smallCtrlRow{right:52px;top:7px;transform:scale(.88);transform-origin:top right;}
+  #doorControls{top:83px;right:8px;transform:scale(.88);transform-origin:top right;}
+  #lightControls{right:8px;bottom:145px;transform:scale(.88);transform-origin:bottom right;}
+  #gearSelector{bottom:96px;transform:translateX(-50%) scale(.9);transform-origin:bottom center;}
+  #wheelWrap{width:128px;height:128px;bottom:7px;left:7px;}
+  #pedalCluster{right:7px;bottom:7px;}
+  .pedal{width:47px;height:88px;}
+  #btnHand{right:105px;bottom:101px;transform:scale(.9);transform-origin:bottom right;}
+  #speedCluster{bottom:7px;transform:translateX(50%) scale(.88);transform-origin:bottom center;}
+}
+@media(max-width:540px){
+  #smallCtrlRow{right:48px;width:144px;grid-template-columns:repeat(4,33px);gap:4px;}
+  .smallBtn{width:33px;height:29px;font-size:6px;}
+  #doorControls,#lightControls{width:146px;grid-template-columns:repeat(4,34px);gap:4px;}
+  .doorBtn,.lightBtn{width:34px;height:29px;font-size:6px;}
+  .doorBtn.wide{width:72px;}
+}
 </style>
 </head>
 <body>
@@ -312,7 +360,6 @@ body{overflow:hidden;}
 <div id="bootScreen">
   <h1>SCORPIO UNIVERSE</h1>
   <div class="tag">Own the Road. Conquer the Village.</div>
-  <div class="tag">Design and developed by TAUSEEF KHAN</div>
   <div id="bootBar"><div id="bootFill"></div></div>
   <div id="bootMsg">Loading village...</div>
 </div>
@@ -320,7 +367,6 @@ body{overflow:hidden;}
 <div id="menuScreen">
   <h1>SCORPIO UNIVERSE</h1>
   <div class="tag">OWN THE ROAD · CONQUER THE VILLAGE</div>
-  <div class="tag">Design and developed by TAUSEEF KHAN</div>
   <button class="menuBtn primary" id="btnPlay">PLAY</button>
   <button class="menuBtn" id="btnHowTo">HOW TO DRIVE</button>
 </div>
@@ -381,21 +427,31 @@ body{overflow:hidden;}
     </div>
     <div class="ctrlBtn" id="btnHand">HAND<br>BRAKE</div>
     <div id="smallCtrlRow">
-      <div class="ctrlBtn smallBtn" id="btnEngine">ENGINE</div>
-      <div class="ctrlBtn smallBtn" id="btnLights">💡</div>
-      <div class="ctrlBtn smallBtn" id="btnHorn">📯</div>
-      <div class="ctrlBtn smallBtn" id="btnCam">🎥</div>
-      <div class="ctrlBtn smallBtn" id="btn4wd">4x4</div>
-      <div class="ctrlBtn smallBtn" id="btnWeather">☁</div>
-      <div class="ctrlBtn smallBtn" id="btnWiper">🧹</div>
+      <div class="ctrlBtn smallBtn" id="btnEngine">START</div>
+      <div class="ctrlBtn smallBtn" id="btnCam">CAM</div>
+      <div class="ctrlBtn smallBtn" id="btnHorn">HORN</div>
+      <div class="ctrlBtn smallBtn" id="btn4wd">4WD</div>
+      <div class="ctrlBtn smallBtn" id="btnWeather">RAIN</div>
+      <div class="ctrlBtn smallBtn" id="btnWiper">WIPER</div>
       <div class="ctrlBtn smallBtn" id="btnSeatbelt">BELT</div>
     </div>
-    <div id="extraVehicleControls">
-      <div class="ctrlBtn" id="btnLeftInd">◀ IND</div>
-      <div class="ctrlBtn" id="btnHazard">⚠ HAZ</div>
-      <div class="ctrlBtn" id="btnRightInd">IND ▶</div>
-      <div class="ctrlBtn" id="btnDoors">🚪 DOORS</div>
-      <div class="ctrlBtn" id="btnTailgate">▣ GATE</div>
+    <div id="lightControls" aria-label="Vehicle lights">
+      <div class="ctrlBtn lightBtn" id="btnLights">HEAD</div>
+      <div class="ctrlBtn lightBtn" id="btnLeftInd">L IND</div>
+      <div class="ctrlBtn lightBtn" id="btnHazard">HAZ</div>
+      <div class="ctrlBtn lightBtn" id="btnRightInd">R IND</div>
+    </div>
+    <div id="doorControls" aria-label="Doors">
+      <div class="ctrlBtn doorBtn" id="btnDoorFL">FL</div>
+      <div class="ctrlBtn doorBtn" id="btnDoorFR">FR</div>
+      <div class="ctrlBtn doorBtn" id="btnDoorRL">RL</div>
+      <div class="ctrlBtn doorBtn" id="btnDoorRR">RR</div>
+      <div class="ctrlBtn doorBtn wide" id="btnTailgate">TAIL</div>
+    </div>
+    <div id="gearSelector" aria-label="Gear selector">
+      <button class="gearBtn" id="gearR" type="button">R</button>
+      <button class="gearBtn active" id="gearN" type="button">N</button>
+      <button class="gearBtn" id="gearD" type="button">D</button>
     </div>
   </div>
 </div>
@@ -530,6 +586,7 @@ const initialDpr = Math.min(window.devicePixelRatio || 1, /Android|iPhone|iPad|i
 renderer.setPixelRatio(initialDpr);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.physicallyCorrectLights = true;
 // Filmic tone mapping + slightly boosted exposure for punchier, less "flat" arcade-racer colors
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.12;
@@ -1079,11 +1136,13 @@ const car = new THREE.Group();
 scene.add(car);
 const bodyTilt = new THREE.Group();
 car.add(bodyTilt);
+// Proportional correction to the official S11 footprint: 4456 mm length / 1820 mm width.
+bodyTilt.scale.set(0.945,1.0,0.948);
 
-const paintMat = new THREE.MeshStandardMaterial({color:0x252a2f, metalness:0.78, roughness:0.20});
+const paintMat = new THREE.MeshPhysicalMaterial({color:0x252a2f, metalness:0.72, roughness:0.18, clearcoat:0.55, clearcoatRoughness:0.12});
 const paintDarkMat = new THREE.MeshStandardMaterial({color:0x0b0d10, metalness:0.45, roughness:0.42});
 const trimMat = new THREE.MeshStandardMaterial({color:0x111315, roughness:0.72, metalness:0.15});
-const glassMat = new THREE.MeshStandardMaterial({color:0x0b151c, metalness:0.15, roughness:0.08, transparent:true, opacity:0.88});
+const glassMat = new THREE.MeshPhysicalMaterial({color:0x08141b, metalness:0.05, roughness:0.06, transparent:true, opacity:0.9, clearcoat:0.65, clearcoatRoughness:0.08});
 const bumperMat = new THREE.MeshStandardMaterial({color:0x171a1d, roughness:0.8, metalness:0.12});
 const claddingMat = new THREE.MeshStandardMaterial({color:0x090b0d, roughness:0.9, metalness:0.05});
 const fenderMat = paintMat;
@@ -1091,7 +1150,7 @@ const redMat = new THREE.MeshStandardMaterial({color:0x190204, emissive:0xff0505
 const amberMat = new THREE.MeshStandardMaterial({color:0x3a1800, emissive:0xff8a00, emissiveIntensity:0.2});
 const whiteLampMat = new THREE.MeshStandardMaterial({color:0xffffff, emissive:0xfff5d0, emissiveIntensity:0.25});
 
-const CAR_LEN=4.72, CAR_WID=1.92, CAR_H=1.86, RIDE_HEIGHT=0.62;
+const CAR_LEN=4.456, CAR_WID=1.82, CAR_H=1.995, RIDE_HEIGHT=0.62;
 
 function addMesh(g, mesh, cast=true, receive=true){
   mesh.castShadow=cast; mesh.receiveShadow=receive; g.add(mesh); return mesh;
@@ -1351,11 +1410,17 @@ const tailPanel=addMesh(tailgate,new THREE.Mesh(new THREE.BoxGeometry(0.06,1.02,
 function toggleTailgate(){ tailgateOpen=!tailgateOpen; toast(tailgateOpen?'TAILGATE OPEN':'TAILGATE CLOSED'); }
 function updateTailgate(dt){ const target=tailgateOpen?-1.15:0; tailgateAnim=lerp(tailgateAnim,target,1-Math.pow(.0007,dt)); tailgate.rotation.z=tailgateAnim; }
 
+function toggleDoor(name){
+  if(Math.abs(vehicle.speed)>0.25){ toast('STOP VEHICLE TO OPEN DOOR'); return; }
+  doorState[name]=!doorState[name];
+  const el=document.getElementById('btnDoor'+name); if(el)el.classList.toggle('active',doorState[name]);
+  toast(name+' DOOR '+(doorState[name]?'OPEN':'CLOSED'));
+}
 function toggleDoors(){
-  const target=!(doorState.FL||doorState.FR||doorState.RL||doorState.RR);
-  Object.keys(doorState).forEach(k=>setDoorOpen(k,target));
-  document.getElementById('btnDoors').classList.toggle('active',target);
-  toast(target?'DOORS OPEN':'DOORS CLOSED');
+  if(Math.abs(vehicle.speed)>0.25){ toast('STOP VEHICLE TO OPEN DOORS'); return; }
+  const anyOpen=Object.values(doorState).some(Boolean);
+  Object.keys(doorState).forEach(k=>{doorState[k]=!anyOpen; const el=document.getElementById('btnDoor'+k); if(el)el.classList.toggle('active',doorState[k]);});
+  toast(anyOpen?'ALL DOORS CLOSED':'ALL DOORS OPEN');
 }
 function updateDoors(dt){
   Object.keys(doorGroups).forEach(k=>{
@@ -1465,7 +1530,7 @@ function updateIndicators(dt){
 }
 
 /* Wheels */
-const WHEEL_R=0.43, WHEEL_W=0.30;
+const WHEEL_R=0.39, WHEEL_W=0.29;
 const tireMat=new THREE.MeshStandardMaterial({color:0x101112,roughness:0.94});
 const treadMat=new THREE.MeshStandardMaterial({color:0x050607,roughness:1});
 const rimMat=new THREE.MeshStandardMaterial({color:0xbfc4ca,metalness:0.88,roughness:0.22});
@@ -1487,8 +1552,8 @@ function makeWheelMesh(){
   return g;
 }
 const wheelDefs=[
- {name:'FL',x:1.55,z:0.99,steer:true},{name:'FR',x:1.55,z:-0.99,steer:true},
- {name:'RL',x:-1.55,z:0.99,steer:false},{name:'RR',x:-1.55,z:-0.99,steer:false}
+ {name:'FL',x:1.34,z:0.91,steer:true},{name:'FR',x:1.34,z:-0.91,steer:true},
+ {name:'RL',x:-1.34,z:0.91,steer:false},{name:'RR',x:-1.34,z:-0.91,steer:false}
 ];
 const wheels=wheelDefs.map(def=>{
   const susPivot=new THREE.Group(); susPivot.position.set(def.x,0,def.z);
@@ -1543,8 +1608,14 @@ document.getElementById('btnSeatbelt').addEventListener('click', toggleSeatbelt)
 document.getElementById('btnLeftInd').addEventListener('click', ()=>toggleIndicator('left'));
 document.getElementById('btnRightInd').addEventListener('click', ()=>toggleIndicator('right'));
 document.getElementById('btnHazard').addEventListener('click', toggleHazard);
-document.getElementById('btnDoors').addEventListener('click', toggleDoors);
+document.getElementById('btnDoorFL').addEventListener('click', ()=>toggleDoor('FL'));
+document.getElementById('btnDoorFR').addEventListener('click', ()=>toggleDoor('FR'));
+document.getElementById('btnDoorRL').addEventListener('click', ()=>toggleDoor('RL'));
+document.getElementById('btnDoorRR').addEventListener('click', ()=>toggleDoor('RR'));
 document.getElementById('btnTailgate').addEventListener('click', toggleTailgate);
+document.getElementById('gearR').addEventListener('click', ()=>setDriveMode('R'));
+document.getElementById('gearN').addEventListener('click', ()=>setDriveMode('N'));
+document.getElementById('gearD').addEventListener('click', ()=>setDriveMode('D'));
 document.getElementById('btnPause').addEventListener('click', ()=>setPaused(true));
 document.getElementById('btnResume').addEventListener('click', ()=>setPaused(false));
 document.getElementById('btnQuit').addEventListener('click', ()=>{ setPaused(false); showMenu(); });
@@ -1565,7 +1636,7 @@ function setTouchSteerFromWheel(){
   let n=wheelState.rot/WHEEL_LOCK_DEG;
   // Small dead-zone prevents tiny finger jitter from making the car wander.
   if(Math.abs(n)<0.035) n=0;
-  input._touchSteer=clamp(n,-1,1);
+  input._touchSteer=clamp(-n,-1,1);
 }
 
 wheelWrap.addEventListener('pointerdown',(e)=>{
@@ -1841,13 +1912,15 @@ const vehicle={
   vehicle.pos.set(s.pos.x,heightAt(s.pos.x,s.pos.z),s.pos.z);
 }
 const MAX_SPEED=23.0;
-const MAX_REVERSE=6.2;
+// 23 m/s is ~83 km/h, intentionally tuned for a village simulator rather than an arcade racer.
+const MAX_REVERSE=8.4;
 const ENGINE_FORCE=8.8;
 const BRAKE_DECEL=16.5;
 const ENGINE_BRAKE=1.9;
-const WHEEL_BASE=3.10;
+const WHEEL_BASE=2.68;
 let engineRunning=true;
 const STEER_MAX=0.52;
+setTimeout(updateGearButtons,0);
 const GEAR_DATA=[
   {name:'1',max:8.0,force:12.5},
   {name:'2',max:15.0,force:9.8},
@@ -1863,16 +1936,24 @@ function frictionForSurface(surface){
   if(surface==='mud')return 0.48;
   return 0.62;
 }
+function updateGearButtons(){
+  ['R','N','D'].forEach(g=>{ const el=document.getElementById('gear'+g); if(el)el.classList.toggle('active',vehicle.gear===g || (g==='D' && ['1','2','3','4','5','6'].includes(vehicle.gear))); });
+}
+function setDriveMode(mode){
+  if(Math.abs(vehicle.speed)>0.35){ toast('SLOW TO A STOP TO CHANGE GEAR'); return; }
+  vehicle.speed=0;
+  vehicle.gear=mode;
+  updateGearButtons();
+  toast(mode==='D'?'DRIVE SELECTED':mode==='R'?'REVERSE SELECTED':'NEUTRAL SELECTED');
+}
 function autoGear(){
   const v=Math.abs(vehicle.speed)*3.6;
-  if(vehicle.speed< -0.15){vehicle.gear='R'; return;}
-  if(Math.abs(vehicle.speed)<0.12 && input.throttle<0.05){vehicle.gear='N';return;}
-  if(Math.abs(v)<0.12 && input.throttle<0.05 && vehicle.gear!=='D'){vehicle.gear='N';return;}
-  if(v>=0 && input.throttle>=0.05 && vehicle.gear==='N') vehicle.gear='1';
-  let idx=0;
-  if(v>8)idx=1; if(v>15)idx=2; if(v>23)idx=3; if(v>32)idx=4; if(v>42)idx=5;
-  const target=GEAR_DATA[idx];
-  if(vehicle.gear!=='R') vehicle.gear=target.name;
+  if(vehicle.gear==='R' || vehicle.gear==='N') return;
+  if(vehicle.gear==='D'){
+    let idx=0;
+    if(v>8)idx=1; if(v>15)idx=2; if(v>23)idx=3; if(v>32)idx=4; if(v>42)idx=5;
+    vehicle.gear=GEAR_DATA[idx].name;
+  }
 }
 function currentGearData(){
   return GEAR_DATA.find(g=>g.name===vehicle.gear)||GEAR_DATA[0];
@@ -1891,31 +1972,43 @@ function updateVehicle(dt){
   const v=vehicle.speed;
   const forward=Math.sin(vehicle.heading), forwardZ=Math.cos(vehicle.heading);
 
-  if(throttle>0.01){
-    if(v< -0.2){
-      vehicle.speed=Math.min(0,v+BRAKE_DECEL*dt);
+  const driveMode=(vehicle.gear==='R'?'R':vehicle.gear==='N'?'N':'D');
+  if(throttle>0.01 && driveMode!=='N'){
+    if(driveMode==='R'){
+      if(v>0.15) vehicle.speed=Math.max(0,v-BRAKE_DECEL*dt);
+      else {
+        const reverseForce=9.6;
+        const reverseGrip=clamp(grip,0.42,1);
+        vehicle.speed -= reverseForce*throttle*reverseGrip*dt;
+      }
     }else{
-      const gd=currentGearData();
-      const speedKmh=v*3.6;
-      const torqueFactor=clamp(1-speedKmh/(gd.max*1.05),0.12,1);
-      const hillFactor=1-clamp((heightAt(vehicle.pos.x+forward*2,vehicle.pos.z+forwardZ*2)-info.height)*0.25,-0.12,0.12);
-      vehicle.speed += gd.force*throttle*torqueFactor*grip*hillFactor*dt;
+      if(v< -0.2){
+        vehicle.speed=Math.min(0,v+BRAKE_DECEL*dt);
+      }else{
+        const gd=currentGearData();
+        const speedKmh=Math.max(0,v)*3.6;
+        const torqueFactor=clamp(1-speedKmh/(gd.max*1.05),0.12,1);
+        const hillFactor=1-clamp((heightAt(vehicle.pos.x+forward*2,vehicle.pos.z+forwardZ*2)-info.height)*0.25,-0.12,0.12);
+        vehicle.speed += gd.force*throttle*torqueFactor*grip*hillFactor*dt;
+      }
     }
   }else if(brake>0.01){
     if(v>0.15) vehicle.speed=Math.max(0,v-BRAKE_DECEL*brake*dt);
-    else if(Math.abs(v)<=0.2) vehicle.speed-=5.8*brake*grip*dt;
-  }else{
+    else if(v< -0.15) vehicle.speed=Math.min(0,v+BRAKE_DECEL*brake*dt);
+    else vehicle.speed=0;
+  }else if(driveMode!=='N'){
     const roll=ENGINE_BRAKE*(0.65+Math.abs(v)/MAX_SPEED);
     if(v>0)vehicle.speed=Math.max(0,v-roll*dt);
     else if(v<0)vehicle.speed=Math.min(0,v+roll*dt);
   }
-
   if(input.handbrake){
     vehicle.speed*=Math.pow(0.92,dt*60);
   }
 
   const surfaceMax=info.band==='mud'?13:info.band==='dirt'?18:MAX_SPEED;
   vehicle.speed=clamp(vehicle.speed,-MAX_REVERSE,Math.min(MAX_SPEED,surfaceMax));
+  if(vehicle.gear==='R') vehicle.speed=Math.max(vehicle.speed,-MAX_REVERSE);
+  if(vehicle.gear==='N') vehicle.speed=lerp(vehicle.speed,0,1-Math.pow(0.000001,dt));
 
   /* Bicycle/Ackermann-like steering. This makes steering depend on wheelbase and speed. */
   const speedAbs=Math.abs(vehicle.speed);
@@ -1937,6 +2030,15 @@ function updateVehicle(dt){
   const fwd=new THREE.Vector3(Math.sin(vehicle.heading),0,Math.cos(vehicle.heading));
   const oldPos=vehicle.pos.clone();
   vehicle.pos.addScaledVector(fwd,vehicle.speed*dt);
+
+  /* Hard playable-map boundary: the SUV can never leave the generated terrain. */
+  const MAP_EDGE=GROUND_SIZE*0.5-3.5;
+  let boundaryHit=false;
+  if(vehicle.pos.x<-MAP_EDGE){vehicle.pos.x=-MAP_EDGE;boundaryHit=true;}
+  if(vehicle.pos.x> MAP_EDGE){vehicle.pos.x= MAP_EDGE;boundaryHit=true;}
+  if(vehicle.pos.z<-MAP_EDGE){vehicle.pos.z=-MAP_EDGE;boundaryHit=true;}
+  if(vehicle.pos.z> MAP_EDGE){vehicle.pos.z= MAP_EDGE;boundaryHit=true;}
+  if(boundaryHit){vehicle.speed*=0.25;camShake=Math.max(camShake,0.35);}
 
   /* Basic prop collision with bounce/slide response. */
   let hit=false;
@@ -1992,11 +2094,11 @@ function updateVehicle(dt){
   const rearAvg=(wheels[2].susOffset+wheels[3].susOffset)/2;
   const leftAvg=(wheels[0].susOffset+wheels[2].susOffset)/2;
   const rightAvg=(wheels[1].susOffset+wheels[3].susOffset)/2;
-  const targetPitch=clamp((rearAvg-frontAvg)*0.8-(throttle-brake)*0.025,-0.18,0.18);
-  const targetRoll=clamp((leftAvg-rightAvg)*0.9+vehicle.steerAngle*speedAbs/20*0.10,-0.20,0.20);
-  vehicle.bodyPitch=lerp(vehicle.bodyPitch,targetPitch,1-Math.pow(0.0005,dt));
-  vehicle.bodyRoll=lerp(vehicle.bodyRoll,targetRoll,1-Math.pow(0.0005,dt));
-  bodyTilt.position.y=RIDE_HEIGHT*0.55+(frontAvg+rearAvg)*0.25;
+  const targetPitch=clamp((rearAvg-frontAvg)*0.48-(throttle-brake)*0.012,-0.095,0.095);
+  const targetRoll=clamp((leftAvg-rightAvg)*0.42+vehicle.steerAngle*speedAbs/20*0.035,-0.085,0.085);
+  vehicle.bodyPitch=lerp(vehicle.bodyPitch,targetPitch,1-Math.pow(0.004,dt));
+  vehicle.bodyRoll=lerp(vehicle.bodyRoll,targetRoll,1-Math.pow(0.004,dt));
+  bodyTilt.position.y=RIDE_HEIGHT*0.55+clamp((frontAvg+rearAvg)*0.12,-0.055,0.055);
   bodyTilt.rotation.x=-vehicle.bodyPitch;
   bodyTilt.rotation.z=vehicle.bodyRoll;
 
@@ -2039,6 +2141,7 @@ function updateHUD(info,throttle){
   const kmh=Math.abs(vehicle.speed)*3.6;
   document.getElementById('speedVal').textContent=Math.round(kmh);
   document.getElementById('gearBadge').textContent=vehicle.gear;
+  updateGearButtons();
   document.getElementById('fuelFill').style.width=vehicle.fuel+'%';
   const rpmPct=clamp((vehicle.rpm-700)/(6500-700)*100,0,100);
   document.getElementById('rpmFill').style.width=rpmPct+'%';
@@ -2194,8 +2297,9 @@ function updateVehiclePresentation(dt,info){
   realism.roadVibe=lerp(realism.roadVibe,pothole,1-Math.pow(.002,dt));
   realism.engineVibe=lerp(realism.engineVibe,engineRunning?(vehicle.rpm/6200)*0.012:0,1-Math.pow(.0005,dt));
   // tiny chassis vibration, intentionally subtle so the camera still feels controlled
-  const vib=(Math.sin(performance.now()*0.037)*realism.roadVibe + Math.sin(performance.now()*0.091)*realism.engineVibe);
+  const vib=(Math.sin(performance.now()*0.037)*realism.roadVibe*0.018 + Math.sin(performance.now()*0.091)*realism.engineVibe*0.012);
   bodyTilt.position.y += vib;
+  bodyTilt.position.y=clamp(bodyTilt.position.y,RIDE_HEIGHT*0.55-0.075,RIDE_HEIGHT*0.55+0.075);
   if(camIndex===3 || camIndex===9){
     camera.rotation.z += clamp(input.steer,-1,1)*speed*0.000015;
   }
