@@ -651,6 +651,138 @@ body.uiSmall #v18LeftToolbar{transform:scale(.84);transform-origin:top left;}
   #btnScreenScale{top:54px !important;}
 }
 
+
+/* ========================================================================
+   V19 UI ZONES — strict non-overlap layout
+   ======================================================================== */
+/* Remove the duplicate centered cinematic pill: it was sitting underneath
+   the title/compass and made the reference HUD look stacked. */
+#v14CinematicOverlay{display:none !important;}
+#v18BrandBar{
+  left:50% !important; top:10px !important;
+  width:520px !important; height:84px !important;
+  grid-template-columns:1fr !important; grid-template-rows:48px 30px !important;
+  gap:6px !important; transform:translateX(-50%) !important;
+  z-index:24 !important;
+}
+.v18Title{grid-row:auto !important; padding:6px 12px !important; font-size:15px !important;}
+.v18Title small{font-size:6px !important; margin-top:3px !important;}
+.v18Compass{grid-row:2 !important;}
+.v18Route{display:none !important;}
+#v18VehicleBadge{top:101px !important;z-index:24 !important;}
+
+/* Left control rail: SCREEN is isolated above the utility buttons. */
+#btnScreenScale{
+  left:10px !important; top:12px !important; width:70px !important; height:36px !important;
+  z-index:80 !important; font-size:8px !important;
+}
+#v18LeftToolbar{
+  left:10px !important; top:58px !important; width:70px !important;
+  gap:6px !important; z-index:79 !important;
+}
+.v18Tool{width:70px !important;height:48px !important;font-size:16px !important;}
+.v18Tool small{font-size:5.5px !important;}
+
+/* Minimap gets its own clean zone between left rail and centre HUD. */
+#minimapWrap{
+  left:94px !important; right:auto !important; top:12px !important;
+  width:88px !important; height:88px !important; z-index:70 !important;
+  border-radius:14px !important; padding:4px !important;
+}
+#minimap{border-radius:10px !important;}
+
+/* Right control dock: each row has fixed height and never shares a pixel
+   region with the minimap, title or vehicle badge. */
+#smallCtrlRow{
+  right:10px !important; left:auto !important; top:10px !important;
+  width:276px !important; height:38px !important;
+  display:grid !important; grid-template-columns:repeat(4,64px) !important;
+  gap:6px !important; z-index:82 !important; transform:none !important;
+}
+#smallCtrlRow .smallBtn{width:64px !important;height:38px !important;font-size:7px !important;}
+#smallCtrlRow #btnEngine{border-color:rgba(242,196,95,.70) !important;}
+#engineStatus{right:10px !important;top:54px !important;z-index:83 !important;}
+#doorControls{
+  right:10px !important; top:91px !important; bottom:auto !important;
+  width:276px !important; height:70px !important;
+  display:grid !important; grid-template-columns:repeat(4,64px) !important;
+  grid-auto-rows:32px !important; gap:6px !important;
+  z-index:82 !important; transform:none !important;
+}
+#doorControls .doorBtn{width:64px !important;height:32px !important;font-size:7px !important;}
+#doorControls .doorBtn.wide{width:134px !important;}
+#lightControls{
+  right:10px !important; bottom:172px !important; top:auto !important;
+  width:276px !important; height:38px !important;
+  display:grid !important; grid-template-columns:repeat(4,64px) !important;
+  gap:6px !important; z-index:82 !important; transform:none !important;
+}
+#lightControls .lightBtn{width:64px !important;height:38px !important;font-size:7px !important;}
+
+/* Steering and pedals occupy their own bottom corner zones. */
+#wheelWrap{
+  left:24px !important; bottom:12px !important;
+  width:clamp(150px,27vw,178px) !important;
+  height:clamp(150px,27vw,178px) !important;
+  z-index:90 !important;
+}
+#pedalCluster{right:18px !important;bottom:12px !important;z-index:90 !important;}
+.pedal{width:58px !important;height:112px !important;}
+#btnHand{right:150px !important;bottom:132px !important;z-index:91 !important;}
+#speedCluster{bottom:12px !important;z-index:88 !important;}
+#gearSelector{bottom:126px !important;z-index:89 !important;}
+#v18DriveStats{bottom:4px !important;z-index:30 !important;}
+
+/* Make the central dashboard readable rather than tiny. */
+#speedCluster{transform:translateX(50%) scale(.88) !important;transform-origin:bottom center !important;}
+#speedBox{width:154px !important;min-width:154px !important;}
+.gaugeDial{width:76px !important;height:76px !important;}
+.dialValue span{font-size:18px !important;}
+
+/* UI scaling now scales zones together instead of causing new collisions. */
+body.uiSmall #v18LeftToolbar, body.uiSmall #btnScreenScale{transform:scale(.88);transform-origin:top left;}
+body.uiLarge #v18LeftToolbar, body.uiLarge #btnScreenScale{transform:scale(1.08);transform-origin:top left;}
+body.uiSmall #smallCtrlRow, body.uiSmall #doorControls, body.uiSmall #lightControls{transform:scale(.88);transform-origin:top right;}
+body.uiLarge #smallCtrlRow, body.uiLarge #doorControls, body.uiLarge #lightControls{transform:scale(1.06);transform-origin:top right;}
+
+@media(max-width:900px){
+  #v18BrandBar{width:430px !important;transform:translateX(-50%) scale(.86) !important;transform-origin:top center;}
+  #smallCtrlRow,#doorControls,#lightControls{width:236px !important;grid-template-columns:repeat(4,54px) !important;}
+  #smallCtrlRow .smallBtn,#doorControls .doorBtn,#lightControls .lightBtn{width:54px !important;}
+  #doorControls .doorBtn.wide{width:114px !important;}
+  #smallCtrlRow{height:34px !important;gap:5px !important;}
+  #smallCtrlRow .smallBtn{height:34px !important;}
+  #doorControls{top:82px !important;gap:5px !important;}
+  #lightControls{bottom:148px !important;gap:5px !important;}
+  #engineStatus{top:48px !important;}
+  #minimapWrap{left:88px !important;width:76px !important;height:76px !important;}
+  #v18LeftToolbar{top:56px !important;}
+  .v18Tool{width:62px !important;height:44px !important;}
+  #btnScreenScale{width:62px !important;height:32px !important;}
+  #wheelWrap{left:16px !important;width:145px !important;height:145px !important;}
+  #pedalCluster{right:10px !important;}
+  .pedal{width:52px !important;height:100px !important;}
+  #btnHand{right:128px !important;bottom:120px !important;}
+  #gearSelector{bottom:111px !important;}
+  #speedCluster{transform:translateX(50%) scale(.76) !important;}
+}
+@media(max-height:430px){
+  #v18BrandBar{top:4px !important;transform:translateX(-50%) scale(.68) !important;}
+  #btnScreenScale{top:5px !important;}
+  #minimapWrap{top:5px !important;left:78px !important;width:64px !important;height:64px !important;}
+  #v18LeftToolbar{top:49px !important;transform:scale(.72);transform-origin:top left;}
+  #smallCtrlRow{top:4px !important;transform:scale(.72) !important;}
+  #engineStatus{top:37px !important;transform:scale(.75);transform-origin:top right;}
+  #doorControls{top:62px !important;transform:scale(.72) !important;}
+  #lightControls{bottom:116px !important;transform:scale(.72) !important;}
+  #wheelWrap{left:10px !important;bottom:6px !important;width:122px !important;height:122px !important;}
+  #pedalCluster{right:6px !important;bottom:6px !important;}
+  .pedal{width:44px !important;height:84px !important;}
+  #btnHand{right:100px !important;bottom:95px !important;transform:scale(.82);}
+  #gearSelector{bottom:82px !important;transform:translateX(-50%) scale(.70) !important;}
+  #speedCluster{bottom:6px !important;transform:translateX(50%) scale(.66) !important;}
+}
+
 </style>
 </head>
 <body>
@@ -11058,7 +11190,7 @@ function v14RunDriveDiagnostics(){
 })();
 
 /* ============================================================================
-   SCORPIO UNIVERSE V18 — HIGH DETAIL REALISM + PHYSICS PACK
+   SCORPIO UNIVERSE V19 — HIGH DETAIL REALISM + PHYSICS PACK
    ---------------------------------------------------------------------------
    This layer is intentionally self-contained. It improves the procedural
    vehicle/environment without requiring a large external asset download.
@@ -19010,7 +19142,7 @@ console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
 
 
 /* ============================================================================
-   V18 REALISM EXTENSION
+   V19 REALISM EXTENSION
    ============================================================================ */
 (function(){
   const v18 = {
@@ -19251,32 +19383,7 @@ console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
   v18BuildIndianLife();
   v18SyncEngine();
 
-  /* Replace the final frame hook with a useful, non-zero dt for V18-only
-     visual updates. The main simulator loop remains untouched. */
-  let last=performance.now();
-  const v18Tick=()=>{
-    const now=performance.now();
-    const dt=Math.min(.05,Math.max(.001,(now-last)/1000));
-    last=now;
-    if(running&&!paused){
-      const info=terrainInfoAt(vehicle.pos.x,vehicle.pos.z);
-      v18UpdateStats(info);
-      v18UpdateCompass();
-      v18SyncEngine();
-
-      /* More natural speed-dependent camera feedback. */
-      const kmh=Math.abs(vehicle.speed)*3.6;
-      if(kmh>55)camera.fov=Math.min(66,camera.fov+.02);
-      if(kmh<45)camera.fov=Math.max(58,camera.fov-.02);
-
-      /* Keep reverse strictly in the 10–15 km/h band. */
-      if(vehicle.gear==='R' && vehicle.speed < -3.9){
-        vehicle.speed=-3.9;
-      }
-    }
-    requestAnimationFrame(v18Tick);
-  };
-  requestAnimationFrame(v18Tick);
+  /* V19: the main simulator frame loop is the single render/update loop. */
 })();
 
 
@@ -19300,6 +19407,120 @@ console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
     chromeMat.metalness=.96;
     chromeMat.roughness=.13;
   }
+})();
+
+
+/* ========================================================================
+   V19 VISUAL QUALITY PASS — road ribbon + PBR surface micro-detail
+   ======================================================================== */
+(function(){
+  function v19Texture(base, noise, speckle, scale){
+    const c=document.createElement('canvas'); c.width=c.height=512;
+    const x=c.getContext('2d');
+    x.fillStyle=base; x.fillRect(0,0,512,512);
+    for(let i=0;i<8500;i++){
+      const n=Math.random();
+      x.globalAlpha=.025+Math.random()*.075;
+      x.fillStyle=n>.5?'#ffffff':'#000000';
+      const sz=.4+Math.random()*2.6;
+      x.fillRect(Math.random()*512,Math.random()*512,sz,sz);
+    }
+    if(speckle){
+      x.globalAlpha=.18;
+      for(let i=0;i<180;i++){
+        x.fillStyle=Math.random()>.5?'#fff':'#161616';
+        x.beginPath();x.arc(Math.random()*512,Math.random()*512,1+Math.random()*3,0,Math.PI*2);x.fill();
+      }
+    }
+    x.globalAlpha=1;
+    const t=new THREE.CanvasTexture(c);
+    t.wrapS=t.wrapT=THREE.RepeatWrapping;
+    t.repeat.set(scale,scale);
+    t.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),8);
+    return t;
+  }
+  function v19Normal(scale){
+    const c=document.createElement('canvas'); c.width=c.height=256;
+    const x=c.getContext('2d'); const g=x.createImageData(256,256);
+    for(let i=0;i<256*256;i++){
+      const n=128+(Math.random()-.5)*scale;
+      g.data[i*4]=n;g.data[i*4+1]=n;g.data[i*4+2]=255;g.data[i*4+3]=255;
+    }
+    x.putImageData(g,0,0);
+    const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(14,14);return t;
+  }
+  const asphalt=v19Texture('#4a4a46',22,true,12);
+  const dirt=v19Texture('#846545',34,true,9);
+  const mud=v19Texture('#40372d',30,true,8);
+  const asphaltN=v19Normal(24), dirtN=v19Normal(34), mudN=v19Normal(45);
+
+  function buildRibbon(band,mat,normal){
+    const positions=[],uvs=[],indices=[]; let vi=0;
+    for(let i=0;i<ROAD_SAMPLES;i++){
+      const a=roadSamples[i], b=roadSamples[i+1];
+      if(surfaceBandAt((a.t+b.t)*.5)!==band)continue;
+      const aw=ROAD_WIDTH*.50, bw=ROAD_WIDTH*.50;
+      const anx=-a.tan.z, anz=a.tan.x, bnx=-b.tan.z, bnz=b.tan.x;
+      const ay=heightAt(a.pos.x+anx*aw,a.pos.z+anz*aw)+.035;
+      const by=heightAt(b.pos.x+bnx*bw,b.pos.z+bnz*bw)+.035;
+      positions.push(
+        a.pos.x+anx*aw,ay,a.pos.z+anz*aw,
+        a.pos.x-anx*aw,ay,a.pos.z-anz*aw,
+        b.pos.x+bnx*bw,by,b.pos.z+bnz*bw,
+        b.pos.x-bnx*bw,by,b.pos.z-bnz*bw
+      );
+      const u0=a.t*34,u1=b.t*34;
+      uvs.push(u0,0,u0,1,u1,0,u1,1);
+      indices.push(vi,vi+2,vi+1,vi+1,vi+2,vi+3); vi+=4;
+    }
+    if(!positions.length)return;
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+    geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+    geo.setIndex(indices);geo.computeVertexNormals();
+    const m=new THREE.MeshStandardMaterial({
+      map:mat,normalMap:normal,normalScale:new THREE.Vector2(.32,.32),
+      roughness:band==='asphalt'?.86:band==='mud'?.98:.94,metalness:band==='asphalt'?.035:0,
+      color:0xffffff
+    });
+    const mesh=new THREE.Mesh(geo,m);mesh.receiveShadow=true;mesh.name='V19_'+band+'_ROAD';scene.add(mesh);
+  }
+  buildRibbon('asphalt',asphalt,asphaltN);
+  buildRibbon('dirt',dirt,dirtN);
+  buildRibbon('mud',mud,mudN);
+
+  /* Wet-road sheen when rain is enabled. */
+  const wetOverlayMat=new THREE.MeshBasicMaterial({color:0x9bb7c4,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending});
+  const wetGeo=new THREE.PlaneGeometry(ROAD_WIDTH*.72,1);
+  const wetGroup=new THREE.Group();wetGroup.name='V19_WetRoadHighlights';scene.add(wetGroup);
+  for(let i=0;i<95;i++){
+    const t=i/95,p=pointOnRoad(t,((i%3)-1)*.65,.045);
+    const m=new THREE.Mesh(wetGeo,wetOverlayMat.clone());
+    m.rotation.x=-Math.PI/2;m.rotation.z=p.heading;m.position.set(p.x,p.y,p.z);
+    m.material.opacity=.045+((i%5)/5)*.018;wetGroup.add(m);
+  }
+
+  /* More natural sun direction: broad warm key + cool sky fill. */
+  sun.position.set(-70,95,55);sun.target.position.set(0,0,0);
+  sun.intensity=1.32;
+  hemi.intensity=.68;
+
+  /* Subtle camera/vehicle contact lighting. */
+  const fill=new THREE.PointLight(0xd7e7ff,.16,34,2);
+  fill.position.set(0,5,0);scene.add(fill);
+
+  /* Keep wet highlights synchronized with weather without a post-processing pass. */
+  const updateWet=()=>{
+    const wet=typeof WEATHERS!=='undefined' && WEATHERS[weatherIdx]==='rain';
+    wetGroup.visible=wet;
+  };
+  setInterval(updateWet,300);
+  updateWet();
+
+  /* Add a few low-cost atmospheric layers far from the player. */
+  const hazeMat=new THREE.MeshBasicMaterial({color:0xdde8e2,transparent:true,opacity:.035,depthWrite:false,side:THREE.DoubleSide});
+  const haze=new THREE.Mesh(new THREE.PlaneGeometry(180,32),hazeMat);
+  haze.rotation.x=-Math.PI/2;haze.position.set(0,.15,-70);scene.add(haze);
 })();
 
 </script>
