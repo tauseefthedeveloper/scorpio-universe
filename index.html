@@ -478,6 +478,179 @@ body.uiSmall #btnScreenScale,body.uiLarge #btnScreenScale{box-shadow:0 0 0 1px r
 /* Higher quality presentation without a heavy post-processing pass. */
 #gameCanvas{image-rendering:auto;filter:contrast(1.035) saturate(1.10) brightness(1.015);}
 
+
+/* ========================================================================
+   V18 REFERENCE HUD — premium mobile driving layout
+   ======================================================================== */
+:root{
+  --v18-bg:rgba(7,9,9,.78);
+  --v18-line:rgba(255,255,255,.18);
+  --v18-gold:#e8bf5c;
+  --v18-green:#52d56c;
+  --v18-blue:#78b9ff;
+}
+#v18BrandBar{
+  position:absolute;left:50%;top:8px;transform:translateX(-50%);
+  width:min(620px,54vw);height:76px;pointer-events:none;
+  display:grid;grid-template-columns:1.25fr 1.2fr;grid-template-rows:40px 30px;
+  gap:5px;
+}
+.v18Title{
+  grid-row:1/3;background:rgba(6,8,8,.74);border:1px solid var(--v18-line);
+  border-radius:12px;padding:6px 12px;color:#fff;font:900 17px/1 system-ui;
+  letter-spacing:.035em;box-shadow:0 7px 22px rgba(0,0,0,.22);
+  backdrop-filter:blur(10px);
+}
+.v18Title .pauseGlyph{display:inline-flex;width:26px;height:26px;border-radius:7px;align-items:center;justify-content:center;
+  margin-right:7px;background:rgba(255,255,255,.10);font-size:15px;}
+.v18Title small{display:block;margin-left:33px;margin-top:4px;color:var(--v18-gold);font-size:7px;letter-spacing:.13em;}
+.v18Compass{
+  display:flex;align-items:center;justify-content:space-around;
+  padding:0 10px;border:1px solid var(--v18-line);border-radius:999px;
+  background:rgba(7,9,9,.66);color:#cbd0cf;font:800 9px system-ui;
+  backdrop-filter:blur(9px);
+}
+.v18Compass b{font-size:13px;color:#fff;}
+.v18Route{
+  display:flex;align-items:center;gap:8px;padding:0 12px;border-radius:9px;
+  background:rgba(7,9,9,.68);border:1px solid var(--v18-line);
+  color:#f3f4f2;font:800 10px system-ui;letter-spacing:.04em;
+}
+.v18Route:first-letter{font-size:18px;}
+.v18Route span{margin-left:auto;color:var(--v18-gold);}
+#v18LeftToolbar{
+  position:absolute;left:9px;top:95px;display:flex;flex-direction:column;gap:6px;
+  pointer-events:auto;z-index:61;
+}
+.v18Tool{
+  width:57px;height:49px;border-radius:11px;border:1px solid var(--v18-line);
+  background:rgba(7,9,9,.70);color:#f2f2ed;box-shadow:0 6px 18px rgba(0,0,0,.22);
+  backdrop-filter:blur(8px);font:900 17px/16px system-ui;
+}
+.v18Tool small{display:block;font-size:6px;letter-spacing:.08em;color:#c9c5b8;margin-top:4px;}
+.v18Tool.active,.v18Tool:active{outline:2px solid var(--v18-gold);filter:brightness(1.18);}
+#v18DriveStats{
+  position:absolute;left:50%;bottom:5px;transform:translateX(-50%);
+  display:flex;gap:5px;z-index:28;pointer-events:none;
+}
+#v18DriveStats span{
+  padding:3px 6px;border-radius:999px;background:rgba(4,6,6,.58);
+  border:1px solid rgba(255,255,255,.10);color:rgba(255,255,255,.70);
+  font:800 6px system-ui;letter-spacing:.10em;backdrop-filter:blur(7px);
+}
+#v18DriveStats span:nth-child(2){color:#8ddf9a;}
+#v18VehicleBadge{
+  position:absolute;left:50%;top:89px;transform:translateX(-50%);
+  padding:5px 10px;border:1px solid rgba(255,255,255,.12);border-radius:8px;
+  background:rgba(7,9,9,.44);color:rgba(255,255,255,.78);font:900 7px system-ui;
+  letter-spacing:.10em;pointer-events:none;z-index:30;backdrop-filter:blur(6px);
+}
+#v18VehicleBadge span{margin-left:7px;color:rgba(255,255,255,.48);font-weight:700;}
+#v18BrandBar,#v18LeftToolbar,#v18DriveStats,#v18VehicleBadge{font-synthesis:none;}
+/* Reference-inspired controls: bigger wheel, slightly inward from the edge. */
+#wheelWrap{
+  left:25px !important;
+  width:clamp(145px,28vw,178px) !important;
+  height:clamp(145px,28vw,178px) !important;
+  bottom:8px !important;
+}
+#wheelSvg{filter:drop-shadow(0 12px 18px rgba(0,0,0,.58));}
+#pedalCluster{right:18px !important;}
+#speedCluster{bottom:9px !important;}
+#speedBox{
+  border:1px solid rgba(255,255,255,.16) !important;
+  box-shadow:0 10px 24px rgba(0,0,0,.34);
+}
+#gearSelector{
+  bottom:116px !important;
+  transform:translateX(-50%) scale(.88) !important;
+}
+#smallCtrlRow{
+  right:10px !important;top:8px !important;
+  width:224px !important;grid-template-columns:repeat(4,50px) !important;
+  gap:6px !important;z-index:63 !important;
+}
+#smallCtrlRow .smallBtn{
+  width:50px !important;height:37px !important;border-radius:10px !important;
+  font-size:7px !important;
+}
+#smallCtrlRow #btnEngine{
+  color:#fff !important;border-color:rgba(232,191,92,.55) !important;
+}
+#lightControls{
+  right:10px !important;bottom:160px !important;
+  width:224px !important;grid-template-columns:repeat(4,50px) !important;
+  gap:6px !important;z-index:63 !important;
+}
+#lightControls .lightBtn{
+  width:50px !important;height:36px !important;border-radius:10px !important;
+  font-size:7px !important;
+}
+#doorControls{
+  right:10px !important;top:97px !important;
+  width:224px !important;grid-template-columns:repeat(4,50px) !important;
+  gap:6px !important;z-index:63 !important;
+}
+#doorControls .doorBtn{
+  width:50px !important;height:34px !important;border-radius:10px !important;font-size:7px !important;
+}
+#doorControls .doorBtn.wide{width:106px !important;}
+#minimapWrap{
+  left:auto !important;right:12px !important;top:98px !important;
+  width:112px !important;height:112px !important;border-radius:14px !important;
+  background:rgba(7,9,9,.78) !important;box-shadow:0 10px 28px rgba(0,0,0,.32);
+}
+#minimap{border-radius:10px !important;}
+#btnScreenScale{
+  left:9px !important;top:62px !important;width:62px !important;height:31px !important;
+  z-index:64 !important;
+}
+#engineStatus{
+  right:10px !important;top:51px !important;
+  padding:6px 10px !important;border-radius:9px !important;
+  background:rgba(7,9,9,.76) !important;color:#d8d4c8 !important;
+  font-size:7px !important;
+}
+#engineStatus.on{color:#9bea9d !important;border-color:rgba(82,213,108,.65) !important;}
+/* Better visual response for the car and scene without a costly postprocess pass. */
+#gameCanvas{
+  filter:contrast(1.045) saturate(1.13) brightness(1.018) !important;
+}
+/* Larger readable HUD at the user's large-screen option. */
+body.uiLarge #v18BrandBar{transform:translateX(-50%) scale(1.08);transform-origin:top center;}
+body.uiLarge #v18LeftToolbar{transform:scale(1.08);transform-origin:top left;}
+body.uiSmall #v18BrandBar{transform:translateX(-50%) scale(.82);transform-origin:top center;}
+body.uiSmall #v18LeftToolbar{transform:scale(.84);transform-origin:top left;}
+@media(max-width:760px){
+  #v18BrandBar{width:500px;max-width:54vw;transform:translateX(-50%) scale(.86);transform-origin:top center;}
+  #v18LeftToolbar{left:7px;top:91px;transform:scale(.88);transform-origin:top left;}
+  #v18VehicleBadge{display:none;}
+  #minimapWrap{width:92px !important;height:92px !important;right:8px !important;top:93px !important;}
+  #smallCtrlRow{width:190px !important;grid-template-columns:repeat(4,43px) !important;gap:4px !important;}
+  #smallCtrlRow .smallBtn{width:43px !important;height:33px !important;font-size:6px !important;}
+  #doorControls,#lightControls{width:190px !important;grid-template-columns:repeat(4,43px) !important;gap:4px !important;}
+  #doorControls .doorBtn,#lightControls .lightBtn{width:43px !important;height:31px !important;font-size:6px !important;}
+  #doorControls .doorBtn.wide{width:90px !important;}
+  #lightControls{bottom:145px !important;}
+  #gearSelector{bottom:103px !important;transform:translateX(-50%) scale(.78) !important;}
+  #wheelWrap{left:22px !important;width:clamp(138px,29vw,164px) !important;height:clamp(138px,29vw,164px) !important;}
+  #pedalCluster{right:9px !important;}
+  #speedCluster{transform:translateX(50%) scale(.78) !important;}
+}
+@media(max-height:430px){
+  #v18BrandBar{top:4px;transform:translateX(-50%) scale(.72);transform-origin:top center;}
+  #v18LeftToolbar{top:70px;transform:scale(.72);transform-origin:top left;}
+  #minimapWrap{top:71px !important;width:72px !important;height:72px !important;}
+  #smallCtrlRow{top:4px !important;right:7px !important;transform:scale(.78) !important;transform-origin:top right;}
+  #doorControls{top:73px !important;right:7px !important;transform:scale(.78) !important;transform-origin:top right;}
+  #lightControls{bottom:126px !important;right:7px !important;transform:scale(.78) !important;transform-origin:bottom right;}
+  #wheelWrap{left:15px !important;bottom:6px !important;width:125px !important;height:125px !important;}
+  #pedalCluster{right:7px !important;bottom:6px !important;}
+  #speedCluster{bottom:6px !important;transform:translateX(50%) scale(.70) !important;}
+  #gearSelector{bottom:82px !important;transform:translateX(-50%) scale(.68) !important;}
+  #btnScreenScale{top:54px !important;}
+}
+
 </style>
 </head>
 <body>
@@ -514,6 +687,27 @@ body.uiSmall #btnScreenScale,body.uiLarge #btnScreenScale{box-shadow:0 0 0 1px r
     </div>
   </div>
 
+  <div id="v18BrandBar">
+    <div class="v18Title"><span class="pauseGlyph">Ⅱ</span><span>SCORPIO UNIVERSE</span><small>OWN THE ROAD · CONQUER THE VILLAGE</small></div>
+    <div class="v18Compass" id="v18Compass"><span>W</span><span>NW</span><b>N</b><span>NE</span><span>E</span></div>
+    <div class="v18Route" id="v18Route">↑ <b>Village Road</b><span id="v18Distance">1.8 km</span></div>
+  </div>
+
+  <div id="v18LeftToolbar">
+    <button class="v18Tool" id="v18Camera">▣<small>CAMERA</small></button>
+    <button class="v18Tool" id="v18DayNight">☼<small>DAY/NIGHT</small></button>
+    <button class="v18Tool" id="v18Weather">☁<small>WEATHER</small></button>
+    <button class="v18Tool" id="v18Map">▥<small>MAP</small></button>
+    <button class="v18Tool" id="v18Settings">⚙<small>SETTINGS</small></button>
+  </div>
+
+  <div id="v18DriveStats">
+    <span id="v18Surface">ASPHALT</span>
+    <span id="v18Traction">4WD</span>
+    <span id="v18Quality">ULTRA</span>
+    <span id="v18Fps">60 FPS</span>
+  </div>
+
   <div id="minimapWrap" class="hud-panel"><canvas id="minimap" width="220" height="220"></canvas></div>
   <button id="btnScreenScale" class="ctrlBtn screenScaleBtn" type="button" aria-label="Change screen control size">SCREEN</button>
 
@@ -539,6 +733,9 @@ body.uiSmall #btnScreenScale,body.uiLarge #btnScreenScale{box-shadow:0 0 0 1px r
     </div>
   </div>
 
+  <div id="v18VehicleBadge">
+    <b>SCORPIO S11</b><span>4.456 m · 1.82 m</span>
+  </div>
   <div id="toast" class="hud-panel"></div>
 
   <div id="controls">
@@ -1699,8 +1896,6 @@ function setIndicator(side,on){
   document.getElementById(side==='left'?'btnLeftInd':'btnRightInd').classList.toggle('active',on);
 }
 function toggleIndicator(side){
-  // One-turn-signal-at-a-time logic. Selecting L/R always cancels hazards and
-  // the opposite side; the two sides can never share an active state.
   hazard=false;
   if(side==='left'){
     indicatorLeft=!indicatorLeft;
@@ -1709,35 +1904,40 @@ function toggleIndicator(side){
     indicatorRight=!indicatorRight;
     indicatorLeft=false;
   }
-  blinkClock=0; blinkOn=true;
-  document.getElementById('btnLeftInd').classList.toggle('active',indicatorLeft);
-  document.getElementById('btnRightInd').classList.toggle('active',indicatorRight);
-  document.getElementById('btnHazard').classList.remove('active');
+  blinkClock=0;
+  blinkOn=true;
+  document.getElementById('btnLeftInd')?.classList.toggle('active',indicatorLeft);
+  document.getElementById('btnRightInd')?.classList.toggle('active',indicatorRight);
+  document.getElementById('btnHazard')?.classList.remove('active');
 }
 function toggleHazard(){
   hazard=!hazard;
-  if(hazard){indicatorLeft=false;indicatorRight=false;blinkClock=0;blinkOn=true;}
-  document.getElementById('btnHazard').classList.toggle('active',hazard);
-  document.getElementById('btnLeftInd').classList.toggle('active',indicatorLeft);
-  document.getElementById('btnRightInd').classList.toggle('active',indicatorRight);
+  if(hazard){
+    indicatorLeft=false;
+    indicatorRight=false;
+    blinkClock=0;
+    blinkOn=true;
+  }
+  document.getElementById('btnHazard')?.classList.toggle('active',hazard);
+  document.getElementById('btnLeftInd')?.classList.toggle('active',indicatorLeft);
+  document.getElementById('btnRightInd')?.classList.toggle('active',indicatorRight);
 }
 function updateIndicators(dt){
   blinkClock+=dt;
   if(blinkClock>0.46){blinkClock=0;blinkOn=!blinkOn;}
-  const leftActive=hazard||indicatorLeft;
-  const rightActive=hazard||indicatorRight;
-  const lOn=leftActive&&blinkOn, rOn=rightActive&&blinkOn;
 
-  // Four-corner amber signalling: front + rear.
-  // Each corner owns its own material. Never reuse the left material for the
-  // right signal; otherwise a right turn can visually become a hazard light.
-  indL.material.emissiveIntensity=lOn?5.2:0.08;
-  indR.material.emissiveIntensity=rOn?5.2:0.08;
-  rearIndL.material.emissiveIntensity=lOn?5.6:0.08;
-  rearIndR.material.emissiveIntensity=rOn?5.6:0.08;
+  const leftOn=(indicatorLeft||hazard)&&blinkOn;
+  const rightOn=(indicatorRight||hazard)&&blinkOn;
 
-  // Tail lamps are always alive at a low running-light level. Brake pressure
-  // adds a strong red bloom instead of making the lamps appear/disappear.
+  // Left front + left rear.
+  indL.material.emissiveIntensity=leftOn?5.8:0.08;
+  rearIndL.material.emissiveIntensity=leftOn?6.0:0.08;
+
+  // Right front + right rear.
+  indR.material.emissiveIntensity=rightOn?5.8:0.08;
+  rearIndR.material.emissiveIntensity=rightOn?6.0:0.08;
+
+  // Tail/brake lamps remain red and independent of amber indicators.
   const brakeOn=input.brake>0.035 || input.handbrake;
   const tailLevel=brakeOn?5.0:0.72;
   tailL.material.emissiveIntensity=tailLevel;
@@ -1746,11 +1946,10 @@ function updateIndicators(dt){
   rearMarkerR.material.emissiveIntensity=brakeOn?4.0:0.45;
   highStop.material.emissiveIntensity=brakeOn?5.0:0.35;
 
-  const reverseOn=vehicle && vehicle.gear==='R' && vehicle.speed < -0.08;
+  const reverseOn=vehicle.gear==='R' && vehicle.speed < -0.08;
   reverseL.material.emissiveIntensity=reverseOn?4.0:0.10;
   reverseR.material.emissiveIntensity=reverseOn?4.0:0.10;
 
-  // Button state mirrors the actual signal state, making missed taps obvious.
   document.getElementById('btnLeftInd')?.classList.toggle('active',indicatorLeft);
   document.getElementById('btnRightInd')?.classList.toggle('active',indicatorRight);
   document.getElementById('btnHazard')?.classList.toggle('active',hazard);
@@ -1873,7 +2072,8 @@ function wheelPointerAngle(e){
 function setTouchSteerFromWheel(){
   let n=clamp(wheelState.rot/WHEEL_LOCK_DEG,-1,1);
   if(Math.abs(n)<STEER_DEADZONE)n=0;
-  // Positive screen rotation commands a left/right steering input consistently.
+  // Three complete wheel turns = the full physical steering range.
+  // The handwheel may continue rotating, but the front tires never exceed lock.
   input._touchSteer=clamp(-n,-1,1);
 }
 function beginWheelDrag(e){
@@ -2171,23 +2371,23 @@ const vehicle={
   const s=roadSamples[0];
   vehicle.pos.set(s.pos.x,heightAt(s.pos.x,s.pos.z),s.pos.z);
 }
-const MAX_SPEED=23.0;
+const MAX_SPEED=33.333333;
 // 23 m/s is ~83 km/h, intentionally tuned for a village simulator rather than an arcade racer.
-const MAX_REVERSE=3.8; // 13.7 km/h reverse maximum, tuned for realistic SUV manoeuvring.
+const MAX_REVERSE=3.9; // 13.7 km/h reverse maximum, tuned for realistic SUV manoeuvring.
 const ENGINE_FORCE=8.8;
 const BRAKE_DECEL=16.5;
 const ENGINE_BRAKE=1.9;
 const WHEEL_BASE=2.68;
 let engineRunning=false;
-const STEER_MAX=0.56; // ~32 degrees front-wheel maximum lock
+const STEER_MAX=0.585; // ~33.5 degrees front-wheel maximum lock
 setTimeout(updateGearButtons,0);
 const GEAR_DATA=[
-  {name:'1',max:8.0,force:12.5},
-  {name:'2',max:15.0,force:9.8},
-  {name:'3',max:22.0,force:7.5},
-  {name:'4',max:30.0,force:5.7},
-  {name:'5',max:38.0,force:4.2},
-  {name:'6',max:48.0,force:3.0}
+  {name:'1',max:6.0,force:13.8,up:20,down:0},
+  {name:'2',max:11.5,force:10.7,up:40,down:16},
+  {name:'3',max:17.0,force:8.4,up:60,down:34},
+  {name:'4',max:23.0,force:6.5,up:80,down:54},
+  {name:'5',max:29.0,force:5.0,up:101,down:74},
+  {name:'6',max:36.0,force:3.8,up:999,down:94}
 ];
 function frictionForSurface(surface){
   if(surface==='asphalt')return 1.0;
@@ -2210,17 +2410,24 @@ function autoGear(){
   const v=Math.abs(vehicle.speed)*3.6;
   if(vehicle.gear==='R' || vehicle.gear==='N') return;
   if(vehicle.gear==='D'){
-    let idx=0;
-    if(v>8)idx=1; if(v>15)idx=2; if(v>23)idx=3; if(v>32)idx=4; if(v>42)idx=5;
-    vehicle.gear=GEAR_DATA[idx].name;
+    vehicle.gear='1';
   }
+  let idx=GEAR_DATA.findIndex(g=>g.name===vehicle.gear);
+  if(idx<0) idx=0;
+  // Hysteresis prevents rapid gear hunting around a shift point.
+  if(idx<GEAR_DATA.length-1 && v>=GEAR_DATA[idx].up){
+    idx++;
+  }else if(idx>0 && v<=GEAR_DATA[idx].down){
+    idx--;
+  }
+  vehicle.gear=GEAR_DATA[idx].name;
 }
 function currentGearData(){
   return GEAR_DATA.find(g=>g.name===vehicle.gear)||GEAR_DATA[0];
 }
 function updateVehicle(dt){
   pollKeyboard();
-  if(!engineRunning){ input.throttle=0; input.brake=Math.max(input.brake,0); }
+  if(!engineRunning){ input.throttle=0; input.brake=Math.max(input.brake,0); vehicle.speed=lerp(vehicle.speed,0,1-Math.exp(-6*dt)); }
   const info=terrainInfoAt(vehicle.pos.x,vehicle.pos.z);
   let grip=frictionForSurface(info.onRoad?info.band:'grass');
   if(is4wd)grip=Math.min(1.0,grip+0.18);
@@ -2432,7 +2639,7 @@ function updateHUD(info,throttle){
   const rpmPct=clamp((vehicle.rpm-700)/(6500-700)*100,0,100);
   document.getElementById('rpmFill').style.width=rpmPct+'%';
   const needle=document.getElementById('rpmNeedle'); if(needle)needle.style.transform='rotate('+(-130+rpmPct*2.6)+'deg)';
-  const speedNeedle=document.getElementById('speedNeedle'); if(speedNeedle)speedNeedle.style.transform='rotate('+(-130+clamp(kmh/180,0,1)*260)+'deg)';
+  const speedNeedle=document.getElementById('speedNeedle'); if(speedNeedle)speedNeedle.style.transform='rotate('+(-130+clamp(kmh/120,0,1)*260)+'deg)';
   const rpmText=document.getElementById('rpmValue'); if(rpmText)rpmText.textContent=Math.round(vehicle.rpm);
   const gearText=document.getElementById('gearText'); if(gearText)gearText.textContent=vehicle.gear;
   if(vehicle.fuel<12 && Math.random()<0.004)toast('LOW FUEL — head to the station');
@@ -2994,7 +3201,7 @@ async function startGame(){
   missionMarker.visible=false;
   running=true;
   paused=false;
-  vehicle.gear='N'; vehicle.speed=0; vehicle.rpm=0; updateGearButtons();
+  vehicle.gear='N'; vehicle.speed=0; vehicle.rpm=850; engineRunning=false; input.engine=false; updateGearButtons();
   const eb=document.getElementById('btnEngine'); if(eb){eb.classList.remove('active');eb.textContent='START';} const es=document.getElementById('engineStatus'); if(es){es.textContent='ENGINE OFF';es.classList.remove('on');}
   toast('SIMULATOR MODE · FREE ROAM · PRESS START · E = START/STOP');
 }
@@ -10851,14 +11058,14 @@ function v14RunDriveDiagnostics(){
 })();
 
 /* ============================================================================
-   SCORPIO UNIVERSE V17 — HIGH DETAIL REALISM + PHYSICS PACK
+   SCORPIO UNIVERSE V18 — HIGH DETAIL REALISM + PHYSICS PACK
    ---------------------------------------------------------------------------
    This layer is intentionally self-contained. It improves the procedural
    vehicle/environment without requiring a large external asset download.
    ============================================================================ */
 
 const V17_REALISM = {
-  version: "17.0",
+  version: "18.0",
   steering: {
     wheelDegrees: 1080,
     physicalLockDeg: 34.0,
@@ -18799,7 +19006,301 @@ frame=function(now){
   }
 };
 
-console.log("SCORPIO UNIVERSE V17 realism pack loaded:",V17_REALISM.version);
+console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
+
+
+/* ============================================================================
+   V18 REALISM EXTENSION
+   ============================================================================ */
+(function(){
+  const v18 = {
+    roadBuilt:false,
+    frameCount:0,
+    fpsTime:performance.now(),
+    fps:60,
+    lastHeading:0
+  };
+
+  /* ---- Road detail: center seam, broken center markings and edge strips ---- */
+  function v18RoadPoint(t,lateral,yLift){
+    return pointOnRoad(t,lateral,yLift||0);
+  }
+  function v18StripMaterial(color,rough=.78){
+    return new THREE.MeshStandardMaterial({
+      color,roughness:rough,metalness:.02,
+      transparent:true,opacity:.88
+    });
+  }
+  function v18BuildRoadDetail(){
+    if(v18.roadBuilt)return;
+    v18.roadBuilt=true;
+    const root=new THREE.Group();
+    root.name='V18_IndianRoadDetails';
+    scene.add(root);
+
+    const edgeMat=v18StripMaterial(0xc9c5b8,.64);
+    const lineMat=v18StripMaterial(0xe5dfc8,.58);
+    const darkMat=v18StripMaterial(0x34312c,.92);
+
+    for(let i=0;i<180;i++){
+      const t=i/180;
+      const p=v18RoadPoint(t,ROAD_WIDTH*.475,.018);
+      const q=v18RoadPoint(t,-ROAD_WIDTH*.475,.018);
+      [p,q].forEach((s,sideIndex)=>{
+        const seg=new THREE.Mesh(new THREE.PlaneGeometry(.055,.70),edgeMat);
+        seg.rotation.x=-Math.PI/2;
+        seg.rotation.z=-s.heading;
+        seg.position.set(s.x,s.y+.012,s.z);
+        root.add(seg);
+      });
+    }
+
+    for(let i=0;i<110;i++){
+      const t=i/110;
+      const p=v18RoadPoint(t,0,.020);
+      const info=terrainInfoAt(p.x,p.z);
+      if(info.band==='dirt'||info.band==='mud')continue;
+      if(i%2===0){
+        const mark=new THREE.Mesh(new THREE.PlaneGeometry(.075,1.15),lineMat);
+        mark.rotation.x=-Math.PI/2;
+        mark.rotation.z=-p.heading;
+        mark.position.set(p.x,p.y+.014,p.z);
+        root.add(mark);
+      }
+    }
+
+    /* Dark wheel-wear ribbons on frequently travelled village lanes. */
+    for(const side of [-.62,.62]){
+      for(let i=0;i<100;i++){
+        const t=i/100;
+        const p=v18RoadPoint(t,side,.022);
+        if(surfaceBandAt(t)==='mud')continue;
+        const wear=new THREE.Mesh(new THREE.PlaneGeometry(.20,.85),darkMat);
+        wear.rotation.x=-Math.PI/2;
+        wear.rotation.z=-p.heading;
+        wear.position.set(p.x,p.y+.011,p.z);
+        wear.material.opacity=.18;
+        root.add(wear);
+      }
+    }
+  }
+
+  /* ---- Extra Indian rural props: crop rows, hay, water drums, signage,
+         boundary walls and tiny road-side shrines. ---- */
+  function v18BuildIndianLife(){
+    const root=new THREE.Group();
+    root.name='V18_IndianVillageLife';
+    scene.add(root);
+
+    const soilMat=new THREE.MeshStandardMaterial({color:0x8b6544,roughness:1});
+    const cropMat=new THREE.MeshStandardMaterial({color:0x547a35,roughness:.96});
+    const strawMat=new THREE.MeshStandardMaterial({color:0xb58a3e,roughness:1});
+    const signMat=new THREE.MeshStandardMaterial({color:0xe0d2a8,roughness:.82});
+    const blueMat=new THREE.MeshStandardMaterial({color:0x2d6075,roughness:.38,metalness:.1});
+
+    for(let i=0;i<32;i++){
+      const t=.66+(i/32)*.27;
+      const p=v18RoadPoint(t,(i%2?1:-1)*(6.5+((i*17)%30)/10),.01);
+      const row=new THREE.Mesh(new THREE.BoxGeometry(1.7,.035,.11),soilMat);
+      row.position.set(p.x,p.y+.018,p.z);
+      row.rotation.y=p.heading;
+      root.add(row);
+      for(let j=0;j<4;j++){
+        const crop=new THREE.Mesh(new THREE.ConeGeometry(.018,.24+(j%2)*.06,4),cropMat);
+        crop.position.set(
+          p.x+Math.sin(p.heading)*(j-.5)*.32,
+          p.y+.15,
+          p.z+Math.cos(p.heading)*(j-.5)*.32
+        );
+        crop.rotation.z=(j%2?-1:1)*.12;
+        root.add(crop);
+      }
+    }
+
+    for(let i=0;i<14;i++){
+      const t=(i*.073+.11)%1;
+      const side=i%2?1:-1;
+      const p=v18RoadPoint(t,side*(7.0+(i%3)*1.5),.02);
+      const bale=new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,.62,12),strawMat);
+      bale.rotation.z=Math.PI/2;
+      bale.position.set(p.x,p.y+.34,p.z);
+      bale.castShadow=true;
+      root.add(bale);
+    }
+
+    for(let i=0;i<9;i++){
+      const t=(i*.113+.04)%1;
+      const p=v18RoadPoint(t,(i%2?1:-1)*8.2,.01);
+      const tank=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.42,16),blueMat);
+      tank.position.set(p.x,p.y+.21,p.z);
+      tank.castShadow=true;
+      root.add(tank);
+    }
+
+    /* Small roadside sign boards with posts. */
+    for(const item of [
+      [.055,5.9,'VILLAGE'],
+      [.31,-5.8,'SCHOOL'],
+      [.58,6.0,'FIELD'],
+      [.88,-6.1,'TEMPLE']
+    ]){
+      const p=v18RoadPoint(item[0],item[1],.01);
+      const post=new THREE.Mesh(new THREE.BoxGeometry(.045,1.15,.045),trimMat);
+      post.position.set(p.x,p.y+.575,p.z);
+      root.add(post);
+      const board=new THREE.Mesh(new THREE.BoxGeometry(.62,.27,.045),signMat);
+      board.position.set(p.x,p.y+1.02,p.z);
+      board.rotation.y=p.heading;
+      root.add(board);
+    }
+  }
+
+  /* ---- Dynamic steering indicator on the HUD compass. ---- */
+  function v18UpdateCompass(){
+    const deg=((vehicle.heading*180/Math.PI)%360+360)%360;
+    const dirs=['N','NE','E','SE','S','SW','W','NW'];
+    const idx=Math.round(deg/45)%8;
+    const center=dirs[idx];
+    const compass=document.getElementById('v18Compass');
+    if(compass){
+      compass.querySelectorAll('span,b').forEach((el,i)=>{
+        if(i===2)el.textContent=center;
+      });
+    }
+  }
+
+  function v18UpdateStats(info){
+    const s=document.getElementById('v18Surface');
+    const t=document.getElementById('v18Traction');
+    const q=document.getElementById('v18Quality');
+    if(s)s.textContent=(info.band||'grass').toUpperCase();
+    if(t)t.textContent=is4wd?'4WD':'2WD';
+    if(q)q.textContent=v14Quality==='high'?'ULTRA':v14Quality.toUpperCase();
+
+    v18.frameCount++;
+    const now=performance.now();
+    if(now-v18.fpsTime>1000){
+      v18.fps=Math.round(v18.frameCount*1000/(now-v18.fpsTime));
+      v18.frameCount=0;
+      v18.fpsTime=now;
+    }
+    const f=document.getElementById('v18Fps');
+    if(f)f.textContent=v18.fps+' FPS';
+  }
+
+  /* ---- Engine state: keep every visual control synchronized. ---- */
+  function v18SyncEngine(){
+    const b=document.getElementById('btnEngine');
+    const s=document.getElementById('engineStatus');
+    if(b){
+      b.textContent=engineRunning?'STOP':'START';
+      b.classList.toggle('active',engineRunning);
+      b.setAttribute('aria-label',engineRunning?'Stop engine':'Start engine');
+    }
+    if(s){
+      s.textContent=engineRunning?'ENGINE ON':'ENGINE OFF';
+      s.classList.toggle('on',engineRunning);
+    }
+  }
+
+  /* ---- Left toolbar actions map to existing simulator systems. ---- */
+  document.getElementById('v18Camera')?.addEventListener('click',cycleCamera);
+  document.getElementById('v18Weather')?.addEventListener('click',cycleWeather);
+  document.getElementById('v18DayNight')?.addEventListener('click',()=>{
+    timeOfDay=(timeOfDay+6)%24;
+    updateSky();
+    toast('TIME: '+String(Math.floor(timeOfDay)).padStart(2,'0')+':00');
+  });
+  document.getElementById('v18Map')?.addEventListener('click',()=>{
+    const m=document.getElementById('minimapWrap');
+    if(m)m.classList.toggle('v18MapLarge');
+  });
+  document.getElementById('v18Settings')?.addEventListener('click',()=>{
+    v14ApplyQuality(v14Quality==='high'?'balanced':'high');
+    toast('GRAPHICS: '+v14Quality.toUpperCase());
+  });
+
+  /* Gear buttons: allow R/N/D; D then immediately starts the six-stage
+     automatic transmission once the engine is running. */
+  ['gearR','gearN','gearD'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.addEventListener('click',()=>{
+      setTimeout(()=>{
+        updateGearButtons();
+        const gt=document.getElementById('gearText');
+        if(gt)gt.textContent=vehicle.gear;
+      },0);
+    });
+  });
+
+  /* Add a real vehicle startup delay feeling without blocking gameplay. */
+  const originalStartEngine=startEngine;
+  startEngine=function(){
+    originalStartEngine();
+    v18SyncEngine();
+    setTimeout(()=>v18SyncEngine(),420);
+  };
+  const originalStopEngine=stopEngine;
+  stopEngine=function(){
+    originalStopEngine();
+    v18SyncEngine();
+  };
+
+  /* Build once, after all original scene objects exist. */
+  v18BuildRoadDetail();
+  v18BuildIndianLife();
+  v18SyncEngine();
+
+  /* Replace the final frame hook with a useful, non-zero dt for V18-only
+     visual updates. The main simulator loop remains untouched. */
+  let last=performance.now();
+  const v18Tick=()=>{
+    const now=performance.now();
+    const dt=Math.min(.05,Math.max(.001,(now-last)/1000));
+    last=now;
+    if(running&&!paused){
+      const info=terrainInfoAt(vehicle.pos.x,vehicle.pos.z);
+      v18UpdateStats(info);
+      v18UpdateCompass();
+      v18SyncEngine();
+
+      /* More natural speed-dependent camera feedback. */
+      const kmh=Math.abs(vehicle.speed)*3.6;
+      if(kmh>55)camera.fov=Math.min(66,camera.fov+.02);
+      if(kmh<45)camera.fov=Math.max(58,camera.fov-.02);
+
+      /* Keep reverse strictly in the 10–15 km/h band. */
+      if(vehicle.gear==='R' && vehicle.speed < -3.9){
+        vehicle.speed=-3.9;
+      }
+    }
+    requestAnimationFrame(v18Tick);
+  };
+  requestAnimationFrame(v18Tick);
+})();
+
+
+/* V18 paint flakes + trim response: procedural micro-variation using
+   physical material parameters instead of a heavy texture download. */
+(function v18MaterialFinish(){
+  if(typeof paintMat!=='undefined'){
+    paintMat.metalness=.72;
+    paintMat.roughness=.18;
+    paintMat.clearcoat=.88;
+    paintMat.clearcoatRoughness=.075;
+    paintMat.reflectivity=.84;
+  }
+  if(typeof glassMat!=='undefined'){
+    glassMat.metalness=.02;
+    glassMat.roughness=.035;
+    glassMat.clearcoat=.92;
+    glassMat.clearcoatRoughness=.055;
+  }
+  if(typeof chromeMat!=='undefined'){
+    chromeMat.metalness=.96;
+    chromeMat.roughness=.13;
+  }
+})();
 
 </script>
 </body>
