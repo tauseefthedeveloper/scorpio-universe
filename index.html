@@ -3242,6 +3242,309 @@ function updateScreenScale(){
 }
 document.getElementById('btnScreenScale')?.addEventListener('click',()=>{screenScaleIndex=(screenScaleIndex+1)%screenScaleModes.length;updateScreenScale();});
 
+
+/* ============================================================================
+   V20 SLOW-ROADS INSPIRED REALISM PASS
+   Long-horizon scenery + smoother vehicle dynamics + photographic road dressing.
+   This is an original implementation inspired by the visual language of
+   endless-road driving games; it does not copy proprietary Slow Roads code/assets.
+   ============================================================================ */
+const SU_V20 = {
+  built:false,
+  trees:[],
+  rails:[],
+  dustTime:0,
+  lastRoadT:0,
+  lateralSlip:0,
+  suspensionBob:0,
+  roadBank:0
+};
+
+function suV20Mat(color, rough=.85, metal=0){
+  return new THREE.MeshStandardMaterial({
+    color, roughness:rough, metalness:metal
+  });
+}
+
+function suV20BuildLongRoadScenery(){
+  if(SU_V20.built) return;
+  SU_V20.built=true;
+
+  const root=new THREE.Group();
+  root.name='V20_SLOW_ROADS_STYLE_SCENERY';
+  scene.add(root);
+
+  /* Wide visual shoulder strips make the road read as a real engineered road. */
+  const shoulderMat=suV20Mat(0x75634d,.96);
+  const edgeMat=suV20Mat(0xcfcfc7,.68);
+  const centerMat=suV20Mat(0xf1eee2,.58);
+
+  for(let i=0;i<260;i++){
+    const t=i/260;
+    const s=roadSamples[Math.floor(t*ROAD_SAMPLES)];
+    const nx=-s.tan.z,nz=s.tan.x;
+
+    for(const side of [-1,1]){
+      const p=pointOnRoad(t,side*(ROAD_WIDTH*.5+1.0),.008);
+      const shoulder=new THREE.Mesh(new THREE.BoxGeometry(2.0,.035,1.0),shoulderMat);
+      shoulder.position.set(p.x,p.y,p.z);
+      shoulder.rotation.y=p.heading;
+      root.add(shoulder);
+
+      /* Clean white road-edge reflectors. */
+      if(i%3===0){
+        const edge=new THREE.Mesh(new THREE.BoxGeometry(.10,.025,1.15),edgeMat);
+        edge.position.set(
+          p.x+nx*side*.72,
+          p.y+.025,
+          p.z+nz*side*.72
+        );
+        edge.rotation.y=p.heading;
+        root.add(edge);
+      }
+    }
+
+    /* Broken centre line. */
+    if(i%7<4){
+      const p=pointOnRoad(t,0,.018);
+      const dash=new THREE.Mesh(new THREE.BoxGeometry(.11,.028,2.0),centerMat);
+      dash.position.set(p.x,p.y,p.z);
+      dash.rotation.y=p.heading;
+      root.add(dash);
+    }
+  }
+
+  /* Guardrails on selected outside bends. */
+  const railMetal=suV20Mat(0x707474,.38,.75);
+  const railPostMat=suV20Mat(0x55595a,.48,.68);
+  for(let i=0;i<92;i++){
+    const t=(i/92+.11)%1;
+    const s=roadSamples[Math.floor(t*ROAD_SAMPLES)];
+    const side=(i%2===0)?1:-1;
+    const p=pointOnRoad(t,side*(ROAD_WIDTH*.5+2.2),.0);
+
+    const post=new THREE.Mesh(new THREE.BoxGeometry(.08,1.0,.08),railPostMat);
+    post.position.set(p.x,p.y+.5,p.z);
+    post.rotation.y=p.heading;
+    root.add(post);
+
+    const rail=new THREE.Mesh(new THREE.BoxGeometry(.11,.16,3.1),railMetal);
+    rail.position.set(p.x,p.y+1.0,p.z);
+    rail.rotation.y=p.heading;
+    root.add(rail);
+  }
+
+  /* Photographic-style distant hills. */
+  const hillMatA=suV20Mat(0x567548,1);
+  const hillMatB=suV20Mat(0x71895a,1);
+  for(let i=0;i<22;i++){
+    const a=(i/22)*Math.PI*2;
+    const radius=105+((i*37)%70);
+    const h=10+((i*17)%18);
+    const w=18+((i*11)%20);
+    const hill=new THREE.Mesh(
+      new THREE.ConeGeometry(w,h,9,1),
+      i%2?hillMatA:hillMatB
+    );
+    hill.position.set(Math.cos(a)*radius,h*.5,Math.sin(a)*radius);
+    hill.rotation.y=a;
+    root.add(hill);
+  }
+
+  /* Instanced roadside trees: many trees, low draw-call cost. */
+  const trunkGeo=new THREE.CylinderGeometry(.13,.20,2.0,7);
+  const crownGeo=new THREE.SphereGeometry(1.15,8,6);
+  const trunkMat=suV20Mat(0x5c3b24,.96);
+  const leafMat=suV20Mat(0x3e6f35,.92);
+
+  const count=260;
+  const trunks=new THREE.InstancedMesh(trunkGeo,trunkMat,count);
+  const crowns=new THREE.InstancedMesh(crownGeo,leafMat,count);
+  const dummy=new THREE.Object3D();
+
+  let made=0, attempts=0;
+  while(made<count && attempts<count*8){
+    attempts++;
+    const t=Math.random();
+    const side=Math.random()<.5?-1:1;
+    const lateral=ROAD_WIDTH*.5+6+Math.random()*28;
+    const p=pointOnRoad(t,side*lateral,.0);
+
+    if(Math.abs(p.x)>102 || Math.abs(p.z)>102) continue;
+
+    dummy.position.set(p.x,p.y+1.0,p.z);
+    dummy.rotation.set(0,Math.random()*Math.PI*2,0);
+    const sc=.72+Math.random()*1.25;
+    dummy.scale.set(sc,sc*(.85+Math.random()*.25),sc);
+    dummy.updateMatrix();
+    trunks.setMatrixAt(made,dummy.matrix);
+
+    dummy.position.y=p.y+2.55*sc;
+    dummy.scale.set(sc*(.9+Math.random()*.25),sc*(.8+Math.random()*.3),sc*(.9+Math.random()*.25));
+    dummy.updateMatrix();
+    crowns.setMatrixAt(made,dummy.matrix);
+    made++;
+  }
+  trunks.count=made;
+  crowns.count=made;
+  trunks.instanceMatrix.needsUpdate=true;
+  crowns.instanceMatrix.needsUpdate=true;
+  root.add(trunks,crowns);
+
+  /* Indian roadside utility poles and simple overhead wire impression. */
+  const poleMat=suV20Mat(0x66635a,.78,.15);
+  for(let i=0;i<54;i++){
+    const t=(i/54+.035)%1;
+    const side=i%2?1:-1;
+    const p=pointOnRoad(t,side*(ROAD_WIDTH*.5+4.8),.0);
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(.065,.085,5.5,7),poleMat);
+    pole.position.set(p.x,p.y+2.75,p.z);
+    root.add(pole);
+
+    const cross=new THREE.Mesh(new THREE.BoxGeometry(1.25,.07,.08),poleMat);
+    cross.position.set(p.x,p.y+5.15,p.z);
+    cross.rotation.y=p.heading;
+    root.add(cross);
+  }
+
+  /* Small roadside reflector posts for depth cues. */
+  const reflectorMat=suV20Mat(0xe9e4d3,.35);
+  for(let i=0;i<120;i++){
+    const t=(i/120+.18)%1;
+    const side=i%2?1:-1;
+    const p=pointOnRoad(t,side*(ROAD_WIDTH*.5+2.8),.0);
+    const post=new THREE.Mesh(new THREE.BoxGeometry(.08,.55,.08),reflectorMat);
+    post.position.set(p.x,p.y+.28,p.z);
+    root.add(post);
+  }
+
+  /* Lighting/reflection probes give the vehicle a more convincing moving-world read. */
+  /* r128 has no ReflectionProbe class; use a lightweight visual probe anchor
+     so later builds can attach real reflections without changing the architecture. */
+  if(!scene.getObjectByName('SU_V20_ReflectionAnchor')){
+    const probe=new THREE.Object3D();
+    probe.name='SU_V20_ReflectionAnchor';
+    probe.position.set(vehicle.pos.x,1.2,vehicle.pos.z);
+    scene.add(probe);
+  }
+
+  /* More cinematic but still inexpensive atmosphere. */
+  if(scene.fog){
+    scene.fog.near=55;
+    scene.fog.far=330;
+  }
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.12;
+  if(renderer.shadowMap){
+    renderer.shadowMap.enabled=true;
+    renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  }
+}
+
+function suV20VehiclePhysics(dt){
+  /* Add a subtle, speed-sensitive road-following stability model.
+     It preserves player steering while removing the floaty "ice" feeling. */
+  const info=terrainInfoAt(vehicle.pos.x,vehicle.pos.z);
+  const speed=Math.abs(vehicle.speed);
+  const speedKmh=speed*3.6;
+
+  let grip=frictionForSurface(info.onRoad?info.band:'grass');
+  if(WEATHERS[weatherIdx]==='rain') grip*=.82;
+  if(is4wd) grip=Math.min(1.05,grip+.12);
+
+  /* Natural lateral slip estimate from heading vs road tangent. */
+  const tan=info.sample.tan;
+  const roadHeading=Math.atan2(tan.x,tan.z);
+  let angle=vehicle.heading-roadHeading;
+  while(angle>Math.PI)angle-=Math.PI*2;
+  while(angle<-Math.PI)angle+=Math.PI*2;
+
+  const desiredSlip=clamp(Math.sin(angle)*speed*.085, -.9,.9);
+  SU_V20.lateralSlip=lerp(SU_V20.lateralSlip,desiredSlip,
+    1-Math.exp(-(2.2+grip*3.0)*dt));
+
+  /* Mud/dirt have progressively softer lateral response. */
+  if(info.onRoad && speedKmh>8){
+    const stability=(info.band==='mud'?.72:info.band==='dirt'?.86:.94);
+    const assist=clamp((speedKmh-8)/85,0,1)*.035*stability;
+    vehicle.heading=lerp(vehicle.heading,roadHeading,1-Math.exp(-assist*dt));
+  }
+
+  /* Terrain-driven chassis motion: road roughness becomes visible in pitch/roll. */
+  const front=heightAt(
+    vehicle.pos.x+Math.sin(vehicle.heading)*1.25,
+    vehicle.pos.z+Math.cos(vehicle.heading)*1.25
+  );
+  const rear=heightAt(
+    vehicle.pos.x-Math.sin(vehicle.heading)*1.25,
+    vehicle.pos.z-Math.cos(vehicle.heading)*1.25
+  );
+  const left=heightAt(
+    vehicle.pos.x+Math.cos(vehicle.heading)*.75,
+    vehicle.pos.z-Math.sin(vehicle.heading)*.75
+  );
+  const right=heightAt(
+    vehicle.pos.x-Math.cos(vehicle.heading)*.75,
+    vehicle.pos.z+Math.sin(vehicle.heading)*.75
+  );
+
+  const pitch=clamp((rear-front)*.13,-.12,.12);
+  const roll=clamp((left-right)*.10 + vehicle.steerAngle*speed*.0017,-.12,.12);
+
+  vehicle.bodyPitch=lerp(vehicle.bodyPitch,pitch,1-Math.exp(-5.5*dt));
+  vehicle.bodyRoll=lerp(vehicle.bodyRoll,roll,1-Math.exp(-5.5*dt));
+
+  /* Weight transfer / suspension bounce after abrupt surface changes. */
+  const rough=Math.abs(front-rear)+Math.abs(left-right);
+  SU_V20.suspensionBob=lerp(
+    SU_V20.suspensionBob,
+    clamp(rough*1.8,0,.10),
+    1-Math.exp(-8*dt)
+  );
+  bodyTilt.position.y += Math.sin(performance.now()*.018)*SU_V20.suspensionBob*.018;
+
+  /* Rain makes braking and cornering progressively less stable. */
+  if(WEATHERS[weatherIdx]==='rain' && speedKmh>45 && input.steer!==0){
+    camShake=Math.max(camShake,.006+speedKmh*.00012);
+  }
+}
+
+function suV20CameraFeel(dt){
+  const speedKmh=Math.abs(vehicle.speed)*3.6;
+  const curve=Math.abs(vehicle.steerAngle);
+
+  /* Slow Roads-like forward horizon: speed slightly widens FOV and
+     the camera settles instead of snapping. */
+  const targetFov=clamp(61 + speedKmh*.045 + curve*3.0,58,70);
+  camera.fov=lerp(camera.fov,targetFov,1-Math.exp(-3.0*dt));
+  camera.updateProjectionMatrix();
+
+  const roadInfo=terrainInfoAt(vehicle.pos.x,vehicle.pos.z);
+  const t=roadInfo.sampleT;
+  SU_V20.lastRoadT=t;
+}
+
+function suV20UpdateWorld(dt){
+  suV20VehiclePhysics(dt);
+  suV20CameraFeel(dt);
+
+  /* Keep the reflection probe close enough to the hero vehicle. */
+  const probe=scene.getObjectByName('SU_V20_ReflectionAnchor');
+  if(probe){
+    probe.position.lerp(new THREE.Vector3(vehicle.pos.x,1.2,vehicle.pos.z),
+      1-Math.exp(-4*dt));
+  }
+}
+
+/* Bootstrap the new world layer after the original environment has loaded. */
+suV20BuildLongRoadScenery();
+
+const suV20OriginalUpdateVehicle=updateVehicle;
+updateVehicle=function(dt){
+  suV20OriginalUpdateVehicle(dt);
+  suV20UpdateWorld(dt);
+};
+
 /* ---------------- Main loop ---------------- */
 let lastT=performance.now(), running=false, paused=false;
 function frame(now){
