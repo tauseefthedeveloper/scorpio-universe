@@ -518,7 +518,7 @@ body.uiSmall #btnScreenScale,body.uiLarge #btnScreenScale{box-shadow:0 0 0 1px r
 }
 .v18Route:first-letter{font-size:18px;}
 .v18Route span{margin-left:auto;color:var(--v18-gold);}
-#v18LeftToolbar{
+#v18LeftToolbar{pointer-events:auto;
   position:absolute;left:9px;top:95px;display:flex;flex-direction:column;gap:6px;
   pointer-events:auto;z-index:61;
 }
@@ -618,12 +618,12 @@ body.uiSmall #btnScreenScale,body.uiLarge #btnScreenScale{box-shadow:0 0 0 1px r
 }
 /* Larger readable HUD at the user's large-screen option. */
 body.uiLarge #v18BrandBar{transform:translateX(-50%) scale(1.08);transform-origin:top center;}
-body.uiLarge #v18LeftToolbar{transform:scale(1.08);transform-origin:top left;}
+body.uiLarge #v18LeftToolbar{pointer-events:auto;transform:scale(1.08);transform-origin:top left;}
 body.uiSmall #v18BrandBar{transform:translateX(-50%) scale(.82);transform-origin:top center;}
-body.uiSmall #v18LeftToolbar{transform:scale(.84);transform-origin:top left;}
+body.uiSmall #v18LeftToolbar{pointer-events:auto;transform:scale(.84);transform-origin:top left;}
 @media(max-width:760px){
   #v18BrandBar{width:500px;max-width:54vw;transform:translateX(-50%) scale(.86);transform-origin:top center;}
-  #v18LeftToolbar{left:7px;top:91px;transform:scale(.88);transform-origin:top left;}
+  #v18LeftToolbar{pointer-events:auto;left:7px;top:91px;transform:scale(.88);transform-origin:top left;}
   #v18VehicleBadge{display:none;}
   #minimapWrap{width:92px !important;height:92px !important;right:8px !important;top:93px !important;}
   #smallCtrlRow{width:190px !important;grid-template-columns:repeat(4,43px) !important;gap:4px !important;}
@@ -639,7 +639,7 @@ body.uiSmall #v18LeftToolbar{transform:scale(.84);transform-origin:top left;}
 }
 @media(max-height:430px){
   #v18BrandBar{top:4px;transform:translateX(-50%) scale(.72);transform-origin:top center;}
-  #v18LeftToolbar{top:70px;transform:scale(.72);transform-origin:top left;}
+  #v18LeftToolbar{pointer-events:auto;top:70px;transform:scale(.72);transform-origin:top left;}
   #minimapWrap{top:71px !important;width:72px !important;height:72px !important;}
   #smallCtrlRow{top:4px !important;right:7px !important;transform:scale(.78) !important;transform-origin:top right;}
   #doorControls{top:73px !important;right:7px !important;transform:scale(.78) !important;transform-origin:top right;}
@@ -676,7 +676,7 @@ body.uiSmall #v18LeftToolbar{transform:scale(.84);transform-origin:top left;}
   left:10px !important; top:12px !important; width:70px !important; height:36px !important;
   z-index:80 !important; font-size:8px !important;
 }
-#v18LeftToolbar{
+#v18LeftToolbar{pointer-events:auto;
   left:10px !important; top:58px !important; width:70px !important;
   gap:6px !important; z-index:79 !important;
 }
@@ -756,7 +756,7 @@ body.uiLarge #smallCtrlRow, body.uiLarge #doorControls, body.uiLarge #lightContr
   #lightControls{bottom:148px !important;gap:5px !important;}
   #engineStatus{top:48px !important;}
   #minimapWrap{left:88px !important;width:76px !important;height:76px !important;}
-  #v18LeftToolbar{top:56px !important;}
+  #v18LeftToolbar{pointer-events:auto;top:56px !important;}
   .v18Tool{width:62px !important;height:44px !important;}
   #btnScreenScale{width:62px !important;height:32px !important;}
   #wheelWrap{left:16px !important;width:145px !important;height:145px !important;}
@@ -770,7 +770,7 @@ body.uiLarge #smallCtrlRow, body.uiLarge #doorControls, body.uiLarge #lightContr
   #v18BrandBar{top:4px !important;transform:translateX(-50%) scale(.68) !important;}
   #btnScreenScale{top:5px !important;}
   #minimapWrap{top:5px !important;left:78px !important;width:64px !important;height:64px !important;}
-  #v18LeftToolbar{top:49px !important;transform:scale(.72);transform-origin:top left;}
+  #v18LeftToolbar{pointer-events:auto;top:49px !important;transform:scale(.72);transform-origin:top left;}
   #smallCtrlRow{top:4px !important;transform:scale(.72) !important;}
   #engineStatus{top:37px !important;transform:scale(.75);transform-origin:top right;}
   #doorControls{top:62px !important;transform:scale(.72) !important;}
@@ -783,6 +783,12 @@ body.uiLarge #smallCtrlRow, body.uiLarge #doorControls, body.uiLarge #lightContr
   #speedCluster{bottom:6px !important;transform:translateX(50%) scale(.66) !important;}
 }
 
+</style>
+
+<style id="v22VisualSafety">
+#canvasWrap{background:linear-gradient(180deg,#77b8ee 0%,#cde6f5 45%,#91a86a 46%,#667b4b 100%);}
+#gameCanvas{background:transparent!important;}
+.v22-legend{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:26;pointer-events:none;padding:7px 14px;border-radius:999px;background:rgba(8,10,9,.52);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.72);font:700 9px system-ui,sans-serif;letter-spacing:.08em;backdrop-filter:blur(8px);}
 </style>
 </head>
 <body>
@@ -810,6 +816,7 @@ body.uiLarge #smallCtrlRow, body.uiLarge #doorControls, body.uiLarge #lightContr
 </div>
 
 <div id="hud">
+  <div class="v22-legend">CAMERA · DAY/NIGHT · WEATHER · MAP · SETTINGS</div>
   <div id="cameraHint">DRAG CENTER AREA · CAMERA ORBIT</div>
   <div id="v14CinematicOverlay"><div id="v14DriveInfo"><span class="dot"></span>FREE ROAM · REALISTIC DRIVE</div></div>
   <div id="topBar">
@@ -930,6 +937,12 @@ body.uiLarge #smallCtrlRow, body.uiLarge #doorControls, body.uiLarge #lightContr
 <div class="hint">TOUCH CONTROLS · STEER LEFT · GAS / BRAKE RIGHT · DRAG CENTER TO LOOK</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>/* V22_RUNTIME_GUARD */
+window.addEventListener('error', function(e){
+  var m=document.getElementById('bootMsg');
+  if(m && e && e.message) m.textContent='ENGINE ERROR: '+e.message;
+});
+</script>
 <script>
 (function(){
 "use strict";
@@ -1055,13 +1068,15 @@ renderer.physicallyCorrectLights = true;
 // Filmic tone mapping + slightly boosted exposure for punchier, less "flat" arcade-racer colors
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.18;
-renderer.outputColorSpace = THREE.SRGBColorSpace;
+if('outputColorSpace' in renderer && THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
 if('useLegacyLights' in renderer) renderer.useLegacyLights=false;
-renderer.outputEncoding = THREE.sRGBEncoding;
+if('outputEncoding' in renderer && THREE.sRGBEncoding) renderer.outputEncoding = THREE.sRGBEncoding;
 // Cheap cinematic color grade (contrast/saturation) — no post-processing pipeline needed
 canvas.style.filter = 'contrast(1.08) saturate(1.22) brightness(1.02)';
 
 const scene = new THREE.Scene();
+// V21 display safety: never allow the game canvas to look like an empty black page.
+scene.background = new THREE.Color(0x8fb9d8);
 const camera = new THREE.PerspectiveCamera(58, innerWidth/innerHeight, 0.1, 900);
 
 function resize(){
@@ -19827,5 +19842,248 @@ console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
 })();
 
 </script>
+
+<style id="v21-control-legend">
+#v21ControlLegend{position:fixed;left:78px;top:96px;z-index:62;pointer-events:none;background:rgba(5,7,7,.68);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px 10px;color:rgba(255,255,255,.72);font:700 9px/1.55 system-ui;letter-spacing:.06em;backdrop-filter:blur(7px);opacity:.0;transition:opacity .2s;}
+#v18LeftToolbar:hover + #v21ControlLegend{opacity:1;}
+</style>
+<div id="v21ControlLegend">CAMERA · VIEW &nbsp; | &nbsp; DAY/NIGHT · TIME<br>WEATHER · WEATHER &nbsp; | &nbsp; MAP · MINIMAP<br>SETTINGS · GRAPHICS</div>
+
 </body>
 </html>
+
+/* ============================================================================
+   SCORPIO UNIVERSE V21 — SLOW-ROADS-STYLE WORLD + CONTROL REWORK
+   ---------------------------------------------------------------------------
+   Goals:
+   - Make the 3D world impossible to disappear into a black background.
+   - Give the player a broad, scenic horizon with rolling terrain, clouds,
+     vegetation, village props and road depth cues.
+   - Make every left toolbar button perform a visible action.
+   - Add a calmer, more natural third-person camera and chassis response.
+   - Keep everything procedural and CDN-light; no external asset download needed.
+   ============================================================================ */
+(function V21(){
+  'use strict';
+  const V={built:false, root:null, clouds:[], birds:[], lastInfo:null};
+
+  function mat(c,r=1,m=0){return new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});}
+  function addMesh(g,geo,ma,x,y,z,ry=0,rx=0){
+    const m=new THREE.Mesh(geo,ma); m.position.set(x,y,z); m.rotation.set(rx,ry,0); m.castShadow=true; m.receiveShadow=true; g.add(m); return m;
+  }
+
+  function addHorizonWorld(){
+    if(V.built)return; V.built=true;
+    V.root=new THREE.Group(); V.root.name='V21_SLOW_ROADS_WORLD'; scene.add(V.root);
+
+    // Very large low-poly terrain apron. It sits below the original road terrain
+    // and gives the camera a safe colored world even when the local road is hidden.
+    const farGroundMat=mat(0x6d8750,1);
+    const farGround=new THREE.Mesh(new THREE.PlaneGeometry(760,760,12,12),farGroundMat);
+    farGround.rotation.x=-Math.PI/2; farGround.position.y=-0.55; farGround.receiveShadow=true; V.root.add(farGround);
+
+    // Layered mountain silhouettes create the long-horizon look of scenic driving games.
+    const mountainA=mat(0x4f6848,1), mountainB=mat(0x617b55,1), mountainC=mat(0x779064,1);
+    for(let ring=0;ring<3;ring++){
+      const radius=145+ring*55;
+      for(let i=0;i<26;i++){
+        const a=i/26*Math.PI*2 + ring*.18;
+        const h=18 + (i*17+ring*13)%28;
+        const w=20 + (i*11)%24;
+        const hill=new THREE.Mesh(new THREE.ConeGeometry(w,h,9,1),ring===0?mountainA:ring===1?mountainB:mountainC);
+        hill.position.set(Math.cos(a)*radius,h*.5-0.3,Math.sin(a)*radius);
+        hill.scale.y=0.82+((i+ring)%4)*.09;
+        hill.rotation.y=a+.3; hill.receiveShadow=true; V.root.add(hill);
+      }
+    }
+
+    // Clouds: flat billboard clusters with soft opacity, animated slowly for life.
+    const cloudMat=new THREE.MeshLambertMaterial({color:0xffffff,transparent:true,opacity:.72,depthWrite:false});
+    for(let i=0;i<18;i++){
+      const g=new THREE.Group();
+      const x=-260+(i*53)%520, z=-170+(i*89)%340, y=48+(i%5)*7;
+      for(let j=0;j<4;j++){
+        const puff=new THREE.Mesh(new THREE.SphereGeometry(4.5+(j%2)*1.7,10,7),cloudMat);
+        puff.position.set((j-1.5)*4.4, (j%2)*1.1, (j%3-1)*1.5); g.add(puff);
+      }
+      g.position.set(x,y,z); g.scale.set(1.4,0.55,0.9); V.root.add(g); V.clouds.push(g);
+    }
+
+    // Vegetation with a deliberately mixed Indian-rural silhouette.
+    const trunk=mat(0x5a3c26,1), leaf1=mat(0x3f7138,1), leaf2=mat(0x638b42,1), palm=mat(0x356c37,1);
+    const tg=new THREE.CylinderGeometry(.10,.18,1.8,7), lg=new THREE.SphereGeometry(1.15,8,6);
+    const dummy=new THREE.Object3D();
+    const trees=new THREE.Group(); trees.name='V21_Vegetation'; V.root.add(trees);
+    for(let i=0;i<320;i++){
+      const t=Math.random(); const side=Math.random()<.5?-1:1;
+      const lateral=ROAD_WIDTH*.5+7+Math.random()*34;
+      const rp=pointOnRoad(t,side*lateral,.0);
+      if(Math.abs(rp.x)>350 || Math.abs(rp.z)>350)continue;
+      const sc=.65+Math.random()*1.35;
+      const tgx=new THREE.Mesh(tg,trunk); tgx.position.set(rp.x,rp.y+.9,rp.z); tgx.scale.set(sc,sc,sc); tgx.castShadow=true; trees.add(tgx);
+      const crown=new THREE.Mesh(lg,(i%5===0)?palm:(i%2?leaf1:leaf2));
+      crown.position.set(rp.x,rp.y+2.2*sc,rp.z); crown.scale.set(sc*1.05,sc*.9,sc*1.05); crown.castShadow=true; trees.add(crown);
+      if(i%9===0){
+        // a second smaller crown creates a more natural irregular canopy
+        const c2=new THREE.Mesh(new THREE.SphereGeometry(.65,7,5),leaf1);
+        c2.position.set(rp.x+1.0*sc,rp.y+2.0*sc,rp.z-.5*sc); c2.castShadow=true; trees.add(c2);
+      }
+    }
+
+    // A few distinctive palms near the village section.
+    for(let i=0;i<22;i++){
+      const t=(i*.071+.17)%1, side=i%2?1:-1;
+      const rp=pointOnRoad(t,side*11,.0);
+      const p=new THREE.Group(); p.position.set(rp.x,rp.y,rp.z);
+      const stem=new THREE.Mesh(new THREE.CylinderGeometry(.12,.17,4.6,8),trunk); stem.position.y=2.3; stem.castShadow=true; p.add(stem);
+      for(let k=0;k<7;k++){
+        const fr=new THREE.Mesh(new THREE.BoxGeometry(.08,1.9,.16),palm); fr.position.y=4.5; fr.rotation.z=.9; fr.rotation.y=k*Math.PI*2/7; fr.castShadow=true; p.add(fr);
+      }
+      V.root.add(p);
+    }
+
+    // Houses / boundary walls / small roadside shops. These make the route feel inhabited.
+    const wall=mat(0xb7a27e,.95), roof=mat(0x6d4730,.98), shop=mat(0x8e7653,.96);
+    for(let i=0;i<34;i++){
+      const t=(i*.049+.09)%1, side=i%2?1:-1;
+      const rp=pointOnRoad(t,side*(8.5+(i%4)*2),.0);
+      const g=new THREE.Group(); g.position.set(rp.x,rp.y,rp.z); g.rotation.y=rp.heading;
+      addMesh(g,new THREE.BoxGeometry(3.4,1.7,2.8),i%5===0?shop:wall,0,.85,0);
+      addMesh(g,new THREE.ConeGeometry(2.2,1.0,4),roof,0,2.15,0,Math.PI/4);
+      if(i%4===0){
+        const sign=addMesh(g,new THREE.BoxGeometry(1.5,.32,.05),mat(0xd7c391,.8),0,1.65,-1.43);
+        sign.rotation.x=0;
+      }
+      V.root.add(g);
+    }
+
+    // Roadside stones and bollards create close-up depth and motion cues.
+    const stone=mat(0x77705f,1), white=mat(0xe8e1cf,.7);
+    for(let i=0;i<180;i++){
+      const t=Math.random(), side=Math.random()<.5?-1:1;
+      const rp=pointOnRoad(t,side*(ROAD_WIDTH*.5+2.5+Math.random()*2),.0);
+      const b=new THREE.Mesh(new THREE.CylinderGeometry(.10,.14,.42+(i%3)*.08,6),i%4?stone:white);
+      b.position.set(rp.x,rp.y+.22,rp.z); b.castShadow=true; V.root.add(b);
+    }
+
+    // Water ribbon off one side of the scenic route.
+    const waterMat=new THREE.MeshPhysicalMaterial({color:0x4b8da0,roughness:.12,metalness:.04,transparent:true,opacity:.82,clearcoat:.7});
+    const water=new THREE.Mesh(new THREE.PlaneGeometry(150,62,24,12),waterMat);
+    water.rotation.x=-Math.PI/2; water.position.set(-82,-.20,40); water.receiveShadow=true; water.name='V21_RIVER'; V.root.add(water);
+
+    // A simple bridge over the water.
+    const bridge=new THREE.Group(); bridge.position.set(-48,.05,37); bridge.rotation.y=.42;
+    addMesh(bridge,new THREE.BoxGeometry(14,.32,5.8),mat(0x77736b,.9),0,0,0);
+    for(let i=-2;i<=2;i++) addMesh(bridge,new THREE.BoxGeometry(.16,1.0,6.2),mat(0x595a58,.75),i*2.8,.58,0);
+    V.root.add(bridge);
+
+    // Lighting tuned for a bright natural daylight base; updateSky can still override it.
+    hemi.intensity=Math.max(hemi.intensity,.72);
+    sun.intensity=Math.max(sun.intensity,1.25);
+    if(scene.fog){scene.fog.color.set(0xbfd3d0);scene.fog.near=65;scene.fog.far=420;}
+    scene.background.set(0x8fb9d8);
+  }
+
+  function realisticCamera(dt){
+    // Use the existing camera system but smooth it toward a cinematic chase rig.
+    // This is intentionally applied after updateCamera so the original camera modes remain usable.
+    const speed=Math.abs(vehicle.speed);
+    const fwd=new THREE.Vector3(Math.sin(vehicle.heading),0,Math.cos(vehicle.heading));
+    const target=vehicle.pos.clone().add(new THREE.Vector3(0,1.15,0)).addScaledVector(fwd,1.7);
+    const back=vehicle.pos.clone().add(new THREE.Vector3(0,2.65,0)).addScaledVector(fwd,-7.8);
+    if(camIndex===0){
+      camPos.lerp(back,1-Math.exp(-4.4*dt));
+      camLook.lerp(target,1-Math.exp(-6.0*dt));
+      camera.position.copy(camPos); camera.lookAt(camLook);
+      camera.fov=lerp(camera.fov,59+Math.min(8,speed*3.6*.055),1-Math.exp(-3.2*dt));
+      camera.updateProjectionMatrix();
+    }
+  }
+
+  function chassisFeel(dt){
+    const info=terrainInfoAt(vehicle.pos.x,vehicle.pos.z);
+    const rough=(Math.abs(heightAt(vehicle.pos.x+Math.sin(vehicle.heading)*1.1,vehicle.pos.z+Math.cos(vehicle.heading)*1.1)-
+      heightAt(vehicle.pos.x-Math.sin(vehicle.heading)*1.1,vehicle.pos.z-Math.cos(vehicle.heading)*1.1)));
+    const speed=Math.abs(vehicle.speed);
+    const bounce=clamp(rough*.18+Math.abs(Math.sin(performance.now()*.010))*rough*.035,0,.055);
+    const suspension=V17_REALISM?.suspension||{bodyRoll:.095,bodyPitch:.105};
+    vehicle.bodyPitch=lerp(vehicle.bodyPitch,clamp(-rough*.18,-.09,.09),1-Math.exp(-5*dt));
+    vehicle.bodyRoll=lerp(vehicle.bodyRoll,clamp(vehicle.steerAngle*speed*.002,-suspension.bodyRoll,suspension.bodyRoll),1-Math.exp(-4.5*dt));
+    bodyTilt.position.y=lerp(bodyTilt.position.y,RIDE_HEIGHT+bounce,1-Math.exp(-8*dt));
+    bodyTilt.rotation.x=lerp(bodyTilt.rotation.x,vehicle.bodyPitch,1-Math.exp(-7*dt));
+    bodyTilt.rotation.z=lerp(bodyTilt.rotation.z,-vehicle.bodyRoll,1-Math.exp(-7*dt));
+    // Surface-specific dust/traction feedback.
+    if(info.band==='mud' && speed>4) camShake=Math.max(camShake,.025);
+    if(info.band==='dirt' && speed>10) camShake=Math.max(camShake,.012);
+  }
+
+  function setToolState(id,active){
+    const e=document.getElementById(id); if(e)e.classList.toggle('active',!!active);
+  }
+  function bindControls(){
+    const cam=document.getElementById('v18Camera');
+    if(cam)cam.onclick=()=>{cycleCamera();setToolState('v18Camera',true);toast('CAMERA · '+(CAM_LABELS[CAM_MODES[camIndex]]||'CHASE'));};
+    const dn=document.getElementById('v18DayNight');
+    if(dn)dn.onclick=()=>{
+      timeOfDay=(timeOfDay+6)%24; updateSky(); setToolState('v18DayNight',true);
+      toast('TIME · '+String(Math.floor(timeOfDay)).padStart(2,'0')+':00');
+      setTimeout(()=>setToolState('v18DayNight',false),500);
+    };
+    const weather=document.getElementById('v18Weather');
+    if(weather)weather.onclick=()=>{cycleWeather();setToolState('v18Weather',true);toast('WEATHER · '+WEATHERS[weatherIdx].toUpperCase());setTimeout(()=>setToolState('v18Weather',false),600);};
+    const map=document.getElementById('v18Map');
+    if(map)map.onclick=()=>{
+      const m=document.getElementById('minimapWrap'); if(m)m.classList.toggle('v18MapLarge');
+      setToolState('v18Map',true); toast('MAP · '+(m&&m.classList.contains('v18MapLarge')?'LARGE':'NORMAL'));setTimeout(()=>setToolState('v18Map',false),600);
+    };
+    const settings=document.getElementById('v18Settings');
+    if(settings)settings.onclick=()=>{
+      const next=v14Quality==='high'?'balanced':v14Quality==='balanced'?'low':'high';
+      v14ApplyQuality(next); setToolState('v18Settings',true); toast('GRAPHICS · '+next.toUpperCase());setTimeout(()=>setToolState('v18Settings',false),700);
+    };
+  }
+
+  function updateEnvironment(dt){
+    for(let i=0;i<V.clouds.length;i++){
+      const c=V.clouds[i]; c.position.x+=dt*(.7+(i%4)*.18); if(c.position.x>290)c.position.x=-290;
+    }
+    realisticCamera(dt);
+    chassisFeel(dt);
+    const info=terrainInfoAt(vehicle.pos.x,vehicle.pos.z); V.lastInfo=info;
+    const f=document.getElementById('v18Surface'); if(f)f.textContent=(info.band||'grass').toUpperCase();
+    const q=document.getElementById('v18Quality'); if(q)q.textContent=v14Quality.toUpperCase();
+  }
+
+  // Build before gameplay starts so the world is already present behind the menu.
+  addHorizonWorld();
+  bindControls();
+
+  // Strong render safety net: even if another feature pauses its own loop, the
+  // renderer keeps drawing the actual 3D scene whenever gameplay is visible.
+  const renderSafety=function(){
+    requestAnimationFrame(renderSafety);
+    if(!document.getElementById('hud')?.classList.contains('show')) return;
+    try{
+      const dt=.016;
+      updateEnvironment(dt);
+      if(typeof sky!=='undefined' && sky) sky.position.set(camera.position.x,0,camera.position.z);
+      renderer.render(scene,camera);
+    }catch(err){
+      // Keep the canvas alive; expose a compact diagnostic in the console only.
+      if(!V.reported){V.reported=true;console.warn('V21 render safety:',err);}
+    }
+  };
+  renderSafety();
+
+  // Give the user an obvious explanation for every left control.
+  const help={
+    v18Camera:'CAMERA: cycle chase / cockpit / hood / front / rear views',
+    v18DayNight:'DAY/NIGHT: jump time forward by 6 hours',
+    v18Weather:'WEATHER: SUNNY → CLOUDY → RAIN',
+    v18Map:'MAP: enlarge / restore the minimap',
+    v18Settings:'SETTINGS: cycle LOW → BALANCED → HIGH graphics'
+  };
+  Object.keys(help).forEach(id=>{const e=document.getElementById(id);if(e)e.title=help[id];});
+
+  console.log('SCORPIO UNIVERSE V21 realistic world loaded');
+})();
