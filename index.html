@@ -434,6 +434,40 @@ body{overflow:hidden;}
   #doorControls{top:76px !important;}
 }
 
+
+/* ========================================================================
+   V15 SCREEN SCALE / MOBILE READABILITY
+   ======================================================================== */
+.menuInner{width:min(92vw,620px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px 14px;}
+#menuScreen h1{max-width:100%;white-space:nowrap;}
+#menuScreen .tag{max-width:100%;text-align:center;white-space:normal;}
+#menuScreen .credit{font-size:clamp(.72rem,2.2vw,.95rem);letter-spacing:.10em;color:var(--sand);opacity:.82;margin:-1.1rem 0 1.55rem;white-space:normal;}
+#btnScreenScale{position:absolute;left:10px;top:90px;width:58px;height:30px;border-radius:9px;z-index:47;font-size:7px;font-weight:900;letter-spacing:.05em;background:rgba(7,9,8,.78);}
+body.uiSmall #hud{--ui-scale:.82;}
+body.uiLarge #hud{--ui-scale:1.12;}
+body.uiSmall #wheelWrap{transform:scale(.90);transform-origin:left bottom;}
+body.uiLarge #wheelWrap{transform:scale(1.10);transform-origin:left bottom;}
+body.uiSmall #pedalCluster{transform:scale(.88);transform-origin:right bottom;}
+body.uiLarge #pedalCluster{transform:scale(1.08);transform-origin:right bottom;}
+body.uiSmall #speedCluster{transform:translateX(50%) scale(.62) !important;}
+body.uiLarge #speedCluster{transform:translateX(50%) scale(.86) !important;}
+body.uiSmall #btnScreenScale,body.uiLarge #btnScreenScale{box-shadow:0 0 0 1px rgba(242,196,95,.35),0 5px 16px rgba(0,0,0,.35);}
+@media(max-width:700px){
+  #menuScreen{overflow:hidden;padding:10px;}
+  .menuInner{max-height:100vh;overflow:hidden;padding:12px 10px;}
+  #menuScreen h1{font-size:clamp(1.55rem,8.5vw,2.65rem);letter-spacing:.045em;}
+  #menuScreen .tag{font-size:clamp(.60rem,2.7vw,.82rem);letter-spacing:.08em;margin:.25rem 0 1rem;}
+  #menuScreen .credit{font-size:.66rem;letter-spacing:.06em;margin:-.25rem 0 .85rem;}
+  .menuBtn{width:min(310px,82vw);padding:.70rem .8rem;font-size:.86rem;margin:.25rem 0;}
+  #btnScreenScale{left:8px;top:84px;}
+}
+@media(max-height:430px){
+  .menuInner{transform:translateY(-3px) scale(.94);}
+  #btnScreenScale{top:76px;}
+}
+/* Higher quality presentation without a heavy post-processing pass. */
+#gameCanvas{image-rendering:auto;filter:contrast(1.035) saturate(1.10) brightness(1.015);}
+
 </style>
 </head>
 <body>
@@ -446,17 +480,18 @@ body{overflow:hidden;}
 <div id="bootScreen">
   <h1>SCORPIO UNIVERSE</h1>
   <div class="tag">Own the Road. Conquer the Village.</div>
-  <div class="tag">Design and developed by Tauseef Khan...</div>
   <div id="bootBar"><div id="bootFill"></div></div>
   <div id="bootMsg">Loading village...</div>
 </div>
 
 <div id="menuScreen">
+  <div class="menuInner">
   <h1>SCORPIO UNIVERSE</h1>
   <div class="tag">OWN THE ROAD · CONQUER THE VILLAGE</div>
-  <div class="tag">Design and developed by Tauseef Khan...</div>
+  <div class="credit">Design and developed by Tauseef Khan...</div>
   <button class="menuBtn primary" id="btnPlay">PLAY</button>
   <button class="menuBtn" id="btnHowTo">HOW TO DRIVE</button>
+  </div>
 </div>
 
 <div id="hud">
@@ -470,6 +505,7 @@ body{overflow:hidden;}
   </div>
 
   <div id="minimapWrap" class="hud-panel"><canvas id="minimap" width="220" height="220"></canvas></div>
+  <button id="btnScreenScale" class="ctrlBtn screenScaleBtn" type="button" aria-label="Change screen control size">SCREEN</button>
 
   <div id="clusterBottomLeft">
     <div class="gauge hud-panel"><span class="lbl">FUEL</span><div class="barTrack"><div class="barFill" id="fuelFill" style="width:82%"></div></div></div>
@@ -671,14 +707,14 @@ function heightAt(x,z){ return terrainInfoAt(x,z).height; }
 /* ---------------- Renderer / Scene ---------------- */
 const canvas = document.getElementById('gameCanvas');
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true, powerPreference:'high-performance'});
-const initialDpr = Math.min(window.devicePixelRatio || 1, /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? 1.35 : 1.75);
+const initialDpr = Math.min(window.devicePixelRatio || 1, /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? 1.25 : 1.65);
 renderer.setPixelRatio(initialDpr);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.physicallyCorrectLights = true;
 // Filmic tone mapping + slightly boosted exposure for punchier, less "flat" arcade-racer colors
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.12;
+renderer.toneMappingExposure = 1.18;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 if('useLegacyLights' in renderer) renderer.useLegacyLights=false;
 renderer.outputEncoding = THREE.sRGBEncoding;
@@ -706,7 +742,7 @@ sun.shadow.camera.far=200; sun.shadow.bias=-0.0006; sun.shadow.normalBias=0.02;
 scene.add(sun); scene.add(sun.target);
 const moonAmbient = new THREE.AmbientLight(0x1a2440, 0.0);
 scene.add(moonAmbient);
-scene.fog = new THREE.Fog(0xbfd6e6, 60, 260);
+scene.fog = new THREE.Fog(0xc8d9df, 75, 310);
 
 // Gradient sky dome (replaces a flat background color with a horizon gradient, like an arcade racer skybox)
 const skyGeo = new THREE.SphereGeometry(400,24,16);
@@ -1228,7 +1264,7 @@ car.add(bodyTilt);
 // Proportional correction to the official S11 footprint: 4456 mm length / 1820 mm width.
 bodyTilt.scale.set(0.945,1.0,0.948);
 
-const paintMat = new THREE.MeshPhysicalMaterial({color:0x252a2f, metalness:0.72, roughness:0.18, clearcoat:0.55, clearcoatRoughness:0.12});
+const paintMat = new THREE.MeshPhysicalMaterial({color:0xd7d4cc, metalness:0.62, roughness:0.20, clearcoat:0.72, clearcoatRoughness:0.10, reflectivity:0.72});
 const paintDarkMat = new THREE.MeshStandardMaterial({color:0x0b0d10, metalness:0.45, roughness:0.42});
 const trimMat = new THREE.MeshStandardMaterial({color:0x111315, roughness:0.72, metalness:0.15});
 const glassMat = new THREE.MeshPhysicalMaterial({color:0x08141b, metalness:0.05, roughness:0.06, transparent:true, opacity:0.9, clearcoat:0.65, clearcoatRoughness:0.08});
@@ -1391,6 +1427,50 @@ scoopBase.position.set(1.58,1.22,0);
 const scoopTop=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.48,.055,.48),claddingMat),false,false);
 scoopTop.position.set(1.62,1.29,0);
 
+/* -------------------------------------------------------------------------
+   V15 exterior detail pass: grille, badges, number plate, roof rails,
+   door seams and glass highlights. These are lightweight procedural meshes.
+   ------------------------------------------------------------------------- */
+const grilleFrameMat=new THREE.MeshStandardMaterial({color:0x111315,metalness:.62,roughness:.28});
+const grilleChromeMat=new THREE.MeshStandardMaterial({color:0xb9bec1,metalness:.90,roughness:.18});
+const plateMat=new THREE.MeshStandardMaterial({color:0xf1f1ea,metalness:.05,roughness:.58});
+const plateTextMat=new THREE.MeshStandardMaterial({color:0x111111,roughness:.8});
+const grilleFrame=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.07,.48,1.12),grilleFrameMat),false,false);
+ grilleFrame.position.set(2.43,1.02,0);
+for(let i=0;i<8;i++){
+  const bar=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.075,.035,1.02),grilleChromeMat),false,false);
+  bar.position.set(2.475,.82+i*.055,0);
+}
+for(const z of [-.42,-.21,0,.21,.42]){
+  const vbar=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.08,.40,.026),grilleFrameMat),false,false);
+  vbar.position.set(2.49,1.00,z);
+}
+const frontPlate=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.035,.16,.56),plateMat),false,false);
+frontPlate.position.set(2.505,.73,0);
+const rearPlate=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.035,.16,.56),plateMat),false,false);
+rearPlate.position.set(-2.405,.73,0);
+for(const sgn of [-1,1]){
+  const rail=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(3.20,.055,.065),grilleChromeMat),false,false);
+  rail.position.set(-.02,2.07,sgn*.67);
+  const foot=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.10,.07,.10),grilleFrameMat),false,false);
+  foot.position.set(-1.25,2.05,sgn*.67);
+  const foot2=foot.clone(); foot2.position.x=1.05; bodyTilt.add(foot2);
+}
+// Door and tailgate shut-lines add scale and panel readability in bright scenes.
+const seamMat=new THREE.LineBasicMaterial({color:0x35393c,transparent:true,opacity:.70});
+function addSeam(x,z,rot=0){
+  const seam=new THREE.Mesh(new THREE.BoxGeometry(.018,.62,.012),seamMat);
+  seam.position.set(x,1.03,z); seam.rotation.z=rot; bodyTilt.add(seam);
+}
+[-1,1].forEach(z=>{addSeam(.08,z);addSeam(-.96,z);});
+const tailSeam=new THREE.Mesh(new THREE.BoxGeometry(.018,.72,1.52),seamMat);
+tailSeam.position.set(-2.43,.98,0); bodyTilt.add(tailSeam);
+// Small amber side repeater at the front fender.
+[-1,1].forEach(z=>{
+  const repeater=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.035,.075,.16),amberMat),false,false);
+  repeater.position.set(1.72,1.05,z*1.005);
+});
+
 /* Side mirrors, door handles, S11-style side cladding and running board. */
 [-1,1].forEach(s=>{
   const mirror=new THREE.Group(); bodyTilt.add(mirror);
@@ -1444,6 +1524,18 @@ const tailL=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.09,0.38,0.25
 const tailR=tailL.clone(); tailR.material=redMat.clone(); tailR.position.z=-0.78; bodyTilt.add(tailR);
 const reverseL=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.095,0.13,0.18),whiteLampMat),false,false); reverseL.position.set(-2.36,0.88,0.78);
 const reverseR=reverseL.clone(); reverseR.position.z=-0.78; bodyTilt.add(reverseR);
+
+// Rear amber indicators: independent from brake/parking lamps so the turn signal
+// remains clearly visible even when the brakes are not pressed.
+const rearIndMatL=new THREE.MeshStandardMaterial({color:0x3b1700,emissive:0xff9b00,emissiveIntensity:0.12,roughness:0.28});
+const rearIndMatR=rearIndMatL.clone();
+const rearIndL=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.10,0.16,0.22),rearIndMatL),false,false);
+const rearIndR=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.10,0.16,0.22),rearIndMatR),false,false);
+rearIndL.position.set(-2.40,1.27,0.80); rearIndR.position.set(-2.40,1.27,-0.80);
+
+const rearMarkerL=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.08,0.11,0.18),redMat.clone()),false,false);
+const rearMarkerR=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.08,0.11,0.18),redMat.clone()),false,false);
+rearMarkerL.position.set(-2.405,1.02,0.79); rearMarkerR.position.set(-2.405,1.02,-0.79);
 const rearHandle=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.08,0.06,0.45),chromeMat),false,false); rearHandle.position.set(-2.34,1.40,0);
 // Rear-mounted spare wheel and center badge: gives the SUV a much more believable silhouette.
 const spareMount=addMesh(bodyTilt,new THREE.Mesh(new THREE.CylinderGeometry(.50,.50,.16,28),trimMat));
@@ -1607,15 +1699,35 @@ function toggleHazard(){
 }
 function updateIndicators(dt){
   blinkClock+=dt;
-  if(blinkClock>0.48){blinkClock=0;blinkOn=!blinkOn;}
-  const lOn=(hazard||indicatorLeft)&&blinkOn, rOn=(hazard||indicatorRight)&&blinkOn;
-  [indL,indR].forEach((m,i)=>{m.material.emissiveIntensity=(i===0?lOn:rOn)?2.7:0.08;});
-  const brakeOn=input.brake>0.05;
-  tailL.material.emissiveIntensity=brakeOn?2.2:0.22;
-  tailR.material.emissiveIntensity=brakeOn?2.2:0.22;
-  const reverseOn=vehicle && vehicle.speed < -0.08;
-  reverseL.material.emissiveIntensity=reverseOn?2.8:0.08;
-  reverseR.material.emissiveIntensity=reverseOn?2.8:0.08;
+  if(blinkClock>0.46){blinkClock=0;blinkOn=!blinkOn;}
+  const leftActive=hazard||indicatorLeft;
+  const rightActive=hazard||indicatorRight;
+  const lOn=leftActive&&blinkOn, rOn=rightActive&&blinkOn;
+
+  // Four-corner amber signalling: front + rear.
+  indL.material.emissiveIntensity=lOn?4.2:0.10;
+  indR.material.emissiveIntensity=rOn?4.2:0.10;
+  rearIndL.material.emissiveIntensity=lOn?4.8:0.10;
+  rearIndR.material.emissiveIntensity=rOn?4.8:0.10;
+
+  // Tail lamps are always alive at a low running-light level. Brake pressure
+  // adds a strong red bloom instead of making the lamps appear/disappear.
+  const brakeOn=input.brake>0.035 || input.handbrake;
+  const tailLevel=brakeOn?5.0:0.72;
+  tailL.material.emissiveIntensity=tailLevel;
+  tailR.material.emissiveIntensity=tailLevel;
+  rearMarkerL.material.emissiveIntensity=brakeOn?4.0:0.45;
+  rearMarkerR.material.emissiveIntensity=brakeOn?4.0:0.45;
+  highStop.material.emissiveIntensity=brakeOn?5.0:0.35;
+
+  const reverseOn=vehicle && vehicle.gear==='R' && vehicle.speed < -0.08;
+  reverseL.material.emissiveIntensity=reverseOn?4.0:0.10;
+  reverseR.material.emissiveIntensity=reverseOn?4.0:0.10;
+
+  // Button state mirrors the actual signal state, making missed taps obvious.
+  document.getElementById('btnLeftInd')?.classList.toggle('active',indicatorLeft);
+  document.getElementById('btnRightInd')?.classList.toggle('active',indicatorRight);
+  document.getElementById('btnHazard')?.classList.toggle('active',hazard);
 }
 
 /* Wheels */
@@ -1784,8 +1896,9 @@ function updateSteeringWheelVisual(dt){
       const target=(keyState['ArrowLeft']||keyState['KeyA']) ? 720 : -720;
       wheelState.rot=lerp(wheelState.rot,target,1-Math.pow(.00004,dt));
     }else if(moving){
-      // Self-centering gets stronger with speed but never exceeds a comfortable rate.
-      const centerRate=clamp(.65+Math.abs(vehicle.speed)*.035,.65,1.45);
+      // Real steering returns gradually toward centre. The handwheel can still
+      // hold a parked angle when stopped, which feels more natural on touch.
+      const centerRate=clamp(.42+Math.abs(vehicle.speed)*.026,.42,1.18);
       wheelState.rot=lerp(wheelState.rot,0,1-Math.exp(-centerRate*dt));
       setTouchSteerFromWheel();
     }
@@ -1800,6 +1913,8 @@ function keyboardSteering(){ return !!(keyState['ArrowLeft']||keyState['ArrowRig
 const keyState={};
 window.addEventListener('keydown', e=>{
   keyState[e.code]=true;
+  if(e.code==='KeyE') toggleEngine();
+  if(e.code==='KeyU'){screenScaleIndex=(screenScaleIndex+1)%screenScaleModes.length;updateScreenScale();}
   if(e.code==='KeyL') toggleLights();
   if(e.code==='KeyH') playHorn();
   if(e.code==='KeyC') cycleCamera();
@@ -1829,35 +1944,49 @@ function ensureAudio(){
   if(actx.state==='suspended') actx.resume();
 }
 let engineOsc=null, engineGain=null, engineFilter=null, hornBusy=false;
-function startEngine(){
-  engineRunning=true;
-  input.engine=true;
-  const b=document.getElementById('btnEngine'); if(b)b.classList.add('active');
+function playEngineStarter(){
   ensureAudio();
-  if(engineOsc) return;
-  engineOsc = actx.createOscillator(); engineOsc.type='sawtooth';
-  engineGain = actx.createGain(); engineGain.gain.value=0.02;
-  const filt = actx.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=300; engineFilter=filt;
-  engineOsc.connect(filt); filt.connect(engineGain); engineGain.connect(actx.destination);
-  engineOsc.frequency.value=45; engineOsc.start();
+  const now=actx.currentTime;
+  const o=actx.createOscillator();
+  const g=actx.createGain();
+  const f=actx.createBiquadFilter();
+  o.type='sawtooth'; o.frequency.setValueAtTime(58,now); o.frequency.exponentialRampToValueAtTime(42,now+0.34);
+  f.type='lowpass'; f.frequency.setValueAtTime(520,now); f.frequency.exponentialRampToValueAtTime(250,now+0.34);
+  g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.055,now+0.035); g.gain.exponentialRampToValueAtTime(0.0001,now+0.38);
+  o.connect(f); f.connect(g); g.connect(actx.destination); o.start(now); o.stop(now+0.4);
+}
+function startEngine(){
+  if(engineRunning)return;
+  engineRunning=true; input.engine=true; vehicle.rpm=850;
+  const b=document.getElementById('btnEngine'); if(b){b.classList.add('active');b.textContent='STOP';}
+  ensureAudio(); playEngineStarter();
+  if(!engineOsc){
+    engineOsc = actx.createOscillator(); engineOsc.type='sawtooth';
+    engineGain = actx.createGain(); engineGain.gain.value=0.0001;
+    const filt = actx.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=320; engineFilter=filt;
+    engineOsc.connect(filt); filt.connect(engineGain); engineGain.connect(actx.destination);
+    engineOsc.frequency.value=45; engineOsc.start();
+  }
+  engineGain.gain.cancelScheduledValues(actx.currentTime);
+  engineGain.gain.setTargetAtTime(0.012,actx.currentTime+0.32,0.16);
+  toast('ENGINE STARTED');
 }
 
 function stopEngine(){
-  engineRunning=false; input.engine=false; input.throttle=0;
-  if(engineGain && actx) engineGain.gain.setTargetAtTime(0.0001,actx.currentTime,0.06);
-  const b=document.getElementById('btnEngine'); if(b)b.classList.remove('active');
+  engineRunning=false; input.engine=false; input.throttle=0; vehicle.speed=lerp(vehicle.speed,0,0.25);
+  if(engineGain && actx) engineGain.gain.setTargetAtTime(0.0001,actx.currentTime,0.08);
+  const b=document.getElementById('btnEngine'); if(b){b.classList.remove('active');b.textContent='START';}
   toast('ENGINE OFF');
 }
-function toggleEngine(){
-  if(engineRunning){ stopEngine(); } else { startEngine(); toast('ENGINE STARTED'); }
-}
+function toggleEngine(){ if(engineRunning) stopEngine(); else startEngine(); }
 function updateEngineAudio(){
   if(!engineOsc || !vehicle)return;
   const speed=Math.abs(vehicle.speed);
   const rpm=vehicle.rpm||850;
-  engineOsc.frequency.setTargetAtTime(38 + rpm*0.075 + speed*1.2, actx.currentTime, 0.045);
-  engineGain.gain.setTargetAtTime(0.012 + input.throttle*0.035 + Math.min(0.012,speed*0.00035), actx.currentTime, 0.08);
-  if(engineFilter) engineFilter.frequency.setTargetAtTime(260 + input.throttle*900 + speed*8, actx.currentTime, 0.08);
+  engineOsc.frequency.setTargetAtTime(38 + rpm*0.082 + speed*1.05, actx.currentTime, 0.06);
+  const audioThrottle=input.throttle;
+  engineGain.gain.setTargetAtTime(engineRunning ? (0.010 + audioThrottle*0.052 + Math.min(0.014,speed*0.0004)) : 0.0001, actx.currentTime, 0.09);
+  if(engineFilter) engineFilter.frequency.setTargetAtTime(250 + audioThrottle*1250 + speed*9, actx.currentTime, 0.10);
 }
 
 function playHorn(){
@@ -2018,12 +2147,12 @@ const vehicle={
 }
 const MAX_SPEED=23.0;
 // 23 m/s is ~83 km/h, intentionally tuned for a village simulator rather than an arcade racer.
-const MAX_REVERSE=8.4;
+const MAX_REVERSE=3.8; // 13.7 km/h reverse maximum, tuned for realistic SUV manoeuvring.
 const ENGINE_FORCE=8.8;
 const BRAKE_DECEL=16.5;
 const ENGINE_BRAKE=1.9;
 const WHEEL_BASE=2.68;
-let engineRunning=true;
+let engineRunning=false;
 const STEER_MAX=0.56; // ~32 degrees front-wheel maximum lock
 setTimeout(updateGearButtons,0);
 const GEAR_DATA=[
@@ -2094,7 +2223,8 @@ function updateVehicle(dt){
         const speedKmh=Math.max(0,v)*3.6;
         const torqueFactor=clamp(1-speedKmh/(gd.max*1.05),0.12,1);
         const hillFactor=1-clamp((heightAt(vehicle.pos.x+forward*2,vehicle.pos.z+forwardZ*2)-info.height)*0.25,-0.12,0.12);
-        vehicle.speed += gd.force*throttle*torqueFactor*grip*hillFactor*dt;
+        const driveAccel=gd.force*throttle*torqueFactor*grip*hillFactor;
+        vehicle.speed += driveAccel*dt;
       }
     }
   }else if(brake>0.01){
@@ -2122,8 +2252,14 @@ function updateVehicle(dt){
   const speedAbs=Math.abs(vehicle.speed);
   const steerInput=clamp(input.steer,-1,1);
   const speedKmh=speedAbs*3.6;
+
+  // Progressive steering assistance: tiny corrections at speed are gentle,
+  // while low-speed village manoeuvres still reach the full physical lock.
+  const lowSpeedAssist=clamp(1.08-speedKmh/180,0.82,1.08);
+  const steeringProgress=1-(1-Math.abs(steerInput))*0.14;
+
   const speedSteerScale=clamp(1.12-speedKmh/115,0.34,1.12);
-  const targetSteer=clamp(steerInput*STEER_MAX*speedSteerScale,-STEER_MAX,STEER_MAX);
+  const targetSteer=clamp(steerInput*STEER_MAX*speedSteerScale*lowSpeedAssist*steeringProgress,-STEER_MAX,STEER_MAX);
   const steerResponse=steerInput===0
     ? 1-Math.exp(-10.5*dt)
     : 1-Math.exp(-(7.5+Math.min(speedKmh,70)*.018)*dt);
@@ -2263,7 +2399,7 @@ function updateVehicle(dt){
 
 function updateHUD(info,throttle){
   const kmh=Math.abs(vehicle.speed)*3.6;
-  document.getElementById('speedVal').textContent=Math.round(kmh);
+  const speedEl=document.getElementById('speedVal'); if(speedEl){const old=Number(speedEl.textContent)||0; speedEl.textContent=Math.round(lerp(old,kmh,0.32));}
   document.getElementById('gearBadge').textContent=vehicle.gear;
   updateGearButtons();
   document.getElementById('fuelFill').style.width=vehicle.fuel+'%';
@@ -2724,6 +2860,23 @@ function adaptiveRenderQuality(now){
   if(Math.abs(next-current)>0.01){ renderer.setPixelRatio(next); resize(); }
 }
 
+/* ========================================================================
+   V15 SCREEN SCALE CONTROL
+   Cycles compact -> normal -> large without resizing the WebGL canvas.
+   This is intentionally CSS-only so performance remains stable on phones.
+   ======================================================================== */
+const screenScaleModes=['uiSmall','uiNormal','uiLarge'];
+let screenScaleIndex=1;
+function updateScreenScale(){
+  document.body.classList.remove('uiSmall','uiLarge');
+  const mode=screenScaleModes[screenScaleIndex];
+  if(mode!=='uiNormal')document.body.classList.add(mode);
+  const b=document.getElementById('btnScreenScale');
+  if(b)b.textContent=mode==='uiSmall'?'SMALL':mode==='uiLarge'?'LARGE':'NORMAL';
+  toast('SCREEN UI: '+mode.replace('ui','').toUpperCase());
+}
+document.getElementById('btnScreenScale')?.addEventListener('click',()=>{screenScaleIndex=(screenScaleIndex+1)%screenScaleModes.length;updateScreenScale();});
+
 /* ---------------- Main loop ---------------- */
 let lastT=performance.now(), running=false, paused=false;
 function frame(now){
@@ -2807,15 +2960,17 @@ document.addEventListener('visibilitychange',()=>{ if(document.hidden && running
 async function startGame(){
   await enterImmersiveFullscreen();
   await lockLandscape();
-  ensureAudio(); startEngine(); applyWeather(); toggle4wdReset();
+  ensureAudio(); applyWeather(); toggle4wdReset();
   document.getElementById('menuScreen').classList.remove('show');
   document.getElementById('hud').classList.add('show');
   document.getElementById('v14CinematicOverlay').classList.add('show');
   missionIndex=missions.length;
   missionMarker.visible=false;
   running=true;
-  ensureAudio(); startEngine(); paused=false;
-  toast('SIMULATOR MODE · FREE ROAM');
+  paused=false;
+  vehicle.gear='N'; vehicle.speed=0; vehicle.rpm=0; updateGearButtons();
+  const eb=document.getElementById('btnEngine'); if(eb){eb.classList.remove('active');eb.textContent='START';}
+  toast('SIMULATOR MODE · FREE ROAM · PRESS START');
 }
 function toggle4wdReset(){ /* ensure clean state each start */ }
 
