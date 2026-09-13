@@ -1018,10 +1018,83 @@ body.playing #v27Pause{display:flex !important;}
   #gearSelector{bottom:90px !important;transform:translateX(-50%) scale(.90) !important;}
   #speedCluster{transform:translateX(-50%) scale(.88) !important;transform-origin:center bottom;}
 }
+
+/* V30 FINAL HUD */
+body.playing #v18LeftToolbar,body.playing #topBar,body.playing #v18VehicleBadge,body.playing #v18DriveStats,body.playing #minimapWrap,body.playing #btnScreenScale{display:none!important;}
+#v27QuickBar{z-index:140!important;gap:7px!important;align-items:center!important;}
+#v27QuickBar button{width:48px!important;height:36px!important;border-radius:11px!important;font-size:8px!important;}
+#v27MorePanel{z-index:141!important;grid-template-columns:repeat(3,64px)!important;gap:6px!important;padding:8px!important;top:calc(max(10px,env(safe-area-inset-top)) + 43px)!important;right:max(10px,env(safe-area-inset-right))!important;}
+#v27MorePanel button{width:64px!important;height:36px!important;font-size:7px!important;}
+#clusterBottomLeft{left:10px!important;top:10px!important;bottom:auto!important;width:138px!important;z-index:128!important;}
+#clusterBottomLeft .gauge{background:rgba(7,9,9,.76)!important;border-radius:12px!important;padding:7px 9px!important;}
+#speedCluster{left:50%!important;right:auto!important;bottom:calc(9px + env(safe-area-inset-bottom))!important;transform:translateX(-50%)!important;display:block!important;width:152px!important;z-index:125!important;}
+#gearBadge{display:none!important;}
+#speedBox{width:152px!important;min-width:152px!important;box-sizing:border-box!important;grid-template-columns:84px 50px!important;gap:5px 7px!important;padding:5px 7px!important;border-radius:16px!important;background:rgba(7,9,9,.88)!important;}
+.gearReadout{height:35px!important;padding:4px 2px!important;box-sizing:border-box!important;}
+.gearReadout span{font-size:17px!important;line-height:16px!important;}
+.rpmReadout{height:35px!important;padding:4px!important;box-sizing:border-box!important;}
+.rpmReadout span{font-size:9px!important;}
+.gaugeDial{width:84px!important;height:84px!important;}
+#gearSelector{left:50%!important;right:auto!important;bottom:calc(116px + env(safe-area-inset-bottom))!important;transform:translateX(-50%)!important;display:flex!important;gap:5px!important;z-index:130!important;padding:5px!important;border-radius:13px!important;background:rgba(7,9,9,.82)!important;border:1px solid rgba(255,255,255,.13)!important;box-shadow:0 10px 24px rgba(0,0,0,.35)!important;}
+#gearSelector .gearBtn{position:static!important;width:38px!important;height:34px!important;margin:0!important;border-radius:9px!important;font-size:14px!important;line-height:34px!important;}
+#lightControls{right:10px!important;bottom:calc(146px + env(safe-area-inset-bottom))!important;width:112px!important;display:grid!important;grid-template-columns:repeat(2,52px)!important;gap:5px!important;z-index:132!important;}
+#lightControls .lightBtn{position:static!important;width:52px!important;height:30px!important;border-radius:9px!important;font-size:7px!important;}
+#btnHand{right:128px!important;bottom:calc(118px + env(safe-area-inset-bottom))!important;width:62px!important;height:30px!important;z-index:132!important;}
+#pedalCluster{right:10px!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;z-index:130!important;gap:7px!important;}
+#pedalCluster .pedal{width:54px!important;height:104px!important;}
+#wheelWrap{left:10px!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;width:150px!important;height:150px!important;z-index:130!important;}
+#v27Pause{left:10px!important;top:10px!important;z-index:145!important;}
+@media(max-width:700px){#v27QuickBar button{width:43px!important;height:32px!important;font-size:7px!important;}#clusterBottomLeft{left:8px!important;top:48px!important;width:128px!important;}#wheelWrap{left:8px!important;bottom:8px!important;width:142px!important;height:142px!important;}#pedalCluster{right:8px!important;bottom:8px!important;}#pedalCluster .pedal{width:51px!important;height:96px!important;}#lightControls{right:8px!important;bottom:130px!important;}#btnHand{right:118px!important;bottom:102px!important;width:58px!important;}#gearSelector{bottom:104px!important;}#speedCluster{bottom:7px!important;transform:translateX(-50%) scale(.92)!important;transform-origin:center bottom!important;}}
+@media(max-width:700px) and (max-height:480px){#v27QuickBar button{width:39px!important;height:29px!important;font-size:6.5px!important;}#clusterBottomLeft{top:43px!important;transform:scale(.88);transform-origin:top left;}#wheelWrap{width:130px!important;height:130px!important;}#pedalCluster .pedal{width:48px!important;height:88px!important;}#lightControls{bottom:116px!important;transform:scale(.90);transform-origin:bottom right;}#btnHand{bottom:92px!important;transform:scale(.86);transform-origin:bottom right;}#gearSelector{bottom:88px!important;transform:translateX(-50%) scale(.90)!important;}#speedCluster{transform:translateX(-50%) scale(.82)!important;}}
+
+
+/* ========================================================================
+   V31 — FINAL MOBILE DRIVING HUD / CONTROL RELIABILITY
+   ======================================================================== */
+#v27QuickBar,#v27MorePanel,#v27Pause{pointer-events:auto!important;touch-action:manipulation!important;user-select:none!important;-webkit-user-select:none!important;}
+#v27QuickBar{display:none;position:fixed!important;z-index:500!important;align-items:center!important;justify-content:flex-end!important;}
+body.playing #v27QuickBar{display:flex!important;}
+#v27QuickBar button{pointer-events:auto!important;touch-action:manipulation!important;cursor:pointer!important;flex:0 0 auto!important;}
+#v27MorePanel{z-index:501!important;pointer-events:auto!important;touch-action:manipulation!important;}
+#v27MorePanel button{pointer-events:auto!important;touch-action:manipulation!important;cursor:pointer!important;}
+#v27MorePanel:not(.show){pointer-events:none!important;}
+
+/* The transmission selector is a dedicated strip; the actual automatic gear
+   remains visible in the dashboard and never sits on top of the dial. */
+#gearSelector{bottom:calc(142px + env(safe-area-inset-bottom))!important;z-index:360!important;}
+#speedCluster{bottom:calc(8px + env(safe-area-inset-bottom))!important;z-index:350!important;}
+#speedBox{width:154px!important;min-width:154px!important;grid-template-columns:82px 54px!important;gap:5px!important;padding:5px!important;}
+#speedBox .gaugeDial{width:78px!important;height:78px!important;}
+#speedBox .gearReadout{height:36px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;}
+#speedBox .gearReadout span{font-size:18px!important;line-height:18px!important;}
+#speedBox .gearReadout small{font-size:6px!important;letter-spacing:.12em!important;}
+#speedBox .rpmReadout{height:36px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;}
+#speedBox .rpmReadout span{font-size:9px!important;line-height:11px!important;}
+#speedBox #statusRow{margin-top:0!important;}
+#gearSelector .gearBtn{box-shadow:inset 0 -2px 0 rgba(0,0,0,.28),0 4px 10px rgba(0,0,0,.24)!important;}
+#gearSelector .gearBtn.active{background:linear-gradient(180deg,#e46d25,#a83f12)!important;color:#fff!important;border-color:#f0a15d!important;}
+
+/* Keep the lower-right control stack from colliding with transmission. */
+#lightControls{bottom:calc(154px + env(safe-area-inset-bottom))!important;z-index:370!important;}
+#btnHand{bottom:calc(125px + env(safe-area-inset-bottom))!important;right:calc(126px + env(safe-area-inset-right))!important;z-index:371!important;}
+#pedalCluster{z-index:360!important;}
+#wheelWrap{z-index:360!important;}
+@media(max-width:700px){
+  #gearSelector{bottom:calc(132px + env(safe-area-inset-bottom))!important;}
+  #lightControls{bottom:calc(126px + env(safe-area-inset-bottom))!important;}
+  #btnHand{bottom:calc(108px + env(safe-area-inset-bottom))!important;right:calc(116px + env(safe-area-inset-right))!important;}
+  #speedCluster{transform:translateX(-50%) scale(.90)!important;transform-origin:center bottom!important;}
+}
+@media(max-width:700px) and (max-height:480px){
+  #gearSelector{bottom:calc(118px + env(safe-area-inset-bottom))!important;transform:translateX(-50%) scale(.88)!important;}
+  #speedCluster{transform:translateX(-50%) scale(.78)!important;}
+  #lightControls{bottom:calc(110px + env(safe-area-inset-bottom))!important;}
+  #btnHand{bottom:calc(92px + env(safe-area-inset-bottom))!important;}
+}
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27><rect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%23140f0a%27/><text x=%2732%27 y=%2743%27 text-anchor=%27middle%27 font-size=%2736%27 fill=%27%23e8b84b%27>SU</text></svg>"></head>
 <body>
-<!-- SCORPIO UNIVERSE V25 BUILD -->
+<!-- SCORPIO UNIVERSE V31 REALISTIC SCORPIO S11 BUILD -->
 
 
 <div id="desktopBlock"><div class="deviceCard"><h2>Mobile Simulator Only</h2><p>SCORPIO UNIVERSE is designed for touch controls on a mobile phone. Open this game on an Android/iPhone in landscape mode.</p></div></div>
@@ -2594,10 +2667,13 @@ function updateEngineAudio(){
   if(!engineOsc || !vehicle)return;
   const speed=Math.abs(vehicle.speed);
   const rpm=vehicle.rpm||850;
-  engineOsc.frequency.setTargetAtTime(38 + rpm*0.082 + speed*1.05, actx.currentTime, 0.06);
-  const audioThrottle=input.throttle;
-  engineGain.gain.setTargetAtTime(engineRunning ? (0.010 + audioThrottle*0.052 + Math.min(0.014,speed*0.0004)) : 0.0001, actx.currentTime, 0.09);
-  if(engineFilter) engineFilter.frequency.setTargetAtTime(250 + audioThrottle*1250 + speed*9, actx.currentTime, 0.10);
+  const shiftCut=performance.now() < (window.__v31ShiftCutUntil||window.__v30ShiftCutUntil||0);
+  const audioThrottle=shiftCut ? 0 : input.throttle;
+  const rpmAudio=shiftCut ? Math.max(820,rpm*.72) : rpm;
+  engineOsc.frequency.setTargetAtTime(38 + rpmAudio*0.082 + speed*1.05, actx.currentTime, shiftCut?0.025:0.06);
+  const base=engineRunning ? (0.010 + audioThrottle*0.052 + Math.min(0.014,speed*0.0004)) : 0.0001;
+  engineGain.gain.setTargetAtTime(shiftCut ? Math.min(base,0.0065) : base, actx.currentTime, shiftCut?0.025:0.09);
+  if(engineFilter) engineFilter.frequency.setTargetAtTime(250 + audioThrottle*1250 + speed*9, actx.currentTime, shiftCut?0.03:0.10);
 }
 
 function playHorn(){
@@ -2767,12 +2843,12 @@ let engineRunning=false;
 const STEER_MAX=0.585; // ~33.5 degrees front-wheel maximum lock
 setTimeout(updateGearButtons,0);
 const GEAR_DATA=[
-  {name:'1',max:6.0,force:13.8,up:20,down:0},
-  {name:'2',max:11.5,force:10.7,up:40,down:16},
-  {name:'3',max:17.0,force:8.4,up:60,down:34},
-  {name:'4',max:23.0,force:6.5,up:80,down:54},
-  {name:'5',max:29.0,force:5.0,up:101,down:74},
-  {name:'6',max:36.0,force:3.8,up:999,down:94}
+  {name:'1',max:6.0,force:13.8,up:18,down:0},
+  {name:'2',max:11.5,force:10.7,up:35,down:13},
+  {name:'3',max:17.0,force:8.4,up:55,down:30},
+  {name:'4',max:23.0,force:6.5,up:78,down:48},
+  {name:'5',max:29.0,force:5.0,up:100,down:70},
+  {name:'6',max:36.0,force:3.8,up:999,down:91}
 ];
 function frictionForSurface(surface){
   if(surface==='asphalt')return 1.0;
@@ -2819,7 +2895,8 @@ function updateVehicle(dt){
   if(WEATHERS[weatherIdx]==='rain')grip*=0.82;
 
   autoGear();
-  const throttle=engineRunning?input.throttle:0;
+  const shiftCutActive = performance.now() < (window.__v30ShiftCutUntil||0);
+  const throttle=engineRunning?(input.throttle*(shiftCutActive?0.18:1)):0;
   const brake=input.brake;
   const v=vehicle.speed;
   const forward=Math.sin(vehicle.heading), forwardZ=Math.cos(vehicle.heading);
@@ -2988,10 +3065,12 @@ function updateVehicle(dt){
   /* RPM tied to throttle + actual selected gear */
   const gd=currentGearData();
   const ratio=vehicle.gear==='R'?2.8:Math.max(1,8.5/(gd.max));
+  const shiftCutNow=performance.now() < (window.__v31ShiftCutUntil||window.__v30ShiftCutUntil||0);
   const targetRPM=vehicle.gear==='N'
     ? 780+throttle*2100
     : clamp(850+Math.abs(vehicle.speed)*ratio*260+throttle*2600,850,6200);
-  vehicle.rpm=lerp(vehicle.rpm,targetRPM,1-Math.pow(0.00001,dt));
+  const shiftRPM=shiftCutNow ? Math.max(820,targetRPM*.70) : targetRPM;
+  vehicle.rpm=lerp(vehicle.rpm,shiftRPM,1-Math.pow(shiftCutNow?0.0008:0.00001,dt));
 
   if(!window.v27Refueling) vehicle.fuel=clamp(vehicle.fuel-(0.010+throttle*0.030+(info.band==='mud'?0.012:0))*dt,0,100);
   const dirty=(info.band==='mud'||info.band==='dirt'||!info.onRoad)&&Math.abs(vehicle.speed)>1;
@@ -20367,23 +20446,9 @@ console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
       }
 
       /* ---- Minimal quick-control wiring ---- */
-      function v27Bind(id,target,mode='click'){
-        const a=document.getElementById(id),b=document.getElementById(target);
-        if(a&&b)a.addEventListener('click',()=>b.click());
-      }
-      v27Bind('v27Engine','btnEngine');
-      v27Bind('v27Cam','btnCam');
-      v27Bind('v27Lights','btnLights');
-      v27Bind('v27Hazard','btnHazard');
-      v27Bind('v27Left','btnLeftInd');
-      v27Bind('v27Right','btnRightInd');
-      v27Bind('v27Rain','btnWeather');
-      v27Bind('v27Wiper','btnWiper');
-      v27Bind('v27Horn','btnHorn');
-      v27Bind('v27Four','btn4wd');
-      document.getElementById('v27More')?.addEventListener('click',()=>{
-        v27MoreOpen=!v27MoreOpen;document.getElementById('v27MorePanel')?.classList.toggle('show',v27MoreOpen);
-      });
+      /* V31 owns the visible quick controls. Legacy proxy listeners are disabled
+         here so one touch cannot toggle a function twice. */
+      function v27Bind(){ /* disabled in V31 */ }
       document.getElementById('v27Pause')?.addEventListener('click',()=>setPaused(!paused));
 
       /* Keep quick controls synchronized with their original state. */
@@ -20454,6 +20519,134 @@ console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
         }
       };
 
+/* V30 CORE REALISM PATCH */
+(function V30CorePatch(){
+  /* White Scorpio S11 PBR finish. */
+  if(typeof paintMat!=='undefined' && paintMat.color){paintMat.color.setHex(0xf2f2ee);paintMat.metalness=.66;paintMat.roughness=.16;paintMat.clearcoat=.94;paintMat.clearcoatRoughness=.055;paintMat.reflectivity=.90;}
+  if(typeof paintDarkMat!=='undefined'&&paintDarkMat.color)paintDarkMat.color.setHex(0x17191b);
+  if(typeof claddingMat!=='undefined'&&claddingMat.color)claddingMat.color.setHex(0x25282b);
+  if(typeof chromeMat!=='undefined'&&chromeMat.color)chromeMat.color.setHex(0xc9cdd0);
+  if(typeof glassMat!=='undefined'){glassMat.color.setHex(0x16252b);glassMat.roughness=.025;glassMat.metalness=.03;}
+  if(typeof renderer!=='undefined'){renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;}
+  if(typeof sun!=='undefined')sun.intensity=Math.max(sun.intensity||1,1.45);
+  if(typeof hemi!=='undefined')hemi.intensity=Math.max(hemi.intensity||.5,.78);
+
+  /* Automatic transmission: shift at realistic road speeds, momentarily unload the engine,
+     then bring torque/audio back in. */
+  const baseAutoGear=autoGear;
+  function shiftSound(){try{ensureAudio();const now=actx.currentTime,o=actx.createOscillator(),g=actx.createGain(),f=actx.createBiquadFilter();o.type='triangle';o.frequency.setValueAtTime(170,now);o.frequency.exponentialRampToValueAtTime(92,now+.105);f.type='lowpass';f.frequency.value=900;g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(.045,now+.012);g.gain.exponentialRampToValueAtTime(.0001,now+.16);o.connect(f);f.connect(g);g.connect(actx.destination);o.start(now);o.stop(now+.18);if(engineGain){engineGain.gain.cancelScheduledValues(now);engineGain.gain.setTargetAtTime(.004,now,.025);engineGain.gain.setTargetAtTime(.016,now+.10,.07);}}catch(e){}}
+  autoGear=function(){const before=vehicle.gear;baseAutoGear();const after=vehicle.gear;if(after!==before&&/^[1-6]$/.test(after)){window.__v30ShiftCutUntil=performance.now()+165;window.__v31ShiftCutUntil=performance.now()+165;shiftSound();const gt=document.getElementById('gearText');if(gt)gt.textContent=after;} };
+
+  /* Direct bindings fix the V29 quick-control layer. Wiper uses the actual plural core function. */
+  const bind=(id,fn)=>{const el=document.getElementById(id);if(!el)return;el.onclick=e=>{e.preventDefault();e.stopPropagation();try{fn();}catch(err){console.warn('V30 control',id,err);}};};
+  bind('v27Engine',toggleEngine);bind('v27Cam',cycleCamera);bind('v27Lights',toggleLights);bind('v27Hazard',toggleHazard);
+  bind('v27Left',()=>toggleIndicator('left'));bind('v27Right',()=>toggleIndicator('right'));bind('v27Rain',cycleWeather);bind('v27Wiper',toggleWipers);bind('v27Horn',playHorn);bind('v27Four',toggle4wd);bind('v27Pause',()=>setPaused(!paused));
+  const more=document.getElementById('v27More');if(more)more.onclick=e=>{e.preventDefault();e.stopPropagation();v27MoreOpen=!v27MoreOpen;document.getElementById('v27MorePanel')?.classList.toggle('show',v27MoreOpen);};
+  function sync(){const p=[['v27Engine','btnEngine'],['v27Cam','btnCam'],['v27Lights','btnLights'],['v27Hazard','btnHazard'],['v27Left','btnLeftInd'],['v27Right','btnRightInd'],['v27Rain','btnWeather'],['v27Wiper','btnWiper'],['v27Four','btn4wd']];p.forEach(([a,b])=>{const x=document.getElementById(a),y=document.getElementById(b);if(x&&y){x.classList.toggle('active',y.classList.contains('active')||y.classList.contains('pressed'));if(a==='v27Engine')x.textContent=engineRunning?'STOP':'START';}});}
+  setInterval(sync,120);sync();
+
+  /* Speed-relative chase FOV + gentle horizon stability. */
+  const baseCam=updateCamera;updateCamera=function(dt){baseCam(dt);const k=clamp(Math.abs(vehicle.speed)/MAX_SPEED,0,1);if(camera){camera.fov=v17Damp(camera.fov,57+13*k,3.8,dt);camera.updateProjectionMatrix();}};
+
+  /* Additional S11 detail: antenna, body-colour mirror caps, handles and underbody contact shadow. */
+  const detail=new THREE.Group();detail.name='V30_S11_DETAIL';bodyTilt.add(detail);
+  const black=new THREE.MeshStandardMaterial({color:0x0b0c0d,roughness:.72,metalness:.28});
+  const white=new THREE.MeshPhysicalMaterial({color:0xf8f8f5,roughness:.13,metalness:.42,clearcoat:.9,clearcoatRoughness:.05});
+  const ant=new THREE.Mesh(new THREE.CylinderGeometry(.012,.018,.34,8),black);ant.position.set(-.45,1.78,0);detail.add(ant);
+  const tip=new THREE.Mesh(new THREE.SphereGeometry(.025,8,6),black);tip.position.set(-.45,1.96,0);detail.add(tip);
+  [-.93,.93].forEach(z=>{const cap=new THREE.Mesh(new THREE.BoxGeometry(.22,.12,.31),white);cap.position.set(.62,1.30,z);detail.add(cap);});
+  [-.82,.82].forEach(z=>[-.48,.42].forEach(x=>{const h=new THREE.Mesh(new THREE.BoxGeometry(.16,.025,.025),black);h.position.set(x,1.12,z);detail.add(h);}));
+  const sh=new THREE.Mesh(new THREE.PlaneGeometry(2.85,1.25),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.26,depthWrite:false}));sh.rotation.x=-Math.PI/2;sh.position.y=.035;detail.add(sh);
+
+  /* ======================================================================
+     V31 RELIABILITY + REALISM PATCH
+     ====================================================================== */
+  try{
+    /* One authoritative binding path.  The visible V31 buttons directly call
+       the real simulator functions, instead of clicking hidden legacy UI. */
+    const direct=(id,fn)=>{
+      const el=document.getElementById(id); if(!el)return;
+      const handler=(e)=>{e.preventDefault();e.stopPropagation();try{fn();}catch(err){console.warn('V31 control '+id,err);}};
+      el.onclick=null;
+      el.addEventListener('pointerup',handler,{passive:false});
+      el.addEventListener('click',()=>{},false);
+    };
+    direct('v27Engine',toggleEngine);
+    direct('v27Cam',cycleCamera);
+    direct('v27Lights',toggleLights);
+    direct('v27Hazard',toggleHazard);
+    direct('v27Left',()=>toggleIndicator('left'));
+    direct('v27Right',()=>toggleIndicator('right'));
+    direct('v27Rain',cycleWeather);
+    direct('v27Wiper',toggleWipers);
+    direct('v27Horn',playHorn);
+    direct('v27Four',toggle4wd);
+    const moreEl=document.getElementById('v27More');
+    if(moreEl){
+      moreEl.onclick=null;
+      moreEl.addEventListener('pointerup',e=>{
+        e.preventDefault();e.stopPropagation();
+        v27MoreOpen=!v27MoreOpen;
+        const panel=document.getElementById('v27MorePanel');
+        if(panel)panel.classList.toggle('show',v27MoreOpen);
+      },{passive:false});
+    }
+
+    /* Make R/N/D buttons update immediately and keep the live gear number in
+       the dashboard synchronized with the automatic transmission. */
+    ['gearR','gearN','gearD'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){el.style.touchAction='manipulation';}
+    });
+
+    const syncV31=()=>{
+      const gear=vehicle.gear;
+      const gt=document.getElementById('gearText'); if(gt)gt.textContent=gear;
+      const gb=document.getElementById('gearBadge'); if(gb)gb.textContent=gear;
+      const d=document.getElementById('gearD');
+      if(d){d.textContent=(/^[1-6]$/.test(gear)?'D':'D');d.setAttribute('aria-label','Automatic drive — gear '+gear);}
+      const engine=document.getElementById('v27Engine'); if(engine)engine.textContent=engineRunning?'STOP':'START';
+      const state=[
+        ['v27Lights',input.headlights],['v27Hazard',hazard],['v27Left',indicatorLeft],['v27Right',indicatorRight],
+        ['v27Wiper',wipersOn],['v27Four',is4wd]
+      ];
+      state.forEach(([id,on])=>document.getElementById(id)?.classList.toggle('active',!!on));
+      const more=document.getElementById('v27MorePanel'); if(more && !more.classList.contains('show')) more.style.display='';
+    };
+    syncV31();
+    setInterval(syncV31,120);
+
+    /* More convincing white S11 finish and a small amount of high-frequency
+       detail; no external model/assets required. */
+    if(typeof paintMat!=='undefined'&&paintMat){
+      paintMat.color.setHex(0xf4f5f2);paintMat.metalness=.72;paintMat.roughness=.145;
+      if('clearcoat' in paintMat)paintMat.clearcoat=.96;
+      if('clearcoatRoughness' in paintMat)paintMat.clearcoatRoughness=.045;
+    }
+    if(typeof glassMat!=='undefined'&&glassMat){glassMat.color.setHex(0x10191e);glassMat.roughness=.02;glassMat.metalness=.08;}
+    if(typeof renderer!=='undefined'){
+      renderer.shadowMap.enabled=true;
+      renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+      renderer.toneMapping=THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure=1.16;
+      if(renderer.outputEncoding!==undefined)renderer.outputEncoding=THREE.sRGBEncoding;
+    }
+
+    /* Slow Roads-inspired presentation cues: stronger lateral smoothing,
+       speed FOV and restrained horizon roll. */
+    const oldUpdateVehiclePresentation=updateVehiclePresentation;
+    updateVehiclePresentation=function(dt,info){
+      oldUpdateVehiclePresentation(dt,info);
+      const kmh=Math.abs(vehicle.speed)*3.6;
+      const lateral=clamp(Math.abs(vehicle.steerAngle)*kmh/105,0,1);
+      if(bodyTilt) bodyTilt.rotation.z=v17Damp(bodyTilt.rotation.z,vehicle.bodyRoll + Math.sign(vehicle.steerAngle)*lateral*.012,7,dt);
+    };
+
+    console.log('SCORPIO UNIVERSE V31: controls, transmission HUD, auto-shift audio/torque and white S11 realism loaded');
+  }catch(err){console.warn('SCORPIO V31 patch warning',err);}
+
+  console.log('SCORPIO UNIVERSE V30: white S11, fixed quick controls, realistic auto-shift audio/torque cut, refined HUD loaded');
+})();
 console.log('SCORPIO UNIVERSE V28: next-level environment, materials and atmosphere loaded');
       console.log('SCORPIO UNIVERSE V27: clean HUD, realistic fuel, vehicle materials, station and driving FX loaded');
     })();
