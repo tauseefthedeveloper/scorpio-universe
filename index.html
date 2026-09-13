@@ -1128,6 +1128,28 @@ body.free-camera #canvasWrap{cursor:grab!important;}
 body.free-camera #canvasWrap:active{cursor:grabbing!important;}
 #v27Cam.free-active{background:linear-gradient(180deg,#e46d25,#a83f12)!important;color:#fff!important;border-color:#f0a15d!important;}
 
+
+/* ========================================================================
+   V34 — INDICATOR STACK + S11 CLASSIC REALISM HUD
+   ======================================================================== */
+#lightControls{
+  bottom:calc(184px + env(safe-area-inset-bottom)) !important;
+  right:calc(10px + env(safe-area-inset-right)) !important;
+  z-index:420 !important;
+}
+#lightControls .lightBtn{box-shadow:0 7px 16px rgba(0,0,0,.32)!important;}
+#pedalCluster{z-index:360!important;}
+#btnHand{z-index:370!important;}
+#gearSelector{z-index:380!important;}
+@media(max-width:700px){
+  #lightControls{bottom:calc(176px + env(safe-area-inset-bottom)) !important;right:calc(8px + env(safe-area-inset-right)) !important;}
+}
+@media(max-width:700px) and (max-height:480px){
+  #lightControls{bottom:calc(154px + env(safe-area-inset-bottom)) !important;transform:scale(.88)!important;transform-origin:bottom right!important;}
+}
+/* cockpit camera: make the dashboard feel like a real cabin rather than a HUD overlay */
+body.cockpit-camera #v27QuickBar{opacity:.82;}
+
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27><rect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%23140f0a%27/><text x=%2732%27 y=%2743%27 text-anchor=%27middle%27 font-size=%2736%27 fill=%27%23e8b84b%27>SU</text></svg>"></head>
 <body>
@@ -2328,6 +2350,7 @@ function updateDoors(dt){
 
 /* Interior */
 const interiorMat=new THREE.MeshStandardMaterial({color:0x0a0c0e,roughness:0.9});
+if(window.__scorpioV34)window.__scorpioV34.interiorMat=interiorMat;
 // Cockpit details: instrument hood, rear-view mirror and A-pillar trim.
 const dashTop=addMesh(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(0.42,0.08,1.42),trimMat),false,false);
 dashTop.position.set(1.20,1.61,0);
@@ -21096,6 +21119,138 @@ console.log('SCORPIO UNIVERSE V28: next-level environment, materials and atmosph
 })();
 })();
 
+</script>
+
+<script>
+/* ========================================================================
+   SCORPIO UNIVERSE V34 — S11 CLASSIC EXTERIOR + INTERIOR REALISM PASS
+   Procedural, original geometry; reference-driven by Slow Roads presentation.
+   ======================================================================== */
+(function V34S11Realism(){
+  try{
+    const R=window.__scorpioV34;
+    if(!R || !R.bodyTilt) return;
+    const {bodyTilt,scene}=R;
+    const THREE=window.THREE;
+    const add=(g,m,cast=true,recv=true)=>{m.castShadow=cast;m.receiveShadow=recv;g.add(m);return m;};
+
+    /* ---------- Materials: Pearl White S11 / black trim / brushed metal ---------- */
+    const pearl=new THREE.MeshPhysicalMaterial({color:0xf5f6f2,metalness:.70,roughness:.17,clearcoat:1.0,clearcoatRoughness:.045,reflectivity:.92});
+    const pearlDark=new THREE.MeshPhysicalMaterial({color:0xd9ddd9,metalness:.52,roughness:.22,clearcoat:.72,clearcoatRoughness:.07});
+    const black=new THREE.MeshStandardMaterial({color:0x090b0c,metalness:.34,roughness:.56});
+    const softBlack=new THREE.MeshStandardMaterial({color:0x151719,metalness:.08,roughness:.78});
+    const chrome=new THREE.MeshPhysicalMaterial({color:0xd2d5d4,metalness:.94,roughness:.16,clearcoat:.4});
+    const rubber=new THREE.MeshStandardMaterial({color:0x090a0a,roughness:.92,metalness:.02});
+    const red=new THREE.MeshStandardMaterial({color:0x180203,emissive:0xff0909,emissiveIntensity:.45});
+    const amber=new THREE.MeshStandardMaterial({color:0x3b1b00,emissive:0xff8b08,emissiveIntensity:.55});
+    const clear=new THREE.MeshPhysicalMaterial({color:0x0c1114,transparent:true,opacity:.72,roughness:.035,metalness:.04,clearcoat:.95,clearcoatRoughness:.04});
+    const interior=new THREE.MeshStandardMaterial({color:0x111315,roughness:.9,metalness:.04});
+    const leather=new THREE.MeshStandardMaterial({color:0x17191b,roughness:.72,metalness:.03});
+    const stitch=new THREE.MeshStandardMaterial({color:0xb4b0a3,roughness:.75});
+
+    /* ---------- S11 Classic rear spare wheel + cover ---------- */
+    const spare=new THREE.Group(); spare.name='V34_S11_REAR_SPARE'; bodyTilt.add(spare);
+    spare.position.set(-2.48,.92,0); spare.rotation.y=Math.PI/2;
+    const tire=new THREE.Mesh(new THREE.TorusGeometry(.49,.145,14,40),rubber); add(spare,tire);
+    const hub=new THREE.Mesh(new THREE.CylinderGeometry(.23,.23,.13,20),black); hub.rotation.x=Math.PI/2; add(spare,hub);
+    const hubCap=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.15,20),chrome); hubCap.rotation.x=Math.PI/2; add(spare,hubCap,false,false);
+    const cover=new THREE.Mesh(new THREE.CircleGeometry(.55,40),new THREE.MeshPhysicalMaterial({color:0xe9ebe8,roughness:.27,metalness:.12,clearcoat:.55}));
+    cover.rotation.y=Math.PI/2; cover.position.x=.02; add(spare,cover,false,false);
+    const coverRing=new THREE.Mesh(new THREE.TorusGeometry(.47,.018,8,40),chrome); coverRing.rotation.y=Math.PI/2; coverRing.position.x=.025; add(spare,coverRing,false,false);
+
+    /* ---------- Stronger classic-S11 exterior panel surfacing ---------- */
+    const creaseMat=new THREE.MeshStandardMaterial({color:0x7b7f80,metalness:.42,roughness:.32,transparent:true,opacity:.48});
+    [-1,1].forEach(side=>{
+      // shoulder crease
+      const crease=add(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(2.55,.018,.018),creaseMat),false,false);
+      crease.position.set(-.18,1.12,side*.925);
+      crease.rotation.z=.018;
+      // lower cladding highlight
+      const lower=add(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(2.85,.018,.018),new THREE.MeshStandardMaterial({color:0x555a5b,metalness:.5,roughness:.34,transparent:true,opacity:.35})),false,false);
+      lower.position.set(-.20,.66,side*.987);
+    });
+    // Rear lamp surrounds and bumper reflectors
+    [-1,1].forEach(side=>{
+      const surround=add(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.10,.46,.30),black),false,false);
+      surround.position.set(-2.29,1.08,side*.80);
+      const lens=add(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.055,.38,.22),red),false,false);
+      lens.position.set(-2.345,1.09,side*.80);
+      const amberSeg=add(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.058,.08,.20),amber),false,false);
+      amberSeg.position.set(-2.375,.98,side*.80);
+      const refl=add(bodyTilt,new THREE.Mesh(new THREE.BoxGeometry(.035,.07,.22),new THREE.MeshStandardMaterial({color:0x651010,emissive:0x220000,emissiveIntensity:.2})),false,false);
+      refl.position.set(-2.34,.63,side*.82);
+    });
+    // Roof antenna base + shark-fin style cap, subtle but visible.
+    const antennaBase=add(bodyTilt,new THREE.Mesh(new THREE.CylinderGeometry(.06,.08,.035,16),black),false,false); antennaBase.position.set(-.55,2.16,0);
+    const antennaRod=add(bodyTilt,new THREE.Mesh(new THREE.CylinderGeometry(.012,.018,.30,8),black),false,false); antennaRod.position.set(-.55,2.31,0); antennaRod.rotation.z=-.10;
+
+    /* ---------- Wheel/tire sidewall detail ---------- */
+    const wheelDetailRoot=new THREE.Group();wheelDetailRoot.name='V34_WHEEL_SIDEWALL_DETAIL';bodyTilt.add(wheelDetailRoot);
+    [-1,1].forEach(side=>{
+      [-1.55,1.55].forEach(x=>{
+        const outer=new THREE.Mesh(new THREE.TorusGeometry(.49,.14,14,40),rubber); outer.rotation.x=Math.PI/2; outer.position.set(x,.57,side*1.00); add(wheelDetailRoot,outer);
+        const sidewall=new THREE.Mesh(new THREE.TorusGeometry(.37,.035,10,32),new THREE.MeshStandardMaterial({color:0x171819,roughness:.95})); sidewall.rotation.x=Math.PI/2; sidewall.position.set(x,.57,side*1.015); add(wheelDetailRoot,sidewall,false,false);
+        const hubRing=new THREE.Mesh(new THREE.TorusGeometry(.25,.022,8,28),chrome); hubRing.rotation.x=Math.PI/2; hubRing.position.set(x,.57,side*1.025); add(wheelDetailRoot,hubRing,false,false);
+      });
+    });
+
+    /* ---------- Realistic S11-style cabin: dashboard, seats, console, gauges ---------- */
+    const cabinDetail=new THREE.Group(); cabinDetail.name='V34_S11_INTERIOR'; bodyTilt.add(cabinDetail);
+    // Dashboard fascia, soft upper pad and silver trim strip
+    const dash=new THREE.Mesh(new THREE.BoxGeometry(.72,.34,1.45),interior); dash.position.set(.82,1.39,0); add(cabinDetail,dash);
+    const dashPad=new THREE.Mesh(new THREE.BoxGeometry(.58,.10,1.52),softBlack); dashPad.position.set(1.05,1.58,0); add(cabinDetail,dashPad);
+    const dashTrim=new THREE.Mesh(new THREE.BoxGeometry(.035,.035,1.38),chrome); dashTrim.position.set(.94,1.48,0); add(cabinDetail,dashTrim,false,false);
+    // Twin-pod instrument cluster
+    const cluster=new THREE.Group(); cluster.position.set(.92,1.60,.02); cabinDetail.add(cluster);
+    [-.24,.24].forEach((z,i)=>{
+      const pod=new THREE.Mesh(new THREE.CylinderGeometry(.145,.145,.045,24),black); pod.rotation.z=Math.PI/2; pod.position.z=z; add(cluster,pod,false,false);
+      const face=new THREE.Mesh(new THREE.CircleGeometry(.112,24),new THREE.MeshStandardMaterial({color:0x090a0b,roughness:.45})); face.rotation.y=Math.PI/2; face.position.x=.025; face.position.z=z; add(cluster,face,false,false);
+      const needle=new THREE.Mesh(new THREE.BoxGeometry(.06,.012,.012),new THREE.MeshStandardMaterial({color:0xf0d58c,emissive:0x5a4012,emissiveIntensity:.4})); needle.position.set(.045,1.60,z); // re-positioned below by world group
+    });
+    // Infotainment / climate stack
+    const screenFrame=new THREE.Mesh(new THREE.BoxGeometry(.13,.34,.60),black); screenFrame.position.set(.86,1.27,0); add(cabinDetail,screenFrame,false,false);
+    const screen=new THREE.Mesh(new THREE.BoxGeometry(.012,.22,.44),new THREE.MeshPhysicalMaterial({color:0x1b2930,emissive:0x16313c,emissiveIntensity:.22,roughness:.12,clearcoat:.85})); screen.position.set(.935,1.31,0); add(cabinDetail,screen,false,false);
+    [-.20,0,.20].forEach(z=>{
+      const knob=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.035,16),chrome); knob.rotation.z=Math.PI/2; knob.position.set(.94,1.08,z); add(cabinDetail,knob,false,false);
+    });
+    // Center console and 6-speed manual lever (S11 spec)
+    const console=new THREE.Mesh(new THREE.BoxGeometry(.88,.16,.54),softBlack); console.position.set(.05,1.05,0); add(cabinDetail,console);
+    const boot=new THREE.Mesh(new THREE.BoxGeometry(.18,.10,.16),leather); boot.position.set(.22,1.15,.0); add(cabinDetail,boot);
+    const leverRod=new THREE.Mesh(new THREE.CylinderGeometry(.018,.026,.23,10),chrome); leverRod.position.set(.22,1.30,0); add(cabinDetail,leverRod,false,false);
+    const knob=new THREE.Mesh(new THREE.SphereGeometry(.075,16,10),black); knob.position.set(.22,1.43,0); add(cabinDetail,knob);
+    // Handbrake lever
+    const hb=new THREE.Mesh(new THREE.BoxGeometry(.20,.035,.045),chrome); hb.position.set(-.15,1.17,.27); hb.rotation.z=-.15; add(cabinDetail,hb,false,false);
+    // Seats with bolsters and stitching
+    [-.56,.30].forEach(x=>[-.42,.42].forEach(z=>{
+      const base=new THREE.Mesh(new THREE.BoxGeometry(.48,.56,.43),leather); base.position.set(x,1.12,z); add(cabinDetail,base);
+      const head=new THREE.Mesh(new THREE.BoxGeometry(.34,.24,.36),leather); head.position.set(x,1.53,z); add(cabinDetail,head);
+      const seam=new THREE.Mesh(new THREE.BoxGeometry(.34,.012,.012),stitch); seam.position.set(x,1.50,z+(.22*(z>0?1:-1))); add(cabinDetail,seam,false,false);
+    }));
+    // A/B pillar inner trim
+    [-1,1].forEach(side=>{
+      const ap=new THREE.Mesh(new THREE.BoxGeometry(.07,.72,.06),softBlack); ap.position.set(1.20,1.72,side*.76); ap.rotation.z=side*.12; add(cabinDetail,ap,false,false);
+      const bp=new THREE.Mesh(new THREE.BoxGeometry(.06,.60,.055),softBlack); bp.position.set(-.30,1.69,side*.82); add(cabinDetail,bp,false,false);
+    });
+    // Interior roof liner
+    const liner=new THREE.Mesh(new THREE.BoxGeometry(2.12,.055,1.55),new THREE.MeshStandardMaterial({color:0x2a2b2c,roughness:1})); liner.position.set(-.05,2.00,0); add(cabinDetail,liner,false,false);
+    // Cabin dome lights
+    const domeMat=new THREE.MeshStandardMaterial({color:0xfff0c8,emissive:0xffdca0,emissiveIntensity:.3});
+    const dome=new THREE.Mesh(new THREE.BoxGeometry(.18,.035,.26),domeMat); dome.position.set(-.20,1.98,0); add(cabinDetail,dome,false,false);
+
+    /* ---------- Glass realism: subtle blue-green tint and dirt gradient ---------- */
+    if(R.glassMat){R.glassMat.color.setHex(0x10252b);R.glassMat.roughness=.035;R.glassMat.clearcoat=.95;R.glassMat.clearcoatRoughness=.045;R.glassMat.opacity=.82;}
+    if(R.paintMat){R.paintMat.color.setHex(0xf3f4ef);R.paintMat.metalness=.70;R.paintMat.roughness=.145;R.paintMat.clearcoat=1;R.paintMat.clearcoatRoughness=.045;}
+
+    /* ---------- Slow Roads-inspired scenic presentation, but original ---------- */
+    if(scene){
+      scene.fog = new THREE.FogExp2(0xcbd8d0, .0041);
+      const film=new THREE.MeshBasicMaterial({color:0xf2f5f0,transparent:true,opacity:.025,depthWrite:false,side:THREE.DoubleSide});
+      const veil=new THREE.Mesh(new THREE.PlaneGeometry(220,75),film); veil.rotation.x=-Math.PI/2; veil.position.set(0,.2,-90); scene.add(veil);
+    }
+    document.body.classList.add('v34-loaded');
+    console.log('SCORPIO UNIVERSE V34: indicator stack lifted + S11 Classic exterior/interior realism loaded');
+  }catch(err){console.warn('SCORPIO V34 realism pass warning',err);}
+})();
 </script>
 </body>
 </html>
