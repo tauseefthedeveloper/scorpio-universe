@@ -19652,10 +19652,284 @@ console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
       }
     }
 
+
+    /* ====================================================================
+       V26 NEXT-LEVEL REALISM PASS
+       --------------------------------------------------------------------
+       This layer stays inside the core IIFE so it can safely use the real
+       scene/camera/vehicle/terrain functions. It adds visual richness rather
+       than replacing the stable V19/V25 driving systems.
+       ==================================================================== */
+    (function V26NextLevelRealism(){
+      const v26Mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const v26Root=new THREE.Group();
+      v26Root.name='SCORPIO_V26_REALISM_WORLD';
+      scene.add(v26Root);
+
+      const v26Mat=(color,rough=.8,metal=0,extra={})=>{
+        const m=new THREE.MeshStandardMaterial(Object.assign({
+          color,roughness:rough,metalness:metal
+        },extra));
+        return m;
+      };
+      const v26Grass=v26Mat(0x4e7139,.98,0);
+      const v26Grass2=v26Mat(0x6b8746,1,0);
+      const v26Bush=v26Mat(0x355a2e,.96,0);
+      const v26Bark=v26Mat(0x49301f,1,0);
+      const v26Wall=v26Mat(0xb9a27c,.94,0);
+      const v26Wall2=v26Mat(0xd0c09a,.92,0);
+      const v26Roof=v26Mat(0x7a4630,.78,0);
+      const v26Roof2=v26Mat(0x555653,.86,.02);
+      const v26Window=v26Mat(0x9fc6d4,.20,.05,{emissive:0x263f48,emissiveIntensity:.12});
+      const v26Door=v26Mat(0x5a3b27,.82,0);
+      const v26Soil=v26Mat(0x68503a,1,0);
+      const v26Wet=v26Mat(0x242b29,.13,.16,{transparent:true,opacity:.62,depthWrite:false});
+      const v26Wire=v26Mat(0x202320,.72,.45);
+
+      function v26Rng(n){
+        const x=Math.sin(n*91.173+17.77)*43758.5453123;
+        return x-Math.floor(x);
+      }
+      function v26Frame(t,lateral,lift=.02){ return pointOnRoad(t,lateral,lift); }
+
+      /* ---- Procedural sky: soft atmospheric gradient without image assets. ---- */
+      const skyCanvas=document.createElement('canvas');
+      skyCanvas.width=512; skyCanvas.height=256;
+      const skyCtx=skyCanvas.getContext('2d');
+      const skyTex=new THREE.CanvasTexture(skyCanvas);
+      skyTex.colorSpace=THREE.SRGBColorSpace;
+      const skyMat=new THREE.MeshBasicMaterial({map:skyTex,side:THREE.BackSide,depthWrite:false,fog:false,transparent:true,opacity:.96});
+      const sky=new THREE.Mesh(new THREE.SphereGeometry(520,32,16),skyMat);
+      sky.name='V26_Procedural_Sky';
+      sky.renderOrder=-100;
+      v26Root.add(sky);
+
+      function v26PaintSky(){
+        const tod=(typeof timeOfDay==='number'?timeOfDay:12);
+        const night=(tod<5.5||tod>19.1);
+        const dawn=(tod>=5.5&&tod<7.2)||(tod>=17.2&&tod<=19.1);
+        let top='#75a9d0',mid='#c7d8df',bot='#e9e0c8';
+        if(night){ top='#08121e'; mid='#1b2d40'; bot='#384756'; }
+        else if(dawn){ top='#6d8ca8'; mid='#d7b69e'; bot='#f0c7a2'; }
+        skyCtx.clearRect(0,0,512,256);
+        const g=skyCtx.createLinearGradient(0,0,0,256);
+        g.addColorStop(0,top); g.addColorStop(.52,mid); g.addColorStop(1,bot);
+        skyCtx.fillStyle=g; skyCtx.fillRect(0,0,512,256);
+        if(!night){
+          const sunX=(tod/24)*512;
+          const glow=skyCtx.createRadialGradient(sunX,72,4,sunX,72,60);
+          glow.addColorStop(0,'rgba(255,245,210,.72)');
+          glow.addColorStop(1,'rgba(255,245,210,0)');
+          skyCtx.fillStyle=glow; skyCtx.fillRect(0,0,512,150);
+        }else{
+          for(let i=0;i<70;i++){
+            const x=v26Rng(i*3.1)*512,y=v26Rng(i*5.7)*145,r=.35+v26Rng(i*9.2)*.7;
+            skyCtx.fillStyle='rgba(245,245,225,'+(0.35+v26Rng(i)*.45)+')';
+            skyCtx.beginPath(); skyCtx.arc(x,y,r,0,Math.PI*2); skyCtx.fill();
+          }
+        }
+        skyTex.needsUpdate=true;
+      }
+      v26PaintSky();
+
+      /* ---- Real roadside shoulder: dirt, gravel and grass transition. ---- */
+      const shoulderGeo=new THREE.BoxGeometry(1.0,.035,.72);
+      const shoulderL=new THREE.Group(), shoulderR=new THREE.Group();
+      shoulderL.name='V26_Left_Gravel_Shoulder'; shoulderR.name='V26_Right_Gravel_Shoulder';
+      v26Root.add(shoulderL,shoulderR);
+      const shoulderCount=v26Mobile?90:150;
+      for(let i=0;i<shoulderCount;i++){
+        const t=(i/shoulderCount+.007)%1;
+        for(const side of [-1,1]){
+          const p=v26Frame(t,side*3.48,.025);
+          const m=new THREE.Mesh(shoulderGeo,side<0?v26Soil:v26Soil);
+          m.position.set(p.x,p.y+.018,p.z);
+          m.rotation.y=p.heading;
+          m.scale.x=.7+v26Rng(i*2.4+side)*.7;
+          (side<0?shoulderL:shoulderR).add(m);
+        }
+      }
+
+      /* ---- Instanced grass: thousands of tiny blades, one draw call per side. ---- */
+      const bladeGeo=new THREE.ConeGeometry(.028,.22,3,1);
+      const bladeMat=v26Grass;
+      const bladeCount=v26Mobile?620:1250;
+      const grassMesh=new THREE.InstancedMesh(bladeGeo,bladeMat,bladeCount);
+      grassMesh.name='V26_Instanced_Field_Grass';
+      const dummy=new THREE.Object3D();
+      for(let i=0;i<bladeCount;i++){
+        const t=(v26Rng(i*1.71)+i*.013)%1;
+        const side=i%2?-1:1;
+        const lateral=side*(4.0+v26Rng(i*4.3)*17.0);
+        const p=v26Frame(t,lateral,.025);
+        const h=.55+v26Rng(i*7.1)*1.25;
+        dummy.position.set(p.x,p.y+h*.5,p.z);
+        dummy.scale.set(.75+v26Rng(i)*.7,h,.75+v26Rng(i+2)*.7);
+        dummy.rotation.set(0,v26Rng(i+4)*Math.PI, (v26Rng(i+6)-.5)*.28);
+        dummy.updateMatrix(); grassMesh.setMatrixAt(i,dummy.matrix);
+      }
+      grassMesh.instanceMatrix.needsUpdate=true;
+      v26Root.add(grassMesh);
+
+      /* ---- Bush clusters with irregular leaf masses instead of perfect balls. ---- */
+      const bushGeo=new THREE.IcosahedronGeometry(1,1);
+      const bushCount=v26Mobile?70:120;
+      for(let i=0;i<bushCount;i++){
+        const t=(i*.61803398875+.08)%1;
+        const side=i%2?-1:1;
+        const p=v26Frame(t,side*(4.7+v26Rng(i)*11),.025);
+        const g=new THREE.Group();
+        const blobs=2+(i%3);
+        for(let j=0;j<blobs;j++){
+          const b=new THREE.Mesh(bushGeo,j%2?v26Bush:v26Grass2);
+          const s=.25+v26Rng(i*4+j)*.55;
+          b.scale.set(s*1.25,s,s*.85);
+          b.position.set((j-blobs/2)*.24,v26Rng(i+j)*.42,(v26Rng(i+j*3)-.5)*.35);
+          b.rotation.set(v26Rng(i+j)*2,v26Rng(i+j+2)*2,v26Rng(i+j+4)*2);
+          b.castShadow=!v26Mobile;
+          g.add(b);
+        }
+        g.position.set(p.x,p.y,p.z);
+        g.rotation.y=v26Rng(i*9)*Math.PI*2;
+        v26Root.add(g);
+      }
+
+      /* ---- Rural fencing: posts + sagging wire for scale and depth. ---- */
+      const fenceRoot=new THREE.Group(); fenceRoot.name='V26_Rural_Fences'; v26Root.add(fenceRoot);
+      const fencePostGeo=new THREE.BoxGeometry(.09,1.15,.09);
+      const fencePosts=[];
+      for(let i=0;i<46;i++){
+        const t=(.13+i/46*.72)%1;
+        const side=i<23?-1:1;
+        const p=v26Frame(t,side*(8.8+v26Rng(i)*3.5),.02);
+        const post=new THREE.Mesh(fencePostGeo,v26Bark);
+        post.position.set(p.x,p.y+.57,p.z);
+        post.rotation.y=p.heading;
+        fenceRoot.add(post); fencePosts.push(post.position.clone());
+      }
+      const fenceLineGeo=new THREE.BufferGeometry();
+      const fencePts=[];
+      for(let i=0;i<fencePosts.length-1;i++){
+        const a=fencePosts[i],b=fencePosts[i+1];
+        if(a.distanceTo(b)<7){ fencePts.push(a.x,a.y+.72,a.z,b.x,b.y+.72,b.z); }
+      }
+      fenceLineGeo.setAttribute('position',new THREE.Float32BufferAttribute(fencePts,3));
+      const fenceLine=new THREE.LineSegments(fenceLineGeo,new THREE.LineBasicMaterial({color:0x3a3933,transparent:true,opacity:.62}));
+      fenceRoot.add(fenceLine);
+
+      /* ---- Small village homes: windows, doors, sloped roofs, no external assets. ---- */
+      function v26House(index,t,side,lateral){
+        const p=v26Frame(t,side*lateral,.04);
+        const g=new THREE.Group(); g.name='V26_Village_House_'+index;
+        const w=2.5+v26Rng(index)*1.3, d=2.1+v26Rng(index+2)*1.0, h=1.75+v26Rng(index+4)*.45;
+        const wall=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),index%2?v26Wall:v26Wall2);
+        wall.position.y=h*.5; wall.castShadow=!v26Mobile; wall.receiveShadow=true; g.add(wall);
+        const roof=new THREE.Mesh(new THREE.ConeGeometry(Math.max(w,d)*.72,1.0,4),index%3?v26Roof:v26Roof2);
+        roof.rotation.y=Math.PI/4; roof.position.y=h+.48; roof.castShadow=!v26Mobile; g.add(roof);
+        const door=new THREE.Mesh(new THREE.BoxGeometry(.48,.95,.035),v26Door);
+        door.position.set(0,.48,d*.5+.021); g.add(door);
+        for(const sx of [-1,1]){
+          const win=new THREE.Mesh(new THREE.BoxGeometry(.42,.34,.035),v26Window);
+          win.position.set(sx*w*.27,h*.60,d*.5+.022); g.add(win);
+        }
+        g.position.set(p.x,p.y,p.z);
+        g.rotation.y=p.heading+(side<0?0:Math.PI*.04);
+        v26Root.add(g);
+      }
+      const houses=v26Mobile?5:9;
+      for(let i=0;i<houses;i++) v26House(i,.08+i*.105,i%2?-1:1,14+v26Rng(i)*7);
+
+      /* ---- Farm plots: low rows give the village landscape believable scale. ---- */
+      const cropMat=v26Mat(0x557c37,.98,0);
+      const cropGeo=new THREE.CylinderGeometry(.035,.055,.38,5);
+      const cropCount=v26Mobile?120:240;
+      const crops=new THREE.InstancedMesh(cropGeo,cropMat,cropCount);
+      crops.name='V26_Crop_Field';
+      for(let i=0;i<cropCount;i++){
+        const row=Math.floor(i/20), col=i%20;
+        const t=(.28+row*.006)%1;
+        const side=1;
+        const lateral=12.5+col*.24;
+        const p=v26Frame(t,lateral,.025);
+        dummy.position.set(p.x,p.y+.19,p.z);
+        dummy.scale.set(1,0.65+v26Rng(i)*.7,1);
+        dummy.rotation.set(0,p.heading+(v26Rng(i)-.5)*.18,0);
+        dummy.updateMatrix(); crops.setMatrixAt(i,dummy.matrix);
+      }
+      crops.instanceMatrix.needsUpdate=true; v26Root.add(crops);
+
+      /* ---- Rain puddles: subtle wet patches that only appear in rainy weather. ---- */
+      const puddleRoot=new THREE.Group(); puddleRoot.name='V26_Wet_Patches'; v26Root.add(puddleRoot);
+      const puddleGeo=new THREE.CircleGeometry(1,16);
+      const puddleCount=v26Mobile?12:24;
+      for(let i=0;i<puddleCount;i++){
+        const t=(.18+v26Rng(i)*.72)%1;
+        const side=i%2?-1:1;
+        const p=v26Frame(t,side*(3.7+v26Rng(i+2)*1.4),.055);
+        const q=new THREE.Mesh(puddleGeo,v26Wet);
+        q.scale.set(.45+v26Rng(i)*1.2,.35+v26Rng(i+1)*.7,1);
+        q.rotation.x=-Math.PI/2; q.rotation.z=p.heading;
+        q.position.set(p.x,p.y+.025,p.z); q.visible=false; puddleRoot.add(q);
+      }
+
+      /* ---- Utility wire network: gives poles an actual connected purpose. ---- */
+      const wirePts=[];
+      const wireN=v26Mobile?16:26;
+      for(let i=0;i<wireN;i++){
+        const t=(i/(wireN-1)+.025)%1;
+        const p=v26Frame(t,8.2,.02);
+        wirePts.push(new THREE.Vector3(p.x+0.55,p.y+4.82,p.z));
+      }
+      const wireGeo=new THREE.BufferGeometry().setFromPoints(wirePts);
+      const wireLine=new THREE.Line(wireGeo,new THREE.LineBasicMaterial({color:0x1f2420,transparent:true,opacity:.55}));
+      wireLine.name='V26_Utility_Wire'; v26Root.add(wireLine);
+
+      /* ---- Contact shadow under SUV: cheap screen-space-looking grounding cue. ---- */
+      const contactMat=new THREE.MeshBasicMaterial({color:0x11120f,transparent:true,opacity:.24,depthWrite:false});
+      const contact=new THREE.Mesh(new THREE.CircleGeometry(1.75,32),contactMat);
+      contact.rotation.x=-Math.PI/2; contact.scale.y=.48; contact.renderOrder=4;
+      scene.add(contact);
+
+      /* ---- Dynamic realism update: sky, wet patches, contact shadow, lights. ---- */
+      const v26OldCamera=updateCamera;
+      let v26SkyTimer=0;
+      updateCamera=function(dt){
+        v26OldCamera(dt);
+        sky.position.copy(camera.position);
+        v26SkyTimer-=dt;
+        if(v26SkyTimer<=0){ v26PaintSky(); v26SkyTimer=.35; }
+        contact.position.set(vehicle.pos.x,vehicle.pos.y+.055,vehicle.pos.z);
+        contact.rotation.y=vehicle.heading;
+        const slip=clamp(Math.abs(vehicle.wheelSlip||0),0,1);
+        contact.material.opacity=.17+.12*(1-slip);
+        const rainy=typeof WEATHERS!=='undefined'&&WEATHERS[weatherIdx]==='rain';
+        puddleRoot.visible=rainy;
+        if(rainy){
+          puddleRoot.children.forEach((q,i)=>{ q.material.opacity=.48+.12*Math.sin(performance.now()*.001+i); });
+        }
+      };
+
+      /* Improve the paint response under changing light without changing the
+         existing vehicle model or physics. */
+      if(typeof paintMat!=='undefined'){
+        paintMat.metalness=.78;
+        paintMat.roughness=.16;
+        paintMat.clearcoat=.92;
+        paintMat.clearcoatRoughness=.055;
+        paintMat.reflectivity=.92;
+      }
+
+      /* More natural exposure: keep night readable while preserving highlights. */
+      renderer.toneMapping=THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure=v26Mobile?1.10:1.16;
+
+      console.log('SCORPIO UNIVERSE V26: next-level environment, materials and atmosphere loaded');
+    })();
+
     console.log('SCORPIO UNIVERSE V25: Slow Roads-inspired scenic/physics presentation loaded');
   })();
 
-  /* V25: the main simulator frame loop remains the single render/update loop. */
+  /* V26: next-level realism is layered over the stable V19/V25 core. */
 })();
 
 
