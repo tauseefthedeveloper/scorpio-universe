@@ -894,6 +894,34 @@ body.uiLarge #smallCtrlRow, body.uiLarge #doorControls, body.uiLarge #lightContr
   #v27QuickBar button{width:44px;height:34px;font-size:7px;}
   #v27FuelStation{bottom:108px;}
 }
+
+/* V28 UI reliability + no-clutter layout */
+body:not(.playing) #v27QuickBar,
+body:not(.playing) #v27MorePanel,
+body:not(.playing) #v27FuelStation,
+body:not(.playing) #v27Pause{display:none !important;}
+body.playing #v27QuickBar{display:flex !important;}
+body.playing #v27Pause{display:flex !important;}
+#clusterBottomLeft{left:12px !important;right:auto !important;top:12px !important;bottom:auto !important;width:150px !important;}
+#speedCluster{bottom:12px !important;}
+#speedBox{min-width:124px !important;}
+#wheelWrap{left:12px !important;bottom:12px !important;}
+#pedalCluster{right:12px !important;bottom:12px !important;}
+#gearSelector{left:50% !important;bottom:105px !important;transform:translateX(-50%) !important;}
+#lightControls{right:12px !important;bottom:156px !important;width:112px !important;grid-template-columns:repeat(2,52px) !important;gap:5px !important;}
+#lightControls #btnLights,#lightControls #btnHazard,#lightControls #btnLeftInd,#lightControls #btnRightInd{grid-column:auto !important;grid-row:auto !important;}
+#lightControls .lightBtn{width:52px !important;height:32px !important;}
+#v27QuickBar{right:12px !important;top:12px !important;gap:6px !important;}
+#v27MorePanel{right:12px !important;top:56px !important;}
+#v27FuelStation{bottom:105px !important;}
+@media(max-width:700px){
+  #clusterBottomLeft{left:10px !important;top:10px !important;width:138px !important;}
+  #v27QuickBar{right:8px !important;top:8px !important;}
+  #v27QuickBar button{width:43px !important;height:32px !important;}
+  #lightControls{right:8px !important;bottom:150px !important;}
+  #wheelWrap{left:10px !important;bottom:10px !important;}
+  #pedalCluster{right:8px !important;bottom:10px !important;}
+}
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27><rect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%23140f0a%27/><text x=%2732%27 y=%2743%27 text-anchor=%27middle%27 font-size=%2736%27 fill=%27%23e8b84b%27>SU</text></svg>"></head>
 <body>
@@ -3424,6 +3452,7 @@ function setPaused(p){
   document.getElementById('pauseOverlay').classList.toggle('show',p);
 }
 function showMenu(){
+  document.body.classList.remove('playing');
   document.getElementById('hud').classList.remove('show');
   document.getElementById('menuScreen').classList.add('show');
   running=false;
@@ -3456,6 +3485,7 @@ async function startGame(){
   await lockLandscape();
   ensureAudio(); applyWeather(); toggle4wdReset();
   document.getElementById('menuScreen').classList.remove('show');
+  document.body.classList.add('playing');
   document.getElementById('hud').classList.add('show');
   document.getElementById('v14CinematicOverlay').classList.add('show');
   missionIndex=missions.length;
@@ -11316,7 +11346,6 @@ function v14RunDriveDiagnostics(){
 }
 
 /* V14 build marker: 3-turn wheel, Ackermann lock, compact dashboard, cinematic environment. */
-})();
 
 /* ============================================================================
    SCORPIO UNIVERSE V19 — HIGH DETAIL REALISM + PHYSICS PACK
@@ -20257,7 +20286,7 @@ console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
       document.getElementById('v27More')?.addEventListener('click',()=>{
         v27MoreOpen=!v27MoreOpen;document.getElementById('v27MorePanel')?.classList.toggle('show',v27MoreOpen);
       });
-      document.getElementById('v27Pause')?.addEventListener('click',()=>document.getElementById('btnPause')?.click());
+      document.getElementById('v27Pause')?.addEventListener('click',()=>setPaused(!paused));
 
       /* Keep quick controls synchronized with their original state. */
       setInterval(()=>{
@@ -20313,7 +20342,7 @@ console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
       }
       window.v27UpdateSystems=v27UpdateSystems;
 
-console.log('SCORPIO UNIVERSE V26: next-level environment, materials and atmosphere loaded');
+console.log('SCORPIO UNIVERSE V28: next-level environment, materials and atmosphere loaded');
       console.log('SCORPIO UNIVERSE V27: clean HUD, realistic fuel, vehicle materials, station and driving FX loaded');
     })();
 
@@ -20321,7 +20350,7 @@ console.log('SCORPIO UNIVERSE V26: next-level environment, materials and atmosph
   })();
 
   /* V26: next-level realism is layered over the stable V19/V25 core. */
-})();
+  })();
 
 
 /* V18 paint flakes + trim response: procedural micro-variation using
@@ -20458,6 +20487,9 @@ console.log('SCORPIO UNIVERSE V26: next-level environment, materials and atmosph
   const hazeMat=new THREE.MeshBasicMaterial({color:0xdde8e2,transparent:true,opacity:.035,depthWrite:false,side:THREE.DoubleSide});
   const haze=new THREE.Mesh(new THREE.PlaneGeometry(180,32),hazeMat);
   haze.rotation.x=-Math.PI/2;haze.position.set(0,.15,-70);scene.add(haze);
+
+/* Close visual quality pass, then the original core IIFE. */
+})();
 })();
 
 </script>
