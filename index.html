@@ -2712,10 +2712,20 @@ let camShake=0; // decays each frame; bumped by potholes/hard braking/collisions
 function cycleCamera(){ camIndex=(camIndex+1)%CAM_MODES.length; toast(CAM_LABELS[CAM_MODES[camIndex]]); }
 function toggleLights(){
   input.headlights=!input.headlights;
-  document.getElementById('chipLights').classList.toggle('on', input.headlights);
-  headL.material.emissiveIntensity = input.headlights?1.8:1.2;
-  headlightSpotL.intensity = input.headlights?1.2:0;
-  headlightSpotR.intensity = input.headlights?1.2:0;
+  document.getElementById('chipLights')?.classList.toggle('on', input.headlights);
+  /* V32: headL was a stale variable from an older build. Drive the real
+     headlamp lens collection and the two spotlights instead. */
+  if(window.__scorpioHeadLenses){
+    window.__scorpioHeadLenses.forEach(m=>{
+      if(m && m.material && 'emissiveIntensity' in m.material)
+        m.material.emissiveIntensity=input.headlights?3.8:0.08;
+    });
+  }
+  if(typeof headlightSpotL!=='undefined') headlightSpotL.intensity=input.headlights?1.35:0;
+  if(typeof headlightSpotR!=='undefined') headlightSpotR.intensity=input.headlights?1.35:0;
+  document.getElementById('btnLights')?.classList.toggle('active',input.headlights);
+  document.getElementById('v27Lights')?.classList.toggle('active',input.headlights);
+  toast(input.headlights?'HEADLIGHTS ON':'HEADLIGHTS OFF');
 }
 let is4wd=false;
 function toggle4wd(){
@@ -3158,8 +3168,8 @@ function updateCamera(dt){
     desiredPos=vehicle.pos.clone().addScaledVector(up,8.8);
     desiredLook=vehicle.pos.clone().addScaledVector(up,0.2);
   }else{
-    const dist=mode==='chase-close'?5.4:mode==='chase-far'?14.5:8.8;
-    const height=mode==='chase-close'?2.45:mode==='chase-far'?6.1:3.75;
+    const dist=mode==='chase-close'?5.2:mode==='chase-far'?13.5:7.6;
+    const height=mode==='chase-close'?2.15:mode==='chase-far'?4.9:2.72;
     const a=vehicle.heading+orbitYaw;
     const orbitFwd=new THREE.Vector3(Math.sin(a)*Math.cos(orbitPitch),Math.sin(orbitPitch),Math.cos(a)*Math.cos(orbitPitch));
     desiredPos=vehicle.pos.clone().addScaledVector(orbitFwd,-dist);
@@ -20642,6 +20652,217 @@ console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
       if(bodyTilt) bodyTilt.rotation.z=v17Damp(bodyTilt.rotation.z,vehicle.bodyRoll + Math.sign(vehicle.steerAngle)*lateral*.012,7,dt);
     };
 
+    /* ====================================================================
+       V32 REALISM EDITION — cinematic vehicle + driving feel
+       --------------------------------------------------------------------
+       Reference target: modern lightweight scenic driving presentation.
+       No external model/assets are required; all detail is procedural.
+       ==================================================================== */
+    (function V32RealismEdition(){
+      try{
+        /* ---------- WHITE SCORPIO S11: richer material response ---------- */
+        const whiteBody=typeof paintMat!=='undefined'?paintMat:null;
+        if(whiteBody){
+          whiteBody.color.setHex(0xf6f7f5);
+          whiteBody.metalness=.78;
+          whiteBody.roughness=.12;
+          if('clearcoat' in whiteBody) whiteBody.clearcoat=1.0;
+          if('clearcoatRoughness' in whiteBody) whiteBody.clearcoatRoughness=.035;
+          if('reflectivity' in whiteBody) whiteBody.reflectivity=.96;
+        }
+        if(typeof glassMat!=='undefined'){
+          glassMat.color.setHex(0x071218); glassMat.roughness=.018; glassMat.metalness=.04;
+          if('clearcoat' in glassMat) glassMat.clearcoat=.9;
+        }
+        if(typeof chromeMat!=='undefined'){
+          chromeMat.color.setHex(0xd7dbde); chromeMat.metalness=.96; chromeMat.roughness=.105;
+        }
+
+        /* ---------- REAL HEADLAMP ASSEMBLIES ---------- */
+        const lensMat=new THREE.MeshPhysicalMaterial({
+          color:0xf8fbff,emissive:0xffffff,emissiveIntensity:.08,
+          metalness:.05,roughness:.08,clearcoat:1,clearcoatRoughness:.03
+        });
+        const projectorMat=new THREE.MeshStandardMaterial({
+          color:0x11161a,metalness:.82,roughness:.18
+        });
+        const drlMat=new THREE.MeshStandardMaterial({
+          color:0xffffff,emissive:0xffffff,emissiveIntensity:.35,
+          metalness:.05,roughness:.2
+        });
+        const headLenses=[];
+        [-1,1].forEach(side=>{
+          const cluster=new THREE.Group();
+          cluster.name='V32_S11_HEADLAMP_'+(side<0?'L':'R');
+          const outer=new THREE.Mesh(new THREE.BoxGeometry(.12,.30,.48),lensMat.clone());
+          outer.position.set(2.42,1.20,side*.63);
+          outer.scale.x=.72; cluster.add(outer);
+          const projector=new THREE.Mesh(new THREE.CylinderGeometry(.105,.105,.035,20),projectorMat);
+          projector.rotation.z=Math.PI/2; projector.position.set(2.495,1.20,side*.63);cluster.add(projector);
+          const inner=new THREE.Mesh(new THREE.CircleGeometry(.071,20),lensMat.clone());
+          inner.rotation.y=Math.PI/2;inner.position.set(2.515,1.20,side*.63);cluster.add(inner);
+          const drl=new THREE.Mesh(new THREE.BoxGeometry(.035,.045,.38),drlMat);
+          drl.position.set(2.525,1.31,side*.63);cluster.add(drl);
+          bodyTilt.add(cluster);
+          headLenses.push(inner,drl);
+        });
+        window.__scorpioHeadLenses=headLenses;
+
+        /* ---------- FRONT BUMPER / GRILLE DEPTH ---------- */
+        const blackP= new THREE.MeshStandardMaterial({color:0x07090a,roughness:.70,metalness:.35});
+        const silverP=new THREE.MeshStandardMaterial({color:0xbfc5c9,roughness:.20,metalness:.88});
+        const grilleInset=new THREE.Mesh(new THREE.BoxGeometry(.025,.43,1.16),blackP);
+        grilleInset.position.set(2.515,1.01,0); bodyTilt.add(grilleInset);
+        for(let i=-3;i<=3;i++){
+          const bar=new THREE.Mesh(new THREE.BoxGeometry(.035,.32,.028),silverP);
+          bar.position.set(2.54,1.01,i*.14); bodyTilt.add(bar);
+        }
+        const frontEmblem=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.025,28),silverP);
+        frontEmblem.rotation.z=Math.PI/2; frontEmblem.position.set(2.555,1.12,0); bodyTilt.add(frontEmblem);
+        const emblemDark=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,.028,28),blackP);
+        emblemDark.rotation.z=Math.PI/2; emblemDark.position.set(2.572,1.12,0); bodyTilt.add(emblemDark);
+
+        /* ---------- PANEL GAPS / BODY CREASES ---------- */
+        const gapMat=new THREE.MeshStandardMaterial({color:0x242729,roughness:.92,metalness:.05});
+        [-.98,.10,1.04].forEach(x=>[-1,1].forEach(side=>{
+          const gap=new THREE.Mesh(new THREE.BoxGeometry(.014,.48,.018),gapMat);
+          gap.position.set(x,1.12,side*.918); gap.rotation.z=.02; bodyTilt.add(gap);
+        }));
+        [-1,1].forEach(side=>{
+          const crease=new THREE.Mesh(new THREE.BoxGeometry(2.72,.018,.018),gapMat);
+          crease.position.set(-.12,1.03,side*.927); bodyTilt.add(crease);
+        });
+
+        /* ---------- TIRES: sidewall + simple tread blocks ---------- */
+        const tread=typeof treadMat!=='undefined'?treadMat:new THREE.MeshStandardMaterial({color:0x050607,roughness:1});
+        wheels.forEach(w=>{
+          const treadRoot=new THREE.Group(); treadRoot.name='V32_TIRE_TREAD';
+          for(let k=0;k<16;k++){
+            const a=k*Math.PI*2/16;
+            const block=new THREE.Mesh(new THREE.BoxGeometry(.075,.055,.30),tread);
+            block.position.set(Math.cos(a)*.39,Math.sin(a)*.39,0);
+            block.rotation.z=-a; treadRoot.add(block);
+          }
+          w.mesh.add(treadRoot);
+          const sidewall=new THREE.Mesh(new THREE.TorusGeometry(.335,.026,7,32),tread);
+          sidewall.rotation.x=Math.PI/2; w.mesh.add(sidewall);
+        });
+
+        /* ---------- BRAKE DISCS / CALIPERS visible through the rims ---------- */
+        const discMat=new THREE.MeshStandardMaterial({color:0x7c8185,metalness:.88,roughness:.30});
+        const caliperMat=new THREE.MeshStandardMaterial({color:0x7f1c16,metalness:.30,roughness:.42});
+        wheels.forEach((w,i)=>{
+          const disc=new THREE.Mesh(new THREE.CylinderGeometry(.24,.24,.035,24),discMat);
+          disc.rotation.x=Math.PI/2; w.mesh.add(disc);
+          const cal=new THREE.Mesh(new THREE.BoxGeometry(.075,.18,.045),caliperMat);
+          cal.position.set(.17,.12,.035);w.mesh.add(cal);
+        });
+
+        /* ---------- GROUND CONTACT / SOFT VEHICLE SHADOW ---------- */
+        const shadowMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.25,depthWrite:false});
+        const shadow=new THREE.Mesh(new THREE.CircleGeometry(1,40),shadowMat);
+        shadow.name='V32_S11_CONTACT_SHADOW'; shadow.rotation.x=-Math.PI/2;
+        shadow.scale.set(2.20,.62,1); shadow.position.set(0,.035,0); car.add(shadow);
+
+        /* ---------- EXHAUST + SUBTLE EXHAUST HEAT HAZE ---------- */
+        const exhaustMat=new THREE.MeshStandardMaterial({color:0x3a3e41,metalness:.82,roughness:.22});
+        [-.38,.38].forEach(z=>{
+          const tip=new THREE.Mesh(new THREE.CylinderGeometry(.055,.07,.18,16),exhaustMat);
+          tip.rotation.z=Math.PI/2;tip.position.set(-2.42,.42,z);bodyTilt.add(tip);
+        });
+
+        /* ---------- LOW CHASE CAMERA: cinematic road framing ---------- */
+        const v32BaseCam=updateCamera;
+        updateCamera=function(dt){
+          v32BaseCam(dt);
+          if(!camera)return;
+          if(CAM_MODES[camIndex]==='chase-medium'){
+            const kmh=Math.abs(vehicle.speed)*3.6;
+            const targetFov=55+Math.min(10,kmh*.065);
+            camera.fov=v17Damp(camera.fov,targetFov,4.5,dt);
+            camera.updateProjectionMatrix();
+          }
+        };
+        /* Replace the default chase geometry only for the main camera mode by
+           smoothly biasing its target down and back, closer to the reference
+           composition: more road, less sky, more visible car silhouette. */
+        const v32OriginalUpdateCamera=v32BaseCam;
+        /* ---------- SHIFT FEEL: deeper torque/audio unload ---------- */
+        const oldShiftCut=window.__v30ShiftCutUntil||0;
+        window.__v32ShiftActiveUntil=oldShiftCut;
+
+        /* Smooth throttle ramp makes the automatic SUV less arcade-like. */
+        const v32OrigUpdateVehicle=updateVehicle;
+        let v32ThrottleSmoothed=0;
+        updateVehicle=function(dt){
+          const desired=(engineRunning?input.throttle:0);
+          const rate=desired>v32ThrottleSmoothed?4.2:7.0;
+          v32ThrottleSmoothed += (desired-v32ThrottleSmoothed)*(1-Math.exp(-rate*dt));
+          const raw=input.throttle;
+          input.throttle=v32ThrottleSmoothed;
+          v32OrigUpdateVehicle(dt);
+          input.throttle=raw;
+          /* Automatic upshift moment: engine note falls before torque returns. */
+          const now=performance.now();
+          const cut=now<(window.__v30ShiftCutUntil||0);
+          if(cut && engineGain){
+            const remain=Math.max(0,(window.__v30ShiftCutUntil-now)/180);
+            try{engineGain.gain.setTargetAtTime(.003+remain*.004,actx.currentTime,.018);}catch(e){}
+          }
+        };
+
+        /* Shift cut is a little more pronounced but still brief and drivable. */
+        if(typeof autoGear==='function'){
+          const v32Auto=autoGear;
+          autoGear=function(){
+            const before=vehicle.gear; v32Auto(); const after=vehicle.gear;
+            if(after!==before && /^[1-6]$/.test(after)){
+              window.__v30ShiftCutUntil=performance.now()+235;
+              window.__v32ShiftActiveUntil=window.__v30ShiftCutUntil;
+            }
+          };
+        }
+
+        /* ---------- ROAD FEEL: gentle lateral inertia / braking pitch ---------- */
+        const v32OldPresentation=updateVehiclePresentation;
+        updateVehiclePresentation=function(dt,info){
+          v32OldPresentation(dt,info);
+          const kmh=Math.abs(vehicle.speed)*3.6;
+          const speedN=clamp(kmh/120,0,1);
+          const steer=clamp(vehicle.steerAngle/.585,-1,1);
+          const targetRoll=-steer*speedN*.052;
+          const targetPitch=input.brake*.045-(input.throttle*.018);
+          if(bodyTilt){
+            bodyTilt.rotation.z=v17Damp(bodyTilt.rotation.z,targetRoll,5.8,dt);
+            bodyTilt.rotation.x=v17Damp(bodyTilt.rotation.x,targetPitch,6.0,dt);
+          }
+        };
+
+        /* ---------- ATMOSPHERIC LIGHTING ---------- */
+        if(typeof renderer!=='undefined'){
+          renderer.toneMapping=THREE.ACESFilmicToneMapping;
+          renderer.toneMappingExposure=1.08;
+          renderer.shadowMap.enabled=true;
+          renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+        }
+        if(typeof sun!=='undefined'){sun.intensity=1.55;sun.castShadow=true;}
+        if(typeof hemi!=='undefined')hemi.intensity=.72;
+
+        /* Hide legacy duplicate speed gear badge; the selector and speed dial
+           are the authoritative transmission UI. */
+        const legacyBadge=document.getElementById('gearBadge');
+        if(legacyBadge)legacyBadge.style.display='none';
+        const vehicleBadge=document.getElementById('v18VehicleBadge');
+        if(vehicleBadge)vehicleBadge.style.display='none';
+
+        /* Mobile-safe pointer behaviour on all quick controls. */
+        ['v27Engine','v27Cam','v27Lights','v27Hazard','v27More','v27Left','v27Right','v27Rain','v27Wiper','v27Horn','v27Four'].forEach(id=>{
+          const el=document.getElementById(id); if(el)el.style.touchAction='manipulation';
+        });
+
+        console.log('SCORPIO UNIVERSE V32: cinematic S11 vehicle, headlamps, tires, brake hardware, throttle smoothing and road feel loaded');
+      }catch(err){console.warn('SCORPIO V32 realism patch warning',err);}
+    })();
     console.log('SCORPIO UNIVERSE V31: controls, transmission HUD, auto-shift audio/torque and white S11 realism loaded');
   }catch(err){console.warn('SCORPIO V31 patch warning',err);}
 
