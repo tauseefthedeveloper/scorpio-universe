@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>SCORPIO UNIVERSE V25</title>
+<title>SCORPIO UNIVERSE V27 — REALISM EDITION</title>
 <style>
   :root{
     --rust:#c1521f; --rust-dark:#8a3a15; --sand:#d8c9a3; --charcoal:#181410;
@@ -783,6 +783,117 @@ body.uiLarge #smallCtrlRow, body.uiLarge #doorControls, body.uiLarge #lightContr
   #speedCluster{bottom:6px !important;transform:translateX(50%) scale(.66) !important;}
 }
 
+
+/* =========================================================================
+   V27 — CLEAN DRIVING HUD
+   Remove navigation clutter and keep only controls needed while driving.
+   ========================================================================= */
+#topBar,#v18BrandBar,#v18LeftToolbar,#v18DriveStats,#v18VehicleBadge,
+#minimapWrap,#btnScreenScale,#doorControls,#missionBox,#v18Compass,#v18Route{
+  display:none !important;
+}
+#smallCtrlRow{display:none !important;}
+#hud{pointer-events:none !important;}
+#controls,#v27QuickBar,#v27MorePanel,#v27FuelStation,#v27Pause{pointer-events:auto;}
+#clusterBottomLeft{
+  left:clamp(188px,22vw,330px) !important;
+  bottom:calc(16px + env(safe-area-inset-bottom)) !important;
+  width:clamp(150px,18vw,220px) !important;
+  z-index:70 !important;
+}
+#clusterBottomLeft .gauge{
+  height:30px;padding:5px 9px !important;border-radius:999px !important;
+  background:rgba(8,10,10,.72) !important;
+  border:1px solid rgba(255,255,255,.13) !important;
+  box-shadow:0 8px 22px rgba(0,0,0,.30);
+}
+#clusterBottomLeft .lbl{width:31px;font-size:8px !important;color:#e6e7e4 !important;}
+#clusterBottomLeft .barTrack{height:6px !important;}
+#clusterBottomLeft #fuelPct{
+  min-width:29px;text-align:right;color:#fff;font-size:9px;letter-spacing:.03em;
+}
+#fuelFill{background:linear-gradient(90deg,#df6849,#f0bd57,#79c96d) !important;}
+#speedCluster{
+  left:50% !important;right:auto !important;bottom:calc(13px + env(safe-area-inset-bottom)) !important;
+  transform:translateX(-50%) !important;z-index:70 !important;
+}
+#speedBox{
+  min-width:132px !important;padding:5px 11px 7px !important;
+  border-radius:18px !important;background:rgba(8,10,10,.68) !important;
+  border:1px solid rgba(255,255,255,.14) !important;
+  box-shadow:0 12px 30px rgba(0,0,0,.36) !important;
+  backdrop-filter:blur(12px);
+}
+#speedBox .gaugeDial{width:88px !important;height:70px !important;}
+#speedVal{font-size:30px !important;letter-spacing:-.04em;}
+#speedUnit{font-size:7px !important;}
+#gearBadge{width:34px !important;height:34px !important;font-size:14px !important;border-radius:50% !important;}
+#statusRow{display:none !important;}
+#rpmFill{background:#d9b454 !important;}
+#wheelWrap{left:18px !important;bottom:calc(12px + env(safe-area-inset-bottom)) !important;width:clamp(156px,23vw,190px) !important;height:clamp(156px,23vw,190px) !important;z-index:72 !important;}
+#pedalCluster{right:18px !important;bottom:calc(12px + env(safe-area-inset-bottom)) !important;z-index:72 !important;}
+#gearSelector{bottom:112px !important;z-index:72 !important;}
+#lightControls{
+  right:18px !important;bottom:calc(150px + env(safe-area-inset-bottom)) !important;
+  width:170px !important;grid-template-columns:repeat(3,50px) !important;
+  gap:5px !important;z-index:72 !important;display:grid !important;
+}
+#lightControls .lightBtn{width:50px !important;height:32px !important;font-size:7px !important;}
+#lightControls #btnRightInd{grid-column:3;}
+#lightControls #btnHazard{grid-column:2;grid-row:1;}
+#lightControls #btnLights{grid-column:1;grid-row:1;}
+#v27QuickBar{
+  position:fixed;right:12px;top:12px;display:flex;gap:5px;z-index:120;
+}
+#v27QuickBar button,#v27MorePanel button{
+  appearance:none;border:1px solid rgba(255,255,255,.15);
+  background:rgba(8,10,10,.62);color:rgba(255,255,255,.88);
+  box-shadow:0 8px 20px rgba(0,0,0,.28);backdrop-filter:blur(12px);
+  border-radius:12px;font:800 8px/1 system-ui;letter-spacing:.06em;
+}
+#v27QuickBar button{width:48px;height:36px;}
+#v27QuickBar button.active{border-color:rgba(231,190,84,.85);color:#f0c85b;background:rgba(45,38,20,.75);}
+#v27MorePanel{
+  position:fixed;right:12px;top:54px;display:none;grid-template-columns:repeat(3,58px);
+  gap:5px;z-index:120;padding:7px;border-radius:14px;
+  background:rgba(7,9,9,.68);border:1px solid rgba(255,255,255,.13);
+  backdrop-filter:blur(14px);box-shadow:0 12px 30px rgba(0,0,0,.34);
+}
+#v27MorePanel.show{display:grid;}
+#v27MorePanel button{height:34px;width:58px;font-size:7px;}
+#v27MorePanel button.active{border-color:rgba(231,190,84,.85);color:#f0c85b;}
+#v27FuelStation{
+  position:fixed;left:50%;bottom:calc(116px + env(safe-area-inset-bottom));
+  transform:translateX(-50%);display:none;align-items:center;gap:8px;
+  min-width:174px;padding:8px 12px;border-radius:999px;
+  background:rgba(7,9,9,.72);border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 10px 26px rgba(0,0,0,.32);backdrop-filter:blur(12px);
+  color:#fff;z-index:90;pointer-events:none;
+}
+#v27FuelStation.show{display:flex;}
+#v27FuelStation span{font:900 8px system-ui;letter-spacing:.08em;color:#e5e6e3;}
+#v27FuelText{font:900 12px system-ui;color:#e8c15b;}
+#v27FuelHint{font:700 7px system-ui;color:rgba(255,255,255,.62);margin-left:auto;}
+#v27Pause{
+  position:fixed;left:12px;top:12px;width:38px;height:36px;display:flex;
+  align-items:center;justify-content:center;z-index:120;border-radius:12px;
+  background:rgba(8,10,10,.58);border:1px solid rgba(255,255,255,.13);
+  color:#fff;font:900 17px system-ui;backdrop-filter:blur(12px);
+}
+#v27Pause:active,#v27QuickBar button:active,#v27MorePanel button:active{transform:scale(.94);}
+#engineStatus{display:none !important;}
+/* Let the world carry the visual attention rather than a heavy UI filter. */
+#gameCanvas{filter:none !important;}
+@media (max-width:700px){
+  #clusterBottomLeft{left:170px !important;width:150px !important;}
+  #wheelWrap{width:148px !important;height:148px !important;left:12px !important;}
+  #pedalCluster{right:10px !important;}
+  .pedal{width:58px !important;}
+  #lightControls{right:10px !important;bottom:143px !important;}
+  #v27QuickBar{right:8px;top:8px;}
+  #v27QuickBar button{width:44px;height:34px;font-size:7px;}
+  #v27FuelStation{bottom:108px;}
+}
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27><rect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%23140f0a%27/><text x=%2732%27 y=%2743%27 text-anchor=%27middle%27 font-size=%2736%27 fill=%27%23e8b84b%27>SU</text></svg>"></head>
 <body>
@@ -845,7 +956,7 @@ body.uiLarge #smallCtrlRow, body.uiLarge #doorControls, body.uiLarge #lightContr
   <button id="btnScreenScale" class="ctrlBtn screenScaleBtn" type="button" aria-label="Change screen control size">SCREEN</button>
 
   <div id="clusterBottomLeft">
-    <div class="gauge hud-panel"><span class="lbl">FUEL</span><div class="barTrack"><div class="barFill" id="fuelFill" style="width:82%"></div></div></div>
+    <div class="gauge hud-panel"><span class="lbl">FUEL</span><div class="barTrack"><div class="barFill" id="fuelFill" style="width:82%"></div></div><b id="fuelPct">82%</b></div>
   </div>
 
   <div id="speedCluster">
@@ -922,6 +1033,23 @@ body.uiLarge #smallCtrlRow, body.uiLarge #doorControls, body.uiLarge #lightContr
   </div>
 </div>
 
+<div id="v27QuickBar" aria-label="Driving controls">
+  <button id="v27Engine" type="button">START</button>
+  <button id="v27Cam" type="button">CAM</button>
+  <button id="v27Lights" type="button">LIGHT</button>
+  <button id="v27Hazard" type="button">HAZ</button>
+  <button id="v27More" type="button">MORE</button>
+</div>
+<div id="v27MorePanel" aria-label="Additional vehicle controls">
+  <button id="v27Left" type="button">◀ IND</button>
+  <button id="v27Right" type="button">IND ▶</button>
+  <button id="v27Rain" type="button">RAIN</button>
+  <button id="v27Wiper" type="button">WIPER</button>
+  <button id="v27Horn" type="button">HORN</button>
+  <button id="v27Four" type="button">4WD</button>
+</div>
+<div id="v27FuelStation" aria-live="polite"><span>FUEL</span><b id="v27FuelText">82%</b><small id="v27FuelHint">DRIVE TO A STATION</small></div>
+<div id="v27Pause" aria-label="Pause">Ⅱ</div>
 <div id="pauseOverlay">
   <h2>PAUSED</h2>
   <button class="menuBtn primary" id="btnResume">RESUME</button>
@@ -2741,7 +2869,7 @@ function updateVehicle(dt){
     : clamp(850+Math.abs(vehicle.speed)*ratio*260+throttle*2600,850,6200);
   vehicle.rpm=lerp(vehicle.rpm,targetRPM,1-Math.pow(0.00001,dt));
 
-  vehicle.fuel=clamp(vehicle.fuel-(0.10+throttle*0.55+(info.band==='mud'?0.25:0))*dt,0,100);
+  if(!window.v27Refueling) vehicle.fuel=clamp(vehicle.fuel-(0.010+throttle*0.030+(info.band==='mud'?0.012:0))*dt,0,100);
   const dirty=(info.band==='mud'||info.band==='dirt'||!info.onRoad)&&Math.abs(vehicle.speed)>1;
   vehicle.dirtiness=clamp(vehicle.dirtiness+(dirty?dt*0.045:-dt*0.008),0,1);
   fenderMat && fenderMat.color && fenderMat.color.lerpColors
@@ -2768,7 +2896,7 @@ function updateHUD(info,throttle){
   const speedEl=document.getElementById('speedVal'); if(speedEl){const old=Number(speedEl.textContent)||0; speedEl.textContent=Math.round(lerp(old,kmh,0.32));}
   document.getElementById('gearBadge').textContent=vehicle.gear;
   updateGearButtons();
-  document.getElementById('fuelFill').style.width=vehicle.fuel+'%';
+  document.getElementById('fuelFill').style.width=vehicle.fuel+'%'; const fuelPctEl=document.getElementById('fuelPct'); if(fuelPctEl)fuelPctEl.textContent=Math.round(vehicle.fuel)+'%'; const v27FuelTextEl=document.getElementById('v27FuelText'); if(v27FuelTextEl)v27FuelTextEl.textContent=Math.round(vehicle.fuel)+'%';
   const rpmPct=clamp((vehicle.rpm-700)/(6500-700)*100,0,100);
   document.getElementById('rpmFill').style.width=rpmPct+'%';
   const needle=document.getElementById('rpmNeedle'); if(needle)needle.style.transform='rotate('+(-130+rpmPct*2.6)+'deg)';
@@ -3261,7 +3389,7 @@ function frame(now){
   v14UpdateTireMarks(dt);
   v14UpdateVehicleFX(dt);
   v14UpdateRoadAtmosphere(dt,realismInfo);
-  updateNightDriving();
+  window.v27UpdateSystems?.(dt,realismInfo); updateNightDriving();
   updateDoors(dt);
   updateTailgate(dt);
   updateIndicators(dt);
@@ -19923,7 +20051,270 @@ console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
       renderer.toneMapping=THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure=v26Mobile?1.10:1.16;
 
-      console.log('SCORPIO UNIVERSE V26: next-level environment, materials and atmosphere loaded');
+      
+      /* =====================================================================
+         V27 REALISM SYSTEMS
+         - physically motivated fuel economy + automatic station refuel
+         - compact HUD / control routing
+         - reflective vehicle materials + procedural environment lighting
+         - richer SUV exterior detail and contact lighting
+         - lightweight dust/spray and wheel-ground cues
+         ===================================================================== */
+
+      let v27Refueling=false; window.v27Refueling=false;
+      let v27MoreOpen=false;
+      let v27StationFlash=0;
+
+      /* ---- Procedural environment cube: gives metallic paint something real
+         to reflect instead of producing the flat/dark appearance of an
+         unlit metallic material. ---- */
+      function v27EnvFace(top,bottom){
+        const c=document.createElement('canvas'); c.width=128;c.height=128;
+        const x=c.getContext('2d');
+        const g=x.createLinearGradient(0,0,0,128);
+        g.addColorStop(0,top);g.addColorStop(.62,bottom);g.addColorStop(1,bottom);
+        x.fillStyle=g;x.fillRect(0,0,128,128);
+        return c;
+      }
+      const v27Cube=new THREE.CubeTexture([
+        v27EnvFace('#7398bc','#cbd5d8'),v27EnvFace('#7398bc','#cbd5d8'),
+        v27EnvFace('#b8c8ce','#edf0e9'),v27EnvFace('#344657','#71808b'),
+        v27EnvFace('#5f7e9c','#c3ced1'),v27EnvFace('#5f7e9c','#c3ced1')
+      ]);
+      v27Cube.needsUpdate=true;
+      v27Cube.encoding=THREE.sRGBEncoding;
+      scene.environment=v27Cube;
+
+      [paintMat,glassMat,chromeMat,rimMat].forEach(m=>{
+        if(!m)return;
+        if('envMapIntensity' in m)m.envMapIntensity=m===paintMat?.72:.95;
+      });
+      if(paintMat){
+        paintMat.color.setHex(0x252a2f);
+        paintMat.metalness=.72;
+        paintMat.roughness=.20;
+        paintMat.clearcoat=.95;
+        paintMat.clearcoatRoughness=.045;
+        paintMat.reflectivity=.92;
+      }
+      if(glassMat){
+        glassMat.color.setHex(0x071116);
+        glassMat.roughness=.035;
+        glassMat.clearcoat=.98;
+        glassMat.clearcoatRoughness=.035;
+        glassMat.envMapIntensity=.72;
+      }
+      if(rimMat){
+        rimMat.metalness=.94;rimMat.roughness=.16;rimMat.envMapIntensity=1.25;
+      }
+
+      /* ---- Exterior micro-details: parking sensors, tailgate seams,
+         rear wiper, exhaust, mud flaps and visible brake discs. ---- */
+      const v27Dark=new THREE.MeshStandardMaterial({color:0x080a0b,roughness:.82,metalness:.08});
+      const v27Rubber=new THREE.MeshStandardMaterial({color:0x0a0b0c,roughness:.98});
+      const v27Disc=new THREE.MeshStandardMaterial({color:0x85898b,metalness:.78,roughness:.27});
+      const v27Amber=new THREE.MeshStandardMaterial({color:0x321700,emissive:0xff7a00,emissiveIntensity:.25});
+      for(const z of [-.55,-.18,.18,.55]){
+        const sensor=new THREE.Mesh(new THREE.SphereGeometry(.026,8,6),v27Dark);
+        sensor.position.set(-2.425,.63,z);bodyTilt.add(sensor);
+      }
+      const tailSeam=new THREE.Mesh(new THREE.BoxGeometry(.018,.82,1.36),v27Dark);
+      tailSeam.position.set(-2.435,.98,0);bodyTilt.add(tailSeam);
+      const rearWiperArm=new THREE.Mesh(new THREE.BoxGeometry(.055,.055,.72),v27Dark);
+      rearWiperArm.position.set(-2.46,1.47,.02);rearWiperArm.rotation.z=.18;bodyTilt.add(rearWiperArm);
+      const exhaust=new THREE.Mesh(new THREE.CylinderGeometry(.055,.065,.18,12),chromeMat);
+      exhaust.rotation.x=Math.PI/2;exhaust.position.set(-2.34,.39,-.62);bodyTilt.add(exhaust);
+      [-.98,.98].forEach(z=>{
+        const flap=new THREE.Mesh(new THREE.BoxGeometry(.10,.34,.25),v27Rubber);
+        flap.position.set(-1.48,.39,z);bodyTilt.add(flap);
+      });
+      wheels.forEach(w=>{
+        const disc=new THREE.Mesh(new THREE.CylinderGeometry(.23,.23,.018,24),v27Disc);
+        disc.rotation.x=Math.PI/2;w.mesh.add(disc);
+      });
+
+      /* Turn signal side repeaters and tiny body reflections. */
+      [-1,1].forEach(side=>{
+        const rep=new THREE.Mesh(new THREE.BoxGeometry(.04,.055,.15),v27Amber);
+        rep.position.set(.62,1.19,side*.925);bodyTilt.add(rep);
+      });
+
+      /* ---- Wheel contact shadows: multiple soft translucent ellipses give
+         the SUV a much stronger connection with the ground. ---- */
+      const v27ShadowMat=new THREE.MeshBasicMaterial({
+        color:0x050607,transparent:true,opacity:.20,depthWrite:false
+      });
+      const v27WheelShadows=[];
+      wheels.forEach(w=>{
+        const sh=new THREE.Mesh(new THREE.CircleGeometry(.47,24),v27ShadowMat.clone());
+        sh.rotation.x=-Math.PI/2;sh.scale.y=.42;sh.renderOrder=3;scene.add(sh);
+        v27WheelShadows.push({mesh:sh,w});
+      });
+
+      /* ---- Dust particle bank. Only visible on dirt/mud/grass, sparse on
+         mobile and denser on desktop. ---- */
+      const v27DustN=v26Mobile?55:110;
+      const v27DustPos=new Float32Array(v27DustN*3);
+      const v27DustVel=new Float32Array(v27DustN*3);
+      const v27DustLife=new Float32Array(v27DustN);
+      const v27DustGeo=new THREE.BufferGeometry();
+      v27DustGeo.setAttribute('position',new THREE.BufferAttribute(v27DustPos,3));
+      const v27DustMat=new THREE.PointsMaterial({color:0xc4aa83,size:v26Mobile?.09:.13,transparent:true,opacity:.18,depthWrite:false,sizeAttenuation:true});
+      const v27Dust=new THREE.Points(v27DustGeo,v27DustMat);scene.add(v27Dust);
+      function v27SpawnDust(i){
+        const rear=new THREE.Vector3(-1.25,0.15,((i%2)?-.72:.72));
+        const f=new THREE.Vector3(Math.sin(vehicle.heading),0,Math.cos(vehicle.heading));
+        const r=new THREE.Vector3(Math.cos(vehicle.heading),0,-Math.sin(vehicle.heading));
+        const base=vehicle.pos.clone().addScaledVector(f,-1.0).addScaledVector(r,rear.z);
+        v27DustPos[i*3]=base.x+(Math.random()-.5)*.18;
+        v27DustPos[i*3+1]=base.y+.05+Math.random()*.16;
+        v27DustPos[i*3+2]=base.z+(Math.random()-.5)*.18;
+        v27DustVel[i*3]=(Math.random()-.5)*.65-f.x*vehicle.speed*.12;
+        v27DustVel[i*3+1]=.22+Math.random()*.40;
+        v27DustVel[i*3+2]=(Math.random()-.5)*.65-f.z*vehicle.speed*.12;
+        v27DustLife[i]=.35+Math.random()*.8;
+      }
+
+      /* ---- Detailed fuel station: realistic canopy, price board, lane
+         markings, bollards, lights and a proper pump island. ---- */
+      const v27StationRoot=new THREE.Group();v27StationRoot.name='V27_Realistic_Fuel_Station';v26Root.add(v27StationRoot);
+      const v27StationMat=new THREE.MeshStandardMaterial({color:0xebe7dc,roughness:.42,metalness:.05});
+      const v27StationRed=new THREE.MeshStandardMaterial({color:0x9b2020,roughness:.35,metalness:.10});
+      const v27StationDark=new THREE.MeshStandardMaterial({color:0x17191b,roughness:.52,metalness:.32});
+      const v27StationGlass=new THREE.MeshPhysicalMaterial({color:0x102f38,roughness:.06,metalness:.04,transparent:true,opacity:.88});
+      const v27SP=v26Frame(.25,8,.04);
+      v27StationRoot.position.set(v27SP.x,v27SP.y,v27SP.z);v27StationRoot.rotation.y=v27SP.heading;
+      const sBase=new THREE.Mesh(new THREE.BoxGeometry(8,.12,6.0),v27StationMat);sBase.position.y=.06;v27StationRoot.add(sBase);
+      const sCanopy=new THREE.Mesh(new THREE.BoxGeometry(7.2,.18,4.8),v27StationRed);sCanopy.position.y=3.45;sCanopy.castShadow=true;v27StationRoot.add(sCanopy);
+      const sStripe=new THREE.Mesh(new THREE.BoxGeometry(7.22,.16,.16),v27StationDark);sStripe.position.set(0,3.30,2.34);v27StationRoot.add(sStripe);
+      [-3.05,3.05].forEach(x=>{
+        [-2.0,2.0].forEach(z=>{
+          const col=new THREE.Mesh(new THREE.CylinderGeometry(.11,.14,3.35,12),v27StationMat);
+          col.position.set(x,1.68,z);col.castShadow=true;v27StationRoot.add(col);
+        });
+      });
+      [-1.8,0,1.8].forEach(x=>{
+        const island=new THREE.Mesh(new THREE.BoxGeometry(1.05,.14,3.0),v27StationDark);island.position.set(x,.16,0);island.castShadow=true;v27StationRoot.add(island);
+        const pumpBody=new THREE.Mesh(new THREE.BoxGeometry(.52,1.18,.40),v27StationMat);pumpBody.position.set(x,.78,0);pumpBody.castShadow=true;v27StationRoot.add(pumpBody);
+        const pumpTop=new THREE.Mesh(new THREE.BoxGeometry(.44,.18,.36),v27StationRed);pumpTop.position.set(x,1.43,0);v27StationRoot.add(pumpTop);
+        const display=new THREE.Mesh(new THREE.BoxGeometry(.30,.18,.025),v27StationGlass);display.position.set(x,1.08,.215);v27StationRoot.add(display);
+      });
+      const priceBoard=new THREE.Mesh(new THREE.BoxGeometry(1.25,1.75,.10),v27StationRed);priceBoard.position.set(3.55,1.25,-1.0);v27StationRoot.add(priceBoard);
+      const priceFace=new THREE.Mesh(new THREE.BoxGeometry(.92,1.15,.03),v27StationGlass);priceFace.position.set(3.55,1.34,-.94);v27StationRoot.add(priceFace);
+      for(let i=0;i<6;i++){
+        const stripe=new THREE.Mesh(new THREE.BoxGeometry(.22,.055,.03),v27StationMat);stripe.position.set(3.15+i*.16,3.36,2.40);v27StationRoot.add(stripe);
+      }
+      for(let i=0;i<8;i++){
+        const mark=new THREE.Mesh(new THREE.BoxGeometry(.16,.012,.85),new THREE.MeshStandardMaterial({color:0xd6c75e,roughness:.82}));
+        mark.position.set(-3.25+i*.92,.13,2.48);v27StationRoot.add(mark);
+      }
+      for(let i=0;i<4;i++){
+        const boll=new THREE.Mesh(new THREE.CylinderGeometry(.07,.09,.72,10),v27StationDark);boll.position.set(-3.25+i*2.15,.36,-2.55);v27StationRoot.add(boll);
+      }
+
+      /* ---- Refuel controller ---- */
+      function v27StationDistance(){
+        if(!window.__fuelStation)return 999;
+        const dx=vehicle.pos.x-window.__fuelStation.x,dz=vehicle.pos.z-window.__fuelStation.z;
+        return Math.sqrt(dx*dx+dz*dz);
+      }
+      function v27UpdateFuel(dt){
+        const d=v27StationDistance();
+        const stopped=Math.abs(vehicle.speed)<.75;
+        const atStation=d<4.2;
+        v27Refueling=atStation && stopped && vehicle.fuel<99.95; window.v27Refueling=v27Refueling;
+        const panel=document.getElementById('v27FuelStation');
+        if(panel)panel.classList.toggle('show',atStation);
+        if(atStation){
+          const hint=document.getElementById('v27FuelHint');
+          if(hint)hint.textContent=v27Refueling?'REFUELING…':'STOP TO REFUEL';
+        }
+        if(v27Refueling){
+          vehicle.fuel=Math.min(100,vehicle.fuel+7.0*dt);
+          v27StationFlash+=dt*9;
+          if(v27StationFlash>1){
+            v27StationFlash=0;
+            toast('FUEL '+Math.round(vehicle.fuel)+'%');
+          }
+        }
+      }
+
+      /* ---- Minimal quick-control wiring ---- */
+      function v27Bind(id,target,mode='click'){
+        const a=document.getElementById(id),b=document.getElementById(target);
+        if(a&&b)a.addEventListener('click',()=>b.click());
+      }
+      v27Bind('v27Engine','btnEngine');
+      v27Bind('v27Cam','btnCam');
+      v27Bind('v27Lights','btnLights');
+      v27Bind('v27Hazard','btnHazard');
+      v27Bind('v27Left','btnLeftInd');
+      v27Bind('v27Right','btnRightInd');
+      v27Bind('v27Rain','btnWeather');
+      v27Bind('v27Wiper','btnWiper');
+      v27Bind('v27Horn','btnHorn');
+      v27Bind('v27Four','btn4wd');
+      document.getElementById('v27More')?.addEventListener('click',()=>{
+        v27MoreOpen=!v27MoreOpen;document.getElementById('v27MorePanel')?.classList.toggle('show',v27MoreOpen);
+      });
+      document.getElementById('v27Pause')?.addEventListener('click',()=>document.getElementById('btnPause')?.click());
+
+      /* Keep quick controls synchronized with their original state. */
+      setInterval(()=>{
+        const map=[['v27Engine','btnEngine'],['v27Cam','btnCam'],['v27Lights','btnLights'],['v27Hazard','btnHazard'],
+                   ['v27Left','btnLeftInd'],['v27Right','btnRightInd'],['v27Rain','btnWeather'],['v27Wiper','btnWiper'],['v27Four','btn4wd']];
+        map.forEach(([a,b])=>{
+          const x=document.getElementById(a),y=document.getElementById(b);
+          if(x&&y){x.classList.toggle('active',y.classList.contains('active')||y.classList.contains('pressed')); if(a==='v27Engine')x.textContent=y.textContent;}
+        });
+      },220);
+
+      function v27UpdateSystems(dt,info){
+        v27UpdateFuel(dt);
+
+        /* Soft contact shadows follow each wheel and fade slightly on jumps. */
+        v27WheelShadows.forEach(({mesh,w})=>{
+          const f=new THREE.Vector3(Math.sin(vehicle.heading),0,Math.cos(vehicle.heading));
+          const r=new THREE.Vector3(Math.cos(vehicle.heading),0,-Math.sin(vehicle.heading));
+          const wx=vehicle.pos.x+f.x*w.def.x+r.x*w.def.z;
+          const wz=vehicle.pos.z+f.z*w.def.x+r.z*w.def.z;
+          const gy=heightAt(wx,wz);
+          mesh.position.set(wx,gy+.012,wz);
+          const contact=clamp(1-Math.abs(w.susOffset)/.34,.25,1);
+          mesh.material.opacity=.10+.16*contact;
+          mesh.scale.set(.72,.34,1);
+        });
+
+        const off=info.band==='dirt'||info.band==='mud'||!info.onRoad;
+        const moving=Math.abs(vehicle.speed)>3;
+        v27DustMat.opacity=off&&moving?clamp(.06+Math.abs(vehicle.speed)/120,.06,.22):0;
+        if(off&&moving&&Math.random()<dt*(v26Mobile?7:12)){
+          const idx=Math.floor(Math.random()*v27DustN);v27SpawnDust(idx);
+        }
+        for(let i=0;i<v27DustN;i++){
+          if(v27DustLife[i]<=0)continue;
+          v27DustLife[i]-=dt;
+          v27DustPos[i*3]+=v27DustVel[i*3]*dt;
+          v27DustPos[i*3+1]+=v27DustVel[i*3+1]*dt;
+          v27DustPos[i*3+2]+=v27DustVel[i*3+2]*dt;
+          v27DustVel[i*3+1]-=.32*dt;
+          if(v27DustLife[i]<=0)v27DustPos[i*3+1]=-100;
+        }
+        v27DustGeo.attributes.position.needsUpdate=true;
+
+        /* Headlight beams become physically useful at night rather than only
+           being emissive decoration. */
+        const night=timeOfDay<5.4||timeOfDay>19.0;
+        if(typeof headlightSpotL!=='undefined'){
+          const beam=input.headlights?(night?1.9:1.25):(night?.22:0);
+          headlightSpotL.intensity=v17Damp(headlightSpotL.intensity,beam,7,dt);
+          headlightSpotR.intensity=v17Damp(headlightSpotR.intensity,beam,7,dt);
+        }
+      }
+      window.v27UpdateSystems=v27UpdateSystems;
+
+console.log('SCORPIO UNIVERSE V26: next-level environment, materials and atmosphere loaded');
+      console.log('SCORPIO UNIVERSE V27: clean HUD, realistic fuel, vehicle materials, station and driving FX loaded');
     })();
 
     console.log('SCORPIO UNIVERSE V25: Slow Roads-inspired scenic/physics presentation loaded');
