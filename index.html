@@ -922,6 +922,102 @@ body.playing #v27Pause{display:flex !important;}
   #wheelWrap{left:10px !important;bottom:10px !important;}
   #pedalCluster{right:8px !important;bottom:10px !important;}
 }
+/* ========================================================================
+   V29 — TOUCH HUD FINAL LAYOUT
+   One clean driving layout; no stacked controls, no overlap with the gauge.
+   ======================================================================== */
+body.playing #v27QuickBar{display:flex !important;}
+body.playing #v27Pause{display:flex !important;}
+#v27QuickBar{
+  top:max(10px,env(safe-area-inset-top)) !important;
+  right:max(10px,env(safe-area-inset-right)) !important;
+  gap:6px !important;
+  flex-wrap:nowrap !important;
+  max-width:calc(100vw - 70px) !important;
+}
+#v27QuickBar button{width:46px !important;height:34px !important;}
+#v27MorePanel{
+  top:calc(max(10px,env(safe-area-inset-top)) + 42px) !important;
+  right:max(10px,env(safe-area-inset-right)) !important;
+  grid-template-columns:repeat(3,58px) !important;
+}
+#v27Pause{
+  top:max(10px,env(safe-area-inset-top)) !important;
+  left:max(10px,env(safe-area-inset-left)) !important;
+}
+/* Fuel stays isolated in the upper-left so it never collides with steering. */
+#clusterBottomLeft{
+  left:max(10px,env(safe-area-inset-left)) !important;
+  top:calc(max(10px,env(safe-area-inset-top)) + 44px) !important;
+  bottom:auto !important;
+  width:145px !important;
+  z-index:76 !important;
+}
+/* Steering and pedals own the lower corners. */
+#wheelWrap{
+  left:max(10px,env(safe-area-inset-left)) !important;
+  bottom:max(10px,env(safe-area-inset-bottom)) !important;
+  z-index:80 !important;
+}
+#pedalCluster{
+  right:max(10px,env(safe-area-inset-right)) !important;
+  bottom:max(10px,env(safe-area-inset-bottom)) !important;
+  z-index:80 !important;
+}
+/* Gear is a separate strip immediately above the speed dial. */
+#speedCluster{
+  left:50% !important;right:auto !important;
+  bottom:calc(10px + env(safe-area-inset-bottom)) !important;
+  transform:translateX(-50%) !important;
+  z-index:78 !important;
+}
+#gearSelector{
+  left:50% !important;
+  bottom:calc(98px + env(safe-area-inset-bottom)) !important;
+  transform:translateX(-50%) !important;
+  z-index:82 !important;
+}
+/* Lights sit above the pedals, not beside/inside the speed cluster. */
+#lightControls{
+  right:max(10px,env(safe-area-inset-right)) !important;
+  bottom:calc(124px + env(safe-area-inset-bottom)) !important;
+  width:112px !important;
+  grid-template-columns:repeat(2,52px) !important;
+  gap:5px !important;
+  z-index:82 !important;
+}
+#lightControls .lightBtn{width:52px !important;height:30px !important;font-size:7px !important;}
+#btnHand{
+  right:calc(118px + env(safe-area-inset-right)) !important;
+  bottom:calc(116px + env(safe-area-inset-bottom)) !important;
+  z-index:82 !important;
+}
+#v27FuelStation{
+  left:50% !important;
+  bottom:calc(108px + env(safe-area-inset-bottom)) !important;
+  z-index:90 !important;
+}
+@media(max-width:700px){
+  #v27QuickBar button{width:43px !important;height:32px !important;font-size:7px !important;}
+  #v27MorePanel{top:calc(max(8px,env(safe-area-inset-top)) + 40px) !important;}
+  #clusterBottomLeft{left:8px !important;top:50px !important;width:132px !important;}
+  #wheelWrap{left:8px !important;bottom:8px !important;width:148px !important;height:148px !important;}
+  #pedalCluster{right:8px !important;bottom:8px !important;}
+  #lightControls{right:8px !important;bottom:136px !important;}
+  #btnHand{right:118px !important;bottom:116px !important;}
+  #gearSelector{bottom:98px !important;}
+  #speedCluster{bottom:8px !important;}
+}
+@media(max-width:700px) and (max-height:480px){
+  #v27QuickBar button{width:39px !important;height:30px !important;font-size:6.5px !important;}
+  #clusterBottomLeft{top:45px !important;transform:scale(.88);transform-origin:top left;}
+  #wheelWrap{width:132px !important;height:132px !important;}
+  .pedal{width:52px !important;height:92px !important;}
+  #lightControls{bottom:118px !important;transform:scale(.88);transform-origin:bottom right;}
+  #btnHand{bottom:100px !important;transform:scale(.86);transform-origin:bottom right;}
+  #gearSelector{bottom:90px !important;transform:translateX(-50%) scale(.90) !important;}
+  #speedCluster{transform:translateX(-50%) scale(.88) !important;transform-origin:center bottom;}
+}
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27><rect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%23140f0a%27/><text x=%2732%27 y=%2743%27 text-anchor=%27middle%27 font-size=%2736%27 fill=%27%23e8b84b%27>SU</text></svg>"></head>
 <body>
@@ -19767,9 +19863,11 @@ console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
     };
 
     /* ---- Chassis response: visual only, does not replace core physics. ---- */
+    /* V29: use the actual stable chassis group. Older enhancement builds
+       referenced vehicleBody/vehicleCabin names that do not exist in the core,
+       causing a ReferenceError and aborting every control wired after this pass. */
     const bodyGroups=[];
-    if(vehicleBody) bodyGroups.push(vehicleBody);
-    if(vehicleCabin) bodyGroups.push(vehicleCabin);
+    if(typeof bodyTilt!=='undefined' && bodyTilt) bodyGroups.push(bodyTilt);
     const originalVehiclePresentation=updateVehiclePresentation;
     updateVehiclePresentation=function(dt,info){
       originalVehiclePresentation(dt,info);
@@ -20300,6 +20398,7 @@ console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
 
       function v27UpdateSystems(dt,info){
         v27UpdateFuel(dt);
+        if(window.v29SteerAssist) window.v29SteerAssist(dt);
 
         /* Soft contact shadows follow each wheel and fade slightly on jumps. */
         v27WheelShadows.forEach(({mesh,w})=>{
@@ -20341,6 +20440,19 @@ console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
         }
       }
       window.v27UpdateSystems=v27UpdateSystems;
+
+      /* V29 driving feel: slightly stronger lateral smoothing and a softer
+         speed-dependent steering limiter, following the feel goals documented
+         by Slow Roads while retaining Scorpio's own kinematic physics. */
+      const v29BaseSteerLimit = typeof STEER_MAX!=='undefined' ? STEER_MAX : .585;
+      window.v29SteerAssist = function(dt){
+        const kmh=Math.abs(vehicle.speed)*3.6;
+        const highSpeed=clamp((kmh-45)/65,0,1);
+        const limit=v29BaseSteerLimit*(1-.22*highSpeed);
+        if(Math.abs(vehicle.steerAngle)>limit){
+          vehicle.steerAngle=v17Damp(vehicle.steerAngle,Math.sign(vehicle.steerAngle)*limit,9,dt);
+        }
+      };
 
 console.log('SCORPIO UNIVERSE V28: next-level environment, materials and atmosphere loaded');
       console.log('SCORPIO UNIVERSE V27: clean HUD, realistic fuel, vehicle materials, station and driving FX loaded');
