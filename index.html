@@ -1091,10 +1091,47 @@ body.playing #v27QuickBar{display:flex!important;}
   #lightControls{bottom:calc(110px + env(safe-area-inset-bottom))!important;}
   #btnHand{bottom:calc(92px + env(safe-area-inset-bottom))!important;}
 }
+
+
+/* ========================================================================
+   V33 — COMPACT TRANSMISSION + TRUE FREE CAMERA
+   ======================================================================== */
+#gearSelector{
+  left:calc(50% + 78px)!important;
+  right:auto!important;
+  bottom:calc(24px + env(safe-area-inset-bottom))!important;
+  transform:none!important;
+  width:112px!important;
+  min-width:112px!important;
+  box-sizing:border-box!important;
+  display:flex!important;
+  justify-content:center!important;
+  gap:4px!important;
+  padding:4px!important;
+  border-radius:11px!important;
+  z-index:380!important;
+}
+#gearSelector .gearBtn{
+  width:32px!important;height:29px!important;min-width:32px!important;
+  border-radius:8px!important;font-size:12px!important;line-height:29px!important;
+}
+#speedCluster{z-index:370!important;}
+#pedalCluster{z-index:360!important;}
+@media(max-width:700px){
+  #gearSelector{left:calc(50% + 73px)!important;bottom:calc(23px + env(safe-area-inset-bottom))!important;}
+}
+@media(max-width:700px) and (max-height:480px){
+  #gearSelector{left:calc(50% + 69px)!important;bottom:calc(20px + env(safe-area-inset-bottom))!important;transform:scale(.90)!important;transform-origin:left bottom!important;}
+}
+/* Free-camera mode: make the canvas explicitly feel like an inspection viewport. */
+body.free-camera #canvasWrap{cursor:grab!important;}
+body.free-camera #canvasWrap:active{cursor:grabbing!important;}
+#v27Cam.free-active{background:linear-gradient(180deg,#e46d25,#a83f12)!important;color:#fff!important;border-color:#f0a15d!important;}
+
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27><rect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%23140f0a%27/><text x=%2732%27 y=%2743%27 text-anchor=%27middle%27 font-size=%2736%27 fill=%27%23e8b84b%27>SU</text></svg>"></head>
 <body>
-<!-- SCORPIO UNIVERSE V31 REALISTIC SCORPIO S11 BUILD -->
+<!-- SCORPIO UNIVERSE V33 REALISTIC SCORPIO S11 BUILD -->
 
 
 <div id="desktopBlock"><div class="deviceCard"><h2>Mobile Simulator Only</h2><p>SCORPIO UNIVERSE is designed for touch controls on a mobile phone. Open this game on an Android/iPhone in landscape mode.</p></div></div>
@@ -1930,7 +1967,7 @@ car.add(bodyTilt);
 // Proportional correction to the official S11 footprint: 4456 mm length / 1820 mm width.
 bodyTilt.scale.set(0.945,1.0,0.948);
 
-const paintMat = new THREE.MeshPhysicalMaterial({color:0xd7d4cc, metalness:0.62, roughness:0.20, clearcoat:0.72, clearcoatRoughness:0.10, reflectivity:0.72});
+const paintMat = new THREE.MeshPhysicalMaterial({color:0xf1f2ef, metalness:0.76, roughness:0.15, clearcoat:0.92, clearcoatRoughness:0.055, reflectivity:0.88});
 const paintDarkMat = new THREE.MeshStandardMaterial({color:0x0b0d10, metalness:0.45, roughness:0.42});
 const trimMat = new THREE.MeshStandardMaterial({color:0x111315, roughness:0.72, metalness:0.15});
 const glassMat = new THREE.MeshPhysicalMaterial({color:0x08141b, metalness:0.05, roughness:0.06, transparent:true, opacity:0.9, clearcoat:0.65, clearcoatRoughness:0.08});
@@ -2433,6 +2470,21 @@ function makeWheelMesh(){
     spoke.position.x=WHEEL_R*0.25; sg.add(spoke); g.add(sg);
   }
   const cap=new THREE.Mesh(new THREE.CylinderGeometry(WHEEL_R*0.13,WHEEL_R*0.13,WHEEL_W*0.7,16),hubCapMat); cap.rotation.x=Math.PI/2; g.add(cap);
+  /* V33 wheel realism: visible ventilated brake disc + caliper behind the alloy. */
+  const discMat=new THREE.MeshStandardMaterial({color:0x555b61,metalness:.82,roughness:.28});
+  const disc=new THREE.Mesh(new THREE.CylinderGeometry(WHEEL_R*.43,WHEEL_R*.43,.045,28),discMat);
+  disc.rotation.x=Math.PI/2; disc.position.z=WHEEL_W*.03; g.add(disc);
+  const caliperMat=new THREE.MeshStandardMaterial({color:0x8b1d16,metalness:.45,roughness:.34});
+  const caliper=new THREE.Mesh(new THREE.BoxGeometry(.10,.24,.065),caliperMat);
+  caliper.position.set(WHEEL_R*.38,WHEEL_R*.17,WHEEL_W*.10); g.add(caliper);
+  /* Subtle tread blocks give the tyres a physical silhouette without a heavy texture. */
+  const treadCount=18;
+  for(let i=0;i<treadCount;i++){
+    const a=i*Math.PI*2/treadCount;
+    const tb=new THREE.Mesh(new THREE.BoxGeometry(.035,.075,.025),treadMat);
+    tb.position.set(Math.cos(a)*WHEEL_R*.94,Math.sin(a)*WHEEL_R*.94,0);
+    tb.rotation.z=a; g.add(tb);
+  }
   return g;
 }
 const wheelDefs=[
@@ -2703,13 +2755,25 @@ function playImpact(strength){
 /* =========================================================================
    Camera modes
    ========================================================================= */
-const CAM_MODES=['chase-medium','chase-close','chase-far','cockpit','hood','front','rear','left','right','wheel','overhead'];
-const CAM_LABELS={'chase-medium':'CHASE','chase-close':'CHASE CLOSE','chase-far':'CHASE FAR','cockpit':'COCKPIT','hood':'HOOD CAM',
+const CAM_MODES=['chase-medium','free','chase-close','chase-far','cockpit','hood','front','rear','left','right','wheel','overhead'];
+const CAM_LABELS={'chase-medium':'CHASE','free':'FREE CAMERA — DRAG TO ORBIT','chase-close':'CHASE CLOSE','chase-far':'CHASE FAR','cockpit':'COCKPIT','hood':'HOOD CAM',
   'front':'FRONT CAM','rear':'REAR CAM','left':'LEFT CAM','right':'RIGHT CAM','wheel':'DRIVER WHEEL CAM','overhead':'OVERHEAD CAM'};
 let camIndex=0;
 const camPos=new THREE.Vector3(0,6,-10), camLook=new THREE.Vector3();
 let camShake=0; // decays each frame; bumped by potholes/hard braking/collisions
-function cycleCamera(){ camIndex=(camIndex+1)%CAM_MODES.length; toast(CAM_LABELS[CAM_MODES[camIndex]]); }
+let freeCamDistance=8.2;
+function syncFreeCameraUI(){
+  const free=CAM_MODES[camIndex]==='free';
+  document.body.classList.toggle('free-camera',free);
+  const b=document.getElementById('v27Cam'); if(b){b.classList.toggle('free-active',free);b.textContent=free?'FREE':'CAM';}
+}
+function cycleCamera(){
+  camIndex=(camIndex+1)%CAM_MODES.length;
+  if(CAM_MODES[camIndex]==='free'){ orbitYaw=0; orbitPitch=.24; freeCamDistance=8.2; }
+  syncFreeCameraUI();
+  toast(CAM_LABELS[CAM_MODES[camIndex]]);
+}
+syncFreeCameraUI();
 function toggleLights(){
   input.headlights=!input.headlights;
   document.getElementById('chipLights')?.classList.toggle('on', input.headlights);
@@ -3126,20 +3190,27 @@ function updateHUD(info,throttle){
 let orbitYaw=0, orbitPitch=0.28;
 let camDragging=false, camPointerId=null, lastCamX=0,lastCamY=0;
 canvas.addEventListener('pointerdown',e=>{
-  if(e.pointerType==='touch' && e.clientX>innerWidth*0.28 && e.clientX<innerWidth*0.72 && e.clientY>innerHeight*0.10 && e.clientY<innerHeight*0.78){
-    camDragging=true; camPointerId=e.pointerId; lastCamX=e.clientX; lastCamY=e.clientY;
-    canvas.setPointerCapture(e.pointerId);
-  }
+  if(CAM_MODES[camIndex]!=='free')return;
+  camDragging=true; camPointerId=e.pointerId; lastCamX=e.clientX; lastCamY=e.clientY;
+  canvas.setPointerCapture?.(e.pointerId);
 });
 canvas.addEventListener('pointermove',e=>{
-  if(!camDragging||e.pointerId!==camPointerId)return;
+  if(!camDragging||e.pointerId!==camPointerId||CAM_MODES[camIndex]!=='free')return;
   const dx=e.clientX-lastCamX,dy=e.clientY-lastCamY;
   lastCamX=e.clientX;lastCamY=e.clientY;
-  orbitYaw-=dx*0.008; orbitPitch=clamp(orbitPitch-dy*0.005,-0.15,0.85);
+  orbitYaw-=dx*0.008; orbitPitch=clamp(orbitPitch-dy*0.005,-0.42,1.02);
 });
-function releaseCam(e){if(e&&e.pointerId!==camPointerId)return;camDragging=false;}
+function releaseCam(e){if(e&&e.pointerId!==camPointerId)return;camDragging=false;camPointerId=null;}
 canvas.addEventListener('pointerup',releaseCam);
 canvas.addEventListener('pointercancel',releaseCam);
+canvas.addEventListener('wheel',e=>{
+  if(CAM_MODES[camIndex]!=='free')return;
+  e.preventDefault(); freeCamDistance=clamp(freeCamDistance+e.deltaY*0.012,4.2,15.5);
+},{passive:false});
+canvas.addEventListener('dblclick',()=>{
+  if(CAM_MODES[camIndex]!=='free')return;
+  orbitYaw=0;orbitPitch=.24;freeCamDistance=8.2;toast('FREE CAMERA RESET');
+});
 function updateCamera(dt){
   const mode=CAM_MODES[camIndex];
   const fwd=new THREE.Vector3(Math.sin(vehicle.heading),0,Math.cos(vehicle.heading));
@@ -3167,6 +3238,13 @@ function updateCamera(dt){
   }else if(mode==='overhead'){
     desiredPos=vehicle.pos.clone().addScaledVector(up,8.8);
     desiredLook=vehicle.pos.clone().addScaledVector(up,0.2);
+  }else if(mode==='free'){
+    const a=vehicle.heading+orbitYaw;
+    const cp=Math.cos(orbitPitch),sp=Math.sin(orbitPitch);
+    const orbitFwd=new THREE.Vector3(Math.sin(a)*cp,sp,Math.cos(a)*cp);
+    desiredPos=vehicle.pos.clone().addScaledVector(orbitFwd,-freeCamDistance);
+    desiredPos.y=vehicle.pos.y+Math.sin(orbitPitch)*freeCamDistance+1.1;
+    desiredLook=vehicle.pos.clone().addScaledVector(up,1.05);
   }else{
     const dist=mode==='chase-close'?5.2:mode==='chase-far'?13.5:7.6;
     const height=mode==='chase-close'?2.15:mode==='chase-far'?4.9:2.72;
