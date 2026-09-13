@@ -21338,7 +21338,7 @@ console.log('SCORPIO UNIVERSE V28: next-level environment, materials and atmosph
       const knob=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.035,16),chrome); knob.rotation.z=Math.PI/2; knob.position.set(.94,1.08,z); add(cabinDetail,knob,false,false);
     });
     // Center console and 6-speed manual lever (S11 spec)
-    const console=new THREE.Mesh(new THREE.BoxGeometry(.88,.16,.54),softBlack); console.position.set(.05,1.05,0); add(cabinDetail,console);
+    const centerConsole=new THREE.Mesh(new THREE.BoxGeometry(.88,.16,.54),softBlack); centerConsole.position.set(.05,1.05,0); add(cabinDetail,centerConsole);
     const boot=new THREE.Mesh(new THREE.BoxGeometry(.18,.10,.16),leather); boot.position.set(.22,1.15,.0); add(cabinDetail,boot);
     const leverRod=new THREE.Mesh(new THREE.CylinderGeometry(.018,.026,.23,10),chrome); leverRod.position.set(.22,1.30,0); add(cabinDetail,leverRod,false,false);
     const knob=new THREE.Mesh(new THREE.SphereGeometry(.075,16,10),black); knob.position.set(.22,1.43,0); add(cabinDetail,knob);
@@ -21372,8 +21372,8 @@ console.log('SCORPIO UNIVERSE V28: next-level environment, materials and atmosph
       const veil=new THREE.Mesh(new THREE.PlaneGeometry(220,75),film); veil.rotation.x=-Math.PI/2; veil.position.set(0,.2,-90); scene.add(veil);
     }
     document.body.classList.add('v34-loaded');
-    console.log('SCORPIO UNIVERSE V34: indicator stack lifted + S11 Classic exterior/interior realism loaded');
-  }catch(err){console.warn('SCORPIO V34 realism pass warning',err);}
+    window.console.log('SCORPIO UNIVERSE V34: indicator stack lifted + S11 Classic exterior/interior realism loaded');
+  }catch(err){window.console.warn('SCORPIO V34 realism pass warning',err);}
 })();
 </script>
 </body>
