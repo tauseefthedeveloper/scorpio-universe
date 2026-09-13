@@ -87,6 +87,13 @@
   #wheelWrap{position:absolute;overscroll-behavior:none;left:8px;bottom:calc(4px + env(safe-area-inset-bottom));width:172px;height:172px;pointer-events:auto;touch-action:none;}
   #wheelSvg{width:100%;height:100%;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5));}
   #wheelWrap.gripped #wheelRim{stroke:var(--accent);}
+  /* V35: real steering-wheel horn pad, centered so it never interferes with pedals. */
+  #steeringHorn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;
+    border:2px solid #45494d;background:radial-gradient(circle at 38% 32%,#3a3d40,#121416 68%);
+    color:#d8d3c6;font:800 14px/1 Arial,sans-serif;letter-spacing:.04em;box-shadow:inset 0 2px 4px rgba(255,255,255,.10),0 4px 10px rgba(0,0,0,.55);
+    pointer-events:auto;touch-action:manipulation;z-index:4;}
+  #steeringHorn:active,#steeringHorn.pressed{transform:translate(-50%,-50%) scale(.94);background:radial-gradient(circle at 38% 32%,#4b4f52,#0b0c0d 70%);border-color:var(--accent);color:#fff;}
+  #steeringHorn::after{content:'HORN';position:absolute;left:50%;top:calc(100% + 5px);transform:translateX(-50%);font-size:7px;letter-spacing:.14em;color:rgba(255,255,255,.52);white-space:nowrap;pointer-events:none;}
 
   /* Pedal-shaped accelerator / brake, side by side like a mobile racer's pedal cluster */
   #pedalCluster{position:absolute;right:10px;bottom:calc(4px + env(safe-area-inset-bottom));display:flex;align-items:flex-end;gap:10px;pointer-events:auto;}
@@ -1252,6 +1259,7 @@ body.cockpit-camera #v27QuickBar{opacity:.82;}
         <circle cx="100" cy="100" r="6" fill="#e8b84b"/>
         <circle cx="100" cy="32" r="4" fill="#8a8a8a"/>
       </svg>
+      <button id="steeringHorn" type="button" aria-label="Horn" title="Horn">H</button>
     </div>
     <div id="pedalCluster">
       <div class="pedal" id="pedalBrake"><div class="padSurface"></div><div class="fillBar" id="brakeFill"></div><span class="pedalLbl">BRAKE</span></div>
@@ -2559,6 +2567,14 @@ document.getElementById('btnEngine').addEventListener('click', toggleEngine);
 document.getElementById('btnLights').addEventListener('click', toggleLights);
 document.getElementById('btnHorn').addEventListener('touchstart', playHorn,{passive:true});
 document.getElementById('btnHorn').addEventListener('mousedown', playHorn);
+const steeringHorn=document.getElementById('steeringHorn');
+if(steeringHorn){
+  const hornDown=(e)=>{e.preventDefault();e.stopPropagation();steeringHorn.classList.add('pressed');try{playHorn();}catch(_){ }};
+  const hornUp=(e)=>{if(e)e.stopPropagation();steeringHorn.classList.remove('pressed');};
+  steeringHorn.addEventListener('pointerdown',hornDown,{passive:false});
+  steeringHorn.addEventListener('pointerup',hornUp,{passive:false});
+  steeringHorn.addEventListener('pointercancel',hornUp,{passive:false});
+}
 document.getElementById('btnCam').addEventListener('click', cycleCamera);
 document.getElementById('btn4wd').addEventListener('click', toggle4wd);
 document.getElementById('btnWeather').addEventListener('click', cycleWeather);
@@ -2752,14 +2768,27 @@ function updateEngineAudio(){
 }
 
 function playHorn(){
+  /* V35: synthesized dual-tone vehicle horn. No external audio asset required. */
   ensureAudio();
   if(hornBusy)return; hornBusy=true;
-  const o=actx.createOscillator(), g=actx.createGain();
-  o.type='square'; o.frequency.value=330;
-  g.gain.value=0.05;
-  o.connect(g); g.connect(actx.destination);
-  o.start(); g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime+0.5);
-  o.stop(actx.currentTime+0.55);
+  const now=actx.currentTime;
+  const master=actx.createGain();
+  const filt=actx.createBiquadFilter();
+  filt.type='lowpass'; filt.frequency.setValueAtTime(1450,now); filt.Q.value=.65;
+  master.gain.setValueAtTime(0.0001,now);
+  master.gain.linearRampToValueAtTime(0.105,now+0.028);
+  master.gain.setTargetAtTime(0.074,now+0.055,0.08);
+  master.gain.setTargetAtTime(0.0001,now+0.42,0.055);
+  filt.connect(master); master.connect(actx.destination);
+  const o1=actx.createOscillator(),o2=actx.createOscillator();
+  o1.type='sawtooth'; o2.type='sawtooth';
+  o1.frequency.setValueAtTime(392,now); o2.frequency.setValueAtTime(493.88,now);
+  o1.detune.value=-3; o2.detune.value=2;
+  const g1=actx.createGain(),g2=actx.createGain();
+  g1.gain.value=.54; g2.gain.value=.42;
+  o1.connect(g1);o2.connect(g2);g1.connect(filt);g2.connect(filt);
+  o1.start(now);o2.start(now);
+  o1.stop(now+.54);o2.stop(now+.54);
   setTimeout(()=>hornBusy=false,560);
 }
 
@@ -20966,6 +20995,101 @@ console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
     })();
     console.log('SCORPIO UNIVERSE V31: controls, transmission HUD, auto-shift audio/torque and white S11 realism loaded');
   }catch(err){console.warn('SCORPIO V31 patch warning',err);}
+
+  /* ========================================================================
+     V35 — S11 BODY REWORK + CENTER HORN
+     Smooth procedural surfacing to remove the "moving box" silhouette.
+     ======================================================================== */
+  try{
+    window.__scorpioV34={bodyTilt,scene,car,wheels,paintMat,glassMat,interiorMat};
+    const v35Black=new THREE.MeshStandardMaterial({color:0x080a0c,roughness:.76,metalness:.08});
+    const v35Pearl=paintMat;
+    const v35Chrome=new THREE.MeshPhysicalMaterial({color:0xc8ccca,metalness:.96,roughness:.14,clearcoat:.55});
+    const v35Rubber=new THREE.MeshStandardMaterial({color:0x0a0b0b,roughness:.96});
+    const v35Red=new THREE.MeshStandardMaterial({color:0x170102,emissive:0xff0808,emissiveIntensity:.28,roughness:.28});
+    const add35=(g,m,cast=true,recv=true)=>{m.castShadow=cast;m.receiveShadow=recv;g.add(m);return m;};
+
+    // Rounded fender shoulders: subtle volumes blend the wheel openings into the body.
+    const fenderRoot=new THREE.Group();fenderRoot.name='V35_ROUNDED_FENDER_SHOULDERS';bodyTilt.add(fenderRoot);
+    [-1,1].forEach(side=>{
+      [1.38,-1.38].forEach(x=>{
+        const arch=new THREE.Mesh(new THREE.TorusGeometry(.53,.115,14,44,Math.PI*1.12),v35Black);
+        arch.rotation.x=Math.PI/2; arch.rotation.z=Math.PI/2; arch.position.set(x,.72,side*.965);
+        add35(fenderRoot,arch,false,false);
+        const lip=new THREE.Mesh(new THREE.TorusGeometry(.515,.035,10,44,Math.PI*1.10),v35Pearl);
+        lip.rotation.x=Math.PI/2;lip.rotation.z=Math.PI/2;lip.position.set(x,.73,side*.978);add35(fenderRoot,lip,false,false);
+      });
+    });
+
+    // Sculpted side sill + shoulder highlights.
+    [-1,1].forEach(side=>{
+      const shoulder=new THREE.Mesh(new THREE.BoxGeometry(3.05,.075,.035),v35Pearl);
+      shoulder.position.set(-.12,1.19,side*.934);shoulder.rotation.z=.012;add35(bodyTilt,shoulder,false,false);
+      const sill=new THREE.Mesh(new THREE.BoxGeometry(2.85,.13,.12),v35Black);
+      sill.position.set(-.10,.50,side*1.005);add35(bodyTilt,sill);
+    });
+
+    // More convincing front/rear corner volumes.
+    [1,-1].forEach(x=>{
+      [-1,1].forEach(side=>{
+        const corner=new THREE.Mesh(new THREE.SphereGeometry(.34,20,14),x>0?v35Pearl:v35Black);
+        corner.scale.set(.62,.78,.98);corner.position.set(x*2.12,.67,side*.80);add35(bodyTilt,corner);
+      });
+    });
+
+    // Hood sculpting: raised center plane + recessed side channels.
+    const hoodTop=new THREE.Mesh(new THREE.BoxGeometry(1.22,.055,.72),v35Pearl);
+    hoodTop.position.set(1.76,1.205,0);add35(bodyTilt,hoodTop);
+    [-.58,.58].forEach(z=>{
+      const channel=new THREE.Mesh(new THREE.BoxGeometry(1.05,.018,.035),v35Black);
+      channel.position.set(1.72,1.244,z);channel.rotation.z=-.02;add35(bodyTilt,channel,false,false);
+    });
+
+    // Front bumper fascia with curved-looking corner caps and lower intake depth.
+    const intake=new THREE.Mesh(new THREE.BoxGeometry(.16,.22,1.34),v35Black);
+    intake.position.set(2.43,.69,0);add35(bodyTilt,intake,false,false);
+    [-.72,.72].forEach(z=>{
+      const fogRing=new THREE.Mesh(new THREE.TorusGeometry(.105,.024,10,28),v35Chrome);
+      fogRing.rotation.y=Math.PI/2;fogRing.position.set(2.47,.70,z);add35(bodyTilt,fogRing,false,false);
+    });
+
+    // Rear bumper reflector/step details.
+    const rearStep=new THREE.Mesh(new THREE.BoxGeometry(.18,.13,1.54),v35Black);rearStep.position.set(-2.39,.53,0);add35(bodyTilt,rearStep);
+    [-.66,.66].forEach(z=>{
+      const refl=new THREE.Mesh(new THREE.BoxGeometry(.045,.07,.22),v35Red);refl.position.set(-2.49,.66,z);add35(bodyTilt,refl,false,false);
+    });
+
+    // Realistic wheel hubs: center cap + lug nuts, with a little depth.
+    if(wheels) wheels.forEach((w)=>{
+      const hub=new THREE.Mesh(new THREE.CylinderGeometry(.105,.105,.055,20),v35Chrome);hub.rotation.x=Math.PI/2;w.mesh.add(hub);
+      for(let i=0;i<5;i++){
+        const a=i*Math.PI*2/5;const lug=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.025,10),v35Black);
+        lug.rotation.x=Math.PI/2;lug.position.set(Math.cos(a)*.16,Math.sin(a)*.16,.17);w.mesh.add(lug);
+      }
+    });
+
+    // Cabin depth: inner door cards, headliner strips and a more substantial dash binnacle.
+    const cabinReal=new THREE.Group();cabinReal.name='V35_CABIN_REALISM';bodyTilt.add(cabinReal);
+    const inner=new THREE.MeshStandardMaterial({color:0x181a1c,roughness:.84});
+    const soft=new THREE.MeshStandardMaterial({color:0x26282a,roughness:.78});
+    [-1,1].forEach(side=>{
+      const card=new THREE.Mesh(new THREE.BoxGeometry(1.95,.50,.045),inner);card.position.set(-.28,1.18,side*.83);add35(cabinReal,card);
+      const beltline=new THREE.Mesh(new THREE.BoxGeometry(1.65,.045,.035),soft);beltline.position.set(-.24,1.43,side*.86);add35(cabinReal,beltline,false,false);
+    });
+    const dashCowl=new THREE.Mesh(new THREE.BoxGeometry(.80,.16,1.30),soft);dashCowl.position.set(1.02,1.66,0);add35(cabinReal,dashCowl);
+    const gaugeGlow=new THREE.MeshBasicMaterial({color:0xffc85a,transparent:true,opacity:.32});
+    [-.24,.24].forEach(z=>{const g=new THREE.Mesh(new THREE.CircleGeometry(.105,24),gaugeGlow);g.rotation.y=Math.PI/2;g.position.set(1.43,1.68,z);add35(cabinReal,g,false,false);});
+
+    // Better ground shadow under the SUV gives the body visual weight.
+    if(scene){
+      const shadowMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.25,depthWrite:false});
+      const shadow=new THREE.Mesh(new THREE.PlaneGeometry(3.75,1.72),shadowMat);shadow.rotation.x=-Math.PI/2;shadow.position.y=.055;shadow.name='V35_CAR_CONTACT_SHADOW';scene.add(shadow);
+      const syncShadow=()=>{shadow.position.set(car.position.x,car.position.y+.055,car.position.z);shadow.rotation.y=car.rotation.y;shadow.scale.set(1+Math.min(.22,Math.abs(vehicle.speed)*.006),1,1);};
+      const oldFrame=window.__v35ShadowSync;window.__v35ShadowSync=syncShadow;
+      if(!oldFrame) setInterval(syncShadow,100);
+    }
+    console.log('SCORPIO UNIVERSE V35: center horn + rounded S11 body surfacing + wheel/cabin realism loaded');
+  }catch(err){console.warn('SCORPIO V35 vehicle pass warning',err);}
 
   console.log('SCORPIO UNIVERSE V30: white S11, fixed quick controls, realistic auto-shift audio/torque cut, refined HUD loaded');
 })();
