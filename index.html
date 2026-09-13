@@ -790,6 +790,7 @@ body.uiLarge #smallCtrlRow, body.uiLarge #doorControls, body.uiLarge #lightContr
 #gameCanvas{background:transparent!important;}
 .v22-legend{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:26;pointer-events:none;padding:7px 14px;border-radius:999px;background:rgba(8,10,9,.52);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.72);font:700 9px system-ui,sans-serif;letter-spacing:.08em;backdrop-filter:blur(8px);}
 </style>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23101212'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-size='30' fill='%23e9b44c'%3ES%3C/text%3E%3C/svg%3E">
 </head>
 <body>
 
@@ -3468,7 +3469,7 @@ function suV20VehiclePhysics(dt){
   if(is4wd) grip=Math.min(1.05,grip+.12);
 
   /* Natural lateral slip estimate from heading vs road tangent. */
-  const tan=info.sample.tan;
+  const tan=(info.sample&&info.sample.tan) || (roadSamples[Math.floor((info.sampleT||0)*ROAD_SAMPLES)%ROAD_SAMPLES]?.tan) || {x:0,z:1};
   const roadHeading=Math.atan2(tan.x,tan.z);
   let angle=vehicle.heading-roadHeading;
   while(angle>Math.PI)angle-=Math.PI*2;
@@ -11505,6 +11506,21 @@ function v14RunDriveDiagnostics(){
 }
 
 /* V14 build marker: 3-turn wheel, Ackermann lock, compact dashboard, cinematic environment. */
+/* Compatibility bridge: later enhancement layers live outside this IIFE. Expose
+   the base simulator objects they intentionally extend. */
+Object.assign(window,{
+  scene,camera,renderer,vehicle,terrainInfoAt,heightAt,pointOnRoad,surfaceBandAt,
+  roadSamples,ROAD_SAMPLES,ROAD_WIDTH,sun,hemi,WEATHERS,bodyTilt,
+  STEER_MAX,WHEEL_BASE,lerp,clamp,input,v14ApplyQuality,
+  updateVehicle,updateSky,updateCamera,updateIndicators,updateWipers,
+  startEngine,stopEngine,cycleCamera,cycleWeather,applyWeather,toast
+});
+Object.defineProperties(window,{
+  weatherIdx:{get:()=>weatherIdx,set:v=>weatherIdx=v},
+  is4wd:{get:()=>is4wd,set:v=>is4wd=v},
+  camShake:{get:()=>camShake,set:v=>camShake=v},
+  v14Quality:{get:()=>v14Quality}
+});
 })();
 
 /* ============================================================================
@@ -19842,16 +19858,7 @@ console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
 })();
 
 </script>
-
-<style id="v21-control-legend">
-#v21ControlLegend{position:fixed;left:78px;top:96px;z-index:62;pointer-events:none;background:rgba(5,7,7,.68);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px 10px;color:rgba(255,255,255,.72);font:700 9px/1.55 system-ui;letter-spacing:.06em;backdrop-filter:blur(7px);opacity:.0;transition:opacity .2s;}
-#v18LeftToolbar:hover + #v21ControlLegend{opacity:1;}
-</style>
-<div id="v21ControlLegend">CAMERA · VIEW &nbsp; | &nbsp; DAY/NIGHT · TIME<br>WEATHER · WEATHER &nbsp; | &nbsp; MAP · MINIMAP<br>SETTINGS · GRAPHICS</div>
-
-</body>
-</html>
-
+<script>
 /* ============================================================================
    SCORPIO UNIVERSE V21 — SLOW-ROADS-STYLE WORLD + CONTROL REWORK
    ---------------------------------------------------------------------------
@@ -20087,3 +20094,16 @@ console.log("SCORPIO UNIVERSE V18 realism pack loaded:",V17_REALISM.version);
 
   console.log('SCORPIO UNIVERSE V21 realistic world loaded');
 })();
+
+</script>
+
+<style id="v21-control-legend">
+#v21ControlLegend{position:fixed;left:78px;top:96px;z-index:62;pointer-events:none;background:rgba(5,7,7,.68);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px 10px;color:rgba(255,255,255,.72);font:700 9px/1.55 system-ui;letter-spacing:.06em;backdrop-filter:blur(7px);opacity:.0;transition:opacity .2s;}
+#v18LeftToolbar:hover + #v21ControlLegend{opacity:1;}
+</style>
+<div id="v21ControlLegend">CAMERA · VIEW &nbsp; | &nbsp; DAY/NIGHT · TIME<br>WEATHER · WEATHER &nbsp; | &nbsp; MAP · MINIMAP<br>SETTINGS · GRAPHICS</div>
+
+</body>
+</html>
+
+
