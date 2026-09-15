@@ -21375,6 +21375,298 @@ console.log('SCORPIO UNIVERSE V28: next-level environment, materials and atmosph
     window.console.log('SCORPIO UNIVERSE V34: indicator stack lifted + S11 Classic exterior/interior realism loaded');
   }catch(err){window.console.warn('SCORPIO V34 realism pass warning',err);}
 })();
+
+
+/* ========================================================================
+   V40 — REALISM REBUILD / SCORPIO CLASSIC S11 VISUAL + DRIVE FEEL
+   ------------------------------------------------------------------------
+   Final presentation layer.  Keeps the simulator self-contained and uses
+   lightweight procedural geometry instead of external 3D assets.
+   Reference cues: S11 proportions, muscular bonnet, bold chrome grille,
+   projector/LED front signature, R17-style alloys, painted cladding and
+   vertical rear lamps.
+   ======================================================================== */
+(function V40RealismRebuild(){
+  try{
+    if(!window.THREE || !window.__scorpioV34) return;
+    const T=window.THREE;
+    const R=window.__scorpioV34;
+    const root=R.bodyTilt;
+    const add=(g,m,cast=true,recv=true)=>{m.castShadow=cast;m.receiveShadow=recv;g.add(m);return m;};
+    const smooth=(v,t,r,dt)=>v+(t-v)*(1-Math.exp(-r*dt));
+
+    /* --- 1. Remove the old flat paint/glass shell from the render path. --- */
+    root.traverse(o=>{
+      if(!o.isMesh) return;
+      if(o.material===R.paintMat || o.material===R.glassMat){ o.visible=false; }
+    });
+
+    const pearl=new T.MeshPhysicalMaterial({
+      color:0xf2f3ee,metalness:.66,roughness:.19,clearcoat:1.0,
+      clearcoatRoughness:.045,reflectivity:.86
+    });
+    const pearlDark=new T.MeshPhysicalMaterial({color:0xd9ddd8,metalness:.55,roughness:.25,clearcoat:.75});
+    const black=new T.MeshStandardMaterial({color:0x0b0d0f,roughness:.74,metalness:.18});
+    const rubber=new T.MeshStandardMaterial({color:0x08090a,roughness:.97});
+    const glass=new T.MeshPhysicalMaterial({color:0x10272f,metalness:.02,roughness:.055,transparent:true,opacity:.78,clearcoat:1,clearcoatRoughness:.035,side:T.DoubleSide});
+    const chrome=new T.MeshPhysicalMaterial({color:0xc8ced0,metalness:.98,roughness:.12,clearcoat:.7,clearcoatRoughness:.04});
+    const darkChrome=new T.MeshStandardMaterial({color:0x30363a,metalness:.85,roughness:.22});
+    const lamp=new T.MeshStandardMaterial({color:0xf8fbff,emissive:0xcfe7ff,emissiveIntensity:.55,roughness:.2});
+    const red=new T.MeshStandardMaterial({color:0x260405,emissive:0xff1010,emissiveIntensity:.7,roughness:.3});
+    const amber=new T.MeshStandardMaterial({color:0x3c1b00,emissive:0xff9a16,emissiveIntensity:.65,roughness:.28});
+
+    const v40=new T.Group(); v40.name='V40_SCORPIO_CLASSIC_S11_SHELL'; root.add(v40);
+
+    /* A smooth, rounded side profile gives the SUV its tall, planted stance. */
+    function profileExtrude(points,depth,mat,bevel=.08){
+      const sh=new T.Shape();
+      points.forEach((p,i)=>i?sh.lineTo(p[0],p[1]):sh.moveTo(p[0],p[1]));
+      sh.closePath();
+      const geo=new T.ExtrudeGeometry(sh,{depth,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:bevel,bevelThickness:bevel,curveSegments:4});
+      geo.translate(0,0,-depth/2);
+      return add(v40,new T.Mesh(geo,mat));
+    }
+
+    const lower=profileExtrude([
+      [-2.25,.38],[-2.25,.62],[-2.13,.80],[-1.92,.90],
+      [1.78,.90],[2.10,.80],[2.28,.62],[2.28,.40]
+    ],1.78,pearl,.10);
+    lower.name='V40_LOWER_SCULPT';
+
+    const upper=profileExtrude([
+      [-2.02,.78],[-1.82,1.24],[-1.53,1.43],[-1.20,1.53],
+      [.72,1.53],[1.30,1.42],[1.78,1.20],[2.04,.86]
+    ],1.70,pearl,.095);
+    upper.name='V40_UPPER_SCULPT';
+
+    /* High roof/cabin volume with a more believable rake than the original box. */
+    const cabin=profileExtrude([
+      [-1.48,1.32],[-1.32,1.78],[-1.02,1.98],[.70,1.98],
+      [1.18,1.80],[1.52,1.36]
+    ],1.58,pearl,.075);
+    cabin.name='V40_CABIN_SHELL';
+
+    /* Lower black cladding is separated from the painted body. */
+    const cladding=add(v40,new T.Mesh(new T.BoxGeometry(4.18,.22,1.86),black));
+    cladding.position.set(0,.51,0);
+    const sillL=add(v40,new T.Mesh(new T.BoxGeometry(2.82,.13,.12),black));
+    sillL.position.set(-.10,.42,.94);
+    const sillR=sillL.clone(); sillR.position.z=-.94; v40.add(sillR);
+
+    /* Sculpted bonnet: broad shoulders + recessed centre + functional-looking scoop. */
+    const bonnet=add(v40,new T.Mesh(new T.BoxGeometry(1.28,.13,1.62),pearl));
+    bonnet.position.set(1.68,1.16,0);
+    const bonnetShoulderL=add(v40,new T.Mesh(new T.BoxGeometry(1.04,.035,.20),pearlDark),false,false);
+    bonnetShoulderL.position.set(1.78,1.245,.61);
+    const bonnetShoulderR=bonnetShoulderL.clone(); bonnetShoulderR.position.z=-.61; v40.add(bonnetShoulderR);
+    const scoop=add(v40,new T.Mesh(new T.BoxGeometry(.58,.085,.38),black),false,false);
+    scoop.position.set(1.64,1.27,0);
+    const scoopInner=add(v40,new T.Mesh(new T.BoxGeometry(.40,.025,.24),darkChrome),false,false);
+    scoopInner.position.set(1.67,1.318,0);
+
+    /* Roof rails + spoiler. */
+    [-1,1].forEach(side=>{
+      const rail=add(v40,new T.Mesh(new T.BoxGeometry(2.40,.055,.055),chrome),false,false);
+      rail.position.set(-.05,2.06,side*.65);
+      const foot1=add(v40,new T.Mesh(new T.BoxGeometry(.10,.08,.10),darkChrome),false,false); foot1.position.set(-1.12,2.02,side*.65);
+      const foot2=foot1.clone(); foot2.position.x=1.00; v40.add(foot2);
+    });
+    const spoiler=add(v40,new T.Mesh(new T.BoxGeometry(.40,.10,1.56),black));
+    spoiler.position.set(-1.82,1.92,0);
+    const spoilerLip=add(v40,new T.Mesh(new T.BoxGeometry(.16,.08,1.68),pearlDark)); spoilerLip.position.set(-1.94,1.96,0);
+
+    /* Windows — recessed-looking, separated by pillars and black surround. */
+    function windowPanel(x,y,z,w,h,rotZ=0){
+      const m=add(v40,new T.Mesh(new T.PlaneGeometry(w,h),glass),false,false);
+      m.position.set(x,y,z); m.rotation.y=z>0?0:Math.PI; m.rotation.z=rotZ; return m;
+    }
+    [-1,1].forEach(side=>{
+      windowPanel(.18,1.67,side*.862,.76,.42,-.05);
+      windowPanel(-.74,1.66,side*.862,.76,.42,.03);
+      windowPanel(-1.26,1.63,side*.862,.30,.37,.08);
+      const belt=add(v40,new T.Mesh(new T.BoxGeometry(2.25,.055,.045),black),false,false); belt.position.set(-.30,1.43,side*.872);
+      const sill=add(v40,new T.Mesh(new T.BoxGeometry(2.35,.045,.04),chrome),false,false); sill.position.set(-.22,1.29,side*.895);
+    });
+    const wind=add(v40,new T.Mesh(new T.PlaneGeometry(.92,.60),glass),false,false); wind.position.set(1.27,1.70,0); wind.rotation.y=Math.PI/2; wind.rotation.z=-.22;
+    const rearWin=add(v40,new T.Mesh(new T.PlaneGeometry(.74,.56),glass),false,false); rearWin.position.set(-1.43,1.67,0); rearWin.rotation.y=Math.PI/2; rearWin.rotation.z=.08;
+
+    /* Pillars and mirrors add scale cues instead of a single dark cabin block. */
+    [-1,1].forEach(side=>{
+      [-.98,-.15,.82].forEach(x=>{
+        const pillar=add(v40,new T.Mesh(new T.BoxGeometry(.055,.58,.065),black),false,false);
+        pillar.position.set(x,1.68,side*.885); pillar.rotation.z=x<-.5?.04:-.03;
+      });
+      const mirror=add(v40,new T.Mesh(new T.BoxGeometry(.24,.16,.31),pearl)); mirror.position.set(1.06,1.57,side*1.00);
+      const mirrorGlass=add(v40,new T.Mesh(new T.BoxGeometry(.19,.075,.21),glass),false,false); mirrorGlass.position.set(1.16,1.58,side*1.025);
+      const indicator=add(v40,new T.Mesh(new T.BoxGeometry(.045,.025,.13),amber),false,false); indicator.position.set(1.18,1.54,side*1.035);
+    });
+
+    /* Door skins with gentle bevels; the existing door animation remains functional. */
+    Object.values(doorGroups||{}).forEach(d=>{
+      if(!d||!d.leaf)return;
+      d.leaf.children.forEach(o=>o.visible=false);
+      const panel=add(d.leaf,new T.Mesh(new T.BoxGeometry(.90,.73,.06),pearl)); panel.position.set(-.45,1.03,0);
+      const glassDoor=add(d.leaf,new T.Mesh(new T.BoxGeometry(.70,.34,.032),glass),false,false); glassDoor.position.set(-.45,1.55,0);
+      const belt=add(d.leaf,new T.Mesh(new T.BoxGeometry(.83,.035,.07),black),false,false); belt.position.set(-.45,1.30,0);
+      const handle=add(d.leaf,new T.Mesh(new T.BoxGeometry(.16,.035,.035),chrome),false,false); handle.position.set(-.08,1.27,d.side*.035);
+    });
+
+    /* Front fascia — the most important S11 recognition pass. */
+    const frontFrame=add(v40,new T.Mesh(new T.BoxGeometry(.13,.60,1.18),black),false,false); frontFrame.position.set(2.38,1.02,0);
+    const grilleBarMat=chrome;
+    for(let i=0;i<7;i++){
+      const z=-.48+i*.16;
+      const bar=add(v40,new T.Mesh(new T.BoxGeometry(.045,.51,.065),grilleBarMat),false,false); bar.position.set(2.46,1.04,z);
+    }
+    const grilleTop=add(v40,new T.Mesh(new T.BoxGeometry(.06,.055,1.18),chrome),false,false); grilleTop.position.set(2.47,1.33,0);
+    const grilleBottom=add(v40,new T.Mesh(new T.BoxGeometry(.07,.045,1.18),darkChrome),false,false); grilleBottom.position.set(2.47,.75,0);
+    /* Twin-peaks-like central emblem, kept generic and original. */
+    const badgeBase=add(v40,new T.Mesh(new T.CylinderGeometry(.12,.12,.045,24),chrome),false,false); badgeBase.rotation.z=Math.PI/2; badgeBase.position.set(2.50,1.08,0);
+    const badgeCore=add(v40,new T.Mesh(new T.OctahedronGeometry(.075,0),darkChrome),false,false); badgeCore.rotation.z=Math.PI/4; badgeCore.position.set(2.53,1.08,0);
+
+    function headlamp(side){
+      const g=new T.Group(); v40.add(g);
+      const housing=add(g,new T.Mesh(new T.BoxGeometry(.14,.34,.46),black),false,false); housing.position.set(2.30,1.18,side*.62);
+      const lens=add(g,new T.Mesh(new T.BoxGeometry(.035,.24,.36),lamp),false,false); lens.position.set(2.385,1.20,side*.62);
+      const projector=add(g,new T.Mesh(new T.TorusGeometry(.09,.018,10,28),chrome),false,false); projector.rotation.y=Math.PI/2; projector.position.set(2.41,1.20,side*.62);
+      const eyebrow=add(g,new T.Mesh(new T.BoxGeometry(.34,.035,.055),lamp),false,false); eyebrow.position.set(2.40,1.39,side*.62); eyebrow.rotation.z=side*.05;
+      const fogOuter=add(g,new T.Mesh(new T.TorusGeometry(.11,.022,10,28),chrome),false,false); fogOuter.rotation.y=Math.PI/2; fogOuter.position.set(2.43,.72,side*.70);
+      const fog=add(g,new T.Mesh(new T.SphereGeometry(.065,12,8),lamp),false,false); fog.position.set(2.45,.72,side*.70);
+    }
+    headlamp(1); headlamp(-1);
+
+    const lowerAir=add(v40,new T.Mesh(new T.BoxGeometry(.10,.18,1.28),black),false,false); lowerAir.position.set(2.43,.68,0);
+    const skid=add(v40,new T.Mesh(new T.BoxGeometry(.12,.11,1.50),chrome),false,false); skid.position.set(2.49,.52,0);
+    [-.70,.70].forEach(z=>{
+      const reflector=add(v40,new T.Mesh(new T.BoxGeometry(.04,.055,.18),amber),false,false); reflector.position.set(2.46,.84,z);
+    });
+
+    /* Rear tailgate, vertical tower lamps and spare wheel. */
+    const tail=add(v40,new T.Mesh(new T.BoxGeometry(.10,1.08,1.58),pearl)); tail.position.set(-2.22,1.05,0);
+    const rearGlass2=add(v40,new T.Mesh(new T.PlaneGeometry(.78,.50),glass),false,false); rearGlass2.position.set(-2.285,1.60,0); rearGlass2.rotation.y=-Math.PI/2;
+    const handle2=add(v40,new T.Mesh(new T.BoxGeometry(.08,.06,.42),chrome),false,false); handle2.position.set(-2.34,1.31,0);
+    [-1,1].forEach(side=>{
+      const tower=add(v40,new T.Mesh(new T.BoxGeometry(.13,.65,.22),red),false,false); tower.position.set(-2.32,1.16,side*.79);
+      const clear=add(v40,new T.Mesh(new T.BoxGeometry(.14,.14,.23),lamp),false,false); clear.position.set(-2.39,.99,side*.79);
+      const amberSeg=add(v40,new T.Mesh(new T.BoxGeometry(.06,.11,.20),amber),false,false); amberSeg.position.set(-2.40,1.34,side*.79);
+    });
+    const rearB=add(v40,new T.Mesh(new T.BoxGeometry(.20,.18,1.76),black)); rearB.position.set(-2.38,.55,0);
+    const spare=add(v40,new T.Mesh(new T.TorusGeometry(.45,.12,14,40),rubber)); spare.rotation.x=Math.PI/2; spare.position.set(-2.48,.94,0);
+    const spareHub=add(v40,new T.Mesh(new T.CylinderGeometry(.25,.25,.08,24),darkChrome),false,false); spareHub.rotation.x=Math.PI/2; spareHub.position.set(-2.50,.94,0);
+
+    /* Wheel arch flares — larger and more integrated with the body. */
+    [-1,1].forEach(side=>[-1.48,1.48].forEach(x=>{
+      const flare=add(v40,new T.Mesh(new T.TorusGeometry(.51,.105,12,40,Math.PI*1.05),black),false,false);
+      flare.rotation.x=Math.PI/2; flare.rotation.z=Math.PI/2; flare.position.set(x,.69,side*.94);
+    }));
+
+    /* Replace the visual wheels with wider 235/65R17-style proportions while retaining physics. */
+    if(Array.isArray(wheels)) wheels.forEach(w=>{
+      w.mesh.scale.set(1.08,1.08,1.14);
+    });
+
+    /* --- 2. Suspension / chassis visual model --- */
+    const chassisState={heave:0,pitch:0,roll:0,lastSpeed:0};
+    window.__scorpioV40=chassisState;
+    const oldPresentation=updateVehiclePresentation;
+    updateVehiclePresentation=function(dt,info){
+      oldPresentation(dt,info);
+      const kmh=Math.abs(vehicle.speed)*3.6;
+      const rough=info.band==='dirt'||info.band==='mud'||!info.onRoad;
+      const roughAmp=rough?.035:.010;
+      const bump=(Math.sin(performance.now()*.011)*roughAmp + Math.sin(performance.now()*.023)*roughAmp*.42);
+      chassisState.heave=smooth(chassisState.heave,bump,9,dt);
+      chassisState.pitch=smooth(chassisState.pitch,clamp((input.brake*.030-input.throttle*.014)+(vehicle.speed>0?0:0),-.045,.045),7,dt);
+      chassisState.roll=smooth(chassisState.roll,clamp(-vehicle.steerAngle*clamp(kmh/95,0,1)*.075,-.075,.075),7,dt);
+      root.position.y=RIDE_HEIGHT*.55+chassisState.heave;
+      root.rotation.x=-vehicle.bodyPitch+chassisState.pitch;
+      root.rotation.z=vehicle.bodyRoll+chassisState.roll;
+      chassisState.lastSpeed=vehicle.speed;
+    };
+
+    /* --- 3. Better low-speed manoeuvring, traction and braking feel. --- */
+    if(typeof V17_REALISM!=='undefined'){
+      V17_REALISM.steering.responseLowSpeed=7.2;
+      V17_REALISM.steering.responseHighSpeed=4.9;
+      V17_REALISM.steering.highSpeedDamping=.72;
+      V17_REALISM.drivetrain.throttleRise=4.2;
+      V17_REALISM.drivetrain.throttleFall=6.8;
+      V17_REALISM.drivetrain.brakeRise=14.5;
+      V17_REALISM.suspension.spring=92;
+      V17_REALISM.suspension.damping=17;
+      V17_REALISM.suspension.bodyRoll=.085;
+      V17_REALISM.suspension.bodyPitch=.095;
+    }
+    if(typeof V17_SURFACE_PROFILES!=='undefined'){
+      V17_SURFACE_PROFILES.asphalt.grip=.98;
+      V17_SURFACE_PROFILES.dirt.grip=.74;
+      V17_SURFACE_PROFILES.mud.grip=.43;
+      V17_SURFACE_PROFILES.grass.grip=.56;
+    }
+    /* Slightly stronger 2nd–4th gear pull, without turning the village SUV into a racer. */
+    if(typeof GEAR_DATA!=='undefined'){
+      GEAR_DATA[0].force=12.9; GEAR_DATA[1].force=10.1; GEAR_DATA[2].force=8.0;
+      GEAR_DATA[3].force=6.2; GEAR_DATA[4].force=4.9; GEAR_DATA[5].force=3.7;
+    }
+
+    /* --- 4. Lightweight dynamic shadow + performance-safe quality controller. --- */
+    const shadow=document.querySelector('[name="V35_CAR_CONTACT_SHADOW"]');
+    if(shadow) shadow.visible=false;
+    const v40ShadowMat=new T.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.24,depthWrite:false});
+    const v40Shadow=new T.Mesh(new T.CircleGeometry(1,40),v40ShadowMat);
+    v40Shadow.rotation.x=-Math.PI/2; v40Shadow.name='V40_DYNAMIC_CAR_SHADOW'; scene.add(v40Shadow);
+    function syncV40Shadow(){
+      v40Shadow.position.set(car.position.x,car.position.y+.045,car.position.z);
+      v40Shadow.scale.set(2.0+Math.min(.65,Math.abs(vehicle.speed)*.008),.86,1);
+      v40Shadow.rotation.z=car.rotation.y;
+    }
+    const baseResize=resize;
+    resize=function(){baseResize();syncV40Shadow();};
+
+    /* Avoid repeated per-frame expensive geometry work on low-end phones. */
+    const qState={level:'auto',lastFps:60,lastChange:0}; window.__scorpioV40Quality=qState;
+    function v40Quality(now){
+      if(now-qState.lastChange<3500)return;
+      const fps=perfFrames/Math.max(.001,(now-perfCheck)/1000);
+      qState.lastFps=fps;
+      const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if(!mobile)return;
+      const current=renderer.getPixelRatio();
+      let next=current;
+      if(fps<36)next=Math.max(.82,current-.12);
+      else if(fps<45)next=Math.max(.92,current-.06);
+      else if(fps>57)next=Math.min(1.35,current+.04);
+      if(Math.abs(next-current)>.01){renderer.setPixelRatio(next);resize();qState.lastChange=now;}
+    }
+    const oldFrame=frame;
+    /* Keep the existing game loop intact; just add a cheap adaptive hook. */
+    window.__scorpioV40FrameHook=v40Quality;
+
+    /* Lighting: richer daylight while retaining mobile-safe shadow cost. */
+    if(renderer){
+      renderer.outputColorSpace = renderer.outputColorSpace || undefined;
+      renderer.toneMapping=T.ACESFilmicToneMapping;
+      renderer.toneMappingExposure=1.06;
+      renderer.shadowMap.enabled=true;
+      renderer.shadowMap.type=T.PCFSoftShadowMap;
+    }
+    if(sun){sun.intensity=1.35;sun.castShadow=true;}
+    if(hemi)hemi.intensity=.82;
+    if(scene.fog){scene.fog.near=70;scene.fog.far=300;}
+
+    /* Add the quality hook to the current animation frame without replacing it. */
+    const nativeRAF=window.requestAnimationFrame;
+    /* Main loop already schedules itself; v40Quality is called from a tiny timer. */
+    if(!window.__scorpioV40Timer){
+      window.__scorpioV40Timer=setInterval(()=>{try{v40Quality(performance.now());syncV40Shadow();}catch(e){}},900);
+    }
+
+    /* Fix a reliability footgun from older layers: never assume console.log exists. */
+    try{window.console && typeof window.console.log==='function' && window.console.log('SCORPIO UNIVERSE V40: S11 shell, chassis feel, adaptive quality and environment pass loaded');}catch(e){}
+  }catch(err){
+    try{window.console && typeof window.console.warn==='function' && window.console.warn('SCORPIO V40 realism pass warning',err);}catch(e){}
+  }
+})();
 </script>
 </body>
 </html>
