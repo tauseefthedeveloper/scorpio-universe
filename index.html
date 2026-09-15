@@ -21562,8 +21562,8 @@ console.log('SCORPIO UNIVERSE V28: next-level environment, materials and atmosph
     }));
 
     /* Replace the visual wheels with wider 235/65R17-style proportions while retaining physics. */
-    if(Array.isArray(wheels)) wheels.forEach(w=>{
-      w.mesh.scale.set(1.08,1.08,1.14);
+    if(Array.isArray(R.wheels)) R.wheels.forEach(w=>{
+      if(w && w.mesh) w.mesh.scale.set(1.08,1.08,1.14);
     });
 
     /* --- 2. Suspension / chassis visual model --- */
@@ -21792,7 +21792,7 @@ console.log('SCORPIO UNIVERSE V28: next-level environment, materials and atmosph
 
     /* Wheel arch flares — leave the actual animated wheels exposed. */
     function arch(x,z){
-      const a=add(root,new T.TorusGeometry(.51,.085,10,40,Math.PI*1.04),black,false,false);
+      const a=add(root,new T.Mesh(new T.TorusGeometry(.51,.085,10,40,Math.PI*1.04),black),false,false);
       a.rotation.x=Math.PI/2;a.rotation.z=Math.PI/2;a.position.set(x,.70,z);return a;
     }
     [-1.52,1.52].forEach(x=>[-1,1].forEach(side=>arch(x,side*.965)));
