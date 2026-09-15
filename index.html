@@ -93,7 +93,7 @@
     color:#d8d3c6;font:800 14px/1 Arial,sans-serif;letter-spacing:.04em;box-shadow:inset 0 2px 4px rgba(255,255,255,.10),0 4px 10px rgba(0,0,0,.55);
     pointer-events:auto;touch-action:manipulation;z-index:4;}
   #steeringHorn:active,#steeringHorn.pressed{transform:translate(-50%,-50%) scale(.94);background:radial-gradient(circle at 38% 32%,#4b4f52,#0b0c0d 70%);border-color:var(--accent);color:#fff;}
-  #steeringHorn::after{content:'HORN';position:absolute;left:50%;top:calc(100% + 5px);transform:translateX(-50%);font-size:7px;letter-spacing:.14em;color:rgba(255,255,255,.52);white-space:nowrap;pointer-events:none;}
+  #steeringHorn::after{content:none!important;display:none!important;}
 
   /* Pedal-shaped accelerator / brake, side by side like a mobile racer's pedal cluster */
   #pedalCluster{position:absolute;right:10px;bottom:calc(4px + env(safe-area-inset-bottom));display:flex;align-items:flex-end;gap:10px;pointer-events:auto;}
@@ -1259,7 +1259,7 @@ body.cockpit-camera #v27QuickBar{opacity:.82;}
         <circle cx="100" cy="100" r="6" fill="#e8b84b"/>
         <circle cx="100" cy="32" r="4" fill="#8a8a8a"/>
       </svg>
-      <button id="steeringHorn" type="button" aria-label="Horn" title="Horn">H</button>
+      <button id="steeringHorn" type="button" aria-label="Press" title="Press">p</button>
     </div>
     <div id="pedalCluster">
       <div class="pedal" id="pedalBrake"><div class="padSurface"></div><div class="fillBar" id="brakeFill"></div><span class="pedalLbl">BRAKE</span></div>
@@ -2825,6 +2825,7 @@ function cycleCamera(){
   if(CAM_MODES[camIndex]==='free'){ orbitYaw=0; orbitPitch=.24; freeCamDistance=8.2; }
   syncFreeCameraUI();
   toast(CAM_LABELS[CAM_MODES[camIndex]]);
+  try{ window.__scorpioCycleCameraHook?.(); }catch(e){}
 }
 syncFreeCameraUI();
 function toggleLights(){
@@ -3265,6 +3266,9 @@ canvas.addEventListener('dblclick',()=>{
   orbitYaw=0;orbitPitch=.24;freeCamDistance=8.2;toast('FREE CAMERA RESET');
 });
 function updateCamera(dt){
+  if(CAM_MODES[camIndex]==='free' && typeof window.__scorpioCameraOverride==='function'){
+    try{ window.__scorpioCameraOverride(dt); return; }catch(e){}
+  }
   const mode=CAM_MODES[camIndex];
   const fwd=new THREE.Vector3(Math.sin(vehicle.heading),0,Math.cos(vehicle.heading));
   const right=new THREE.Vector3(Math.cos(vehicle.heading),0,-Math.sin(vehicle.heading));
@@ -21240,6 +21244,33 @@ console.log('SCORPIO UNIVERSE V28: next-level environment, materials and atmosph
   const haze=new THREE.Mesh(new THREE.PlaneGeometry(180,32),hazeMat);
   haze.rotation.x=-Math.PI/2;haze.position.set(0,.15,-70);scene.add(haze);
 
+/* Close visual quality pass, then expose a tiny public bridge for later realism layers.
+   The simulator core is intentionally wrapped in an IIFE, so V40/V41 must use this
+   bridge instead of trying to reference private lexical variables directly. */
+window.__scorpioCore = {
+  get scene(){return scene;},
+  get camera(){return camera;},
+  get renderer(){return renderer;},
+  get vehicle(){return vehicle;},
+  get wheels(){return wheels;},
+  get car(){return car;},
+  get bodyTilt(){return bodyTilt;},
+  get input(){return input;},
+  get sun(){return sun;},
+  get hemi(){return hemi;},
+  get camIndex(){return camIndex;},
+  get camModes(){return CAM_MODES.slice();},
+  get camPos(){return camPos;},
+  get camLook(){return camLook;},
+  terrainInfoAt, heightAt, resize,
+  setCameraIndex(i){
+    camIndex=((i|0)%CAM_MODES.length+CAM_MODES.length)%CAM_MODES.length;
+    if(CAM_MODES[camIndex]==='free'){ orbitYaw=0; orbitPitch=.24; freeCamDistance=8.2; }
+    syncFreeCameraUI();
+  },
+  setCameraOverride(fn){ window.__scorpioCameraOverride=typeof fn==='function'?fn:null; },
+  clearCameraOverride(){ window.__scorpioCameraOverride=null; }
+};
 /* Close visual quality pass, then the original core IIFE. */
 })();
 })();
@@ -21566,53 +21597,20 @@ console.log('SCORPIO UNIVERSE V28: next-level environment, materials and atmosph
       if(w && w.mesh) w.mesh.scale.set(1.08,1.08,1.14);
     });
 
-    /* --- 2. Suspension / chassis visual model --- */
-    const chassisState={heave:0,pitch:0,roll:0,lastSpeed:0};
-    window.__scorpioV40=chassisState;
-    const oldPresentation=updateVehiclePresentation;
-    updateVehiclePresentation=function(dt,info){
-      oldPresentation(dt,info);
-      const kmh=Math.abs(vehicle.speed)*3.6;
-      const rough=info.band==='dirt'||info.band==='mud'||!info.onRoad;
-      const roughAmp=rough?.035:.010;
-      const bump=(Math.sin(performance.now()*.011)*roughAmp + Math.sin(performance.now()*.023)*roughAmp*.42);
-      chassisState.heave=smooth(chassisState.heave,bump,9,dt);
-      chassisState.pitch=smooth(chassisState.pitch,clamp((input.brake*.030-input.throttle*.014)+(vehicle.speed>0?0:0),-.045,.045),7,dt);
-      chassisState.roll=smooth(chassisState.roll,clamp(-vehicle.steerAngle*clamp(kmh/95,0,1)*.075,-.075,.075),7,dt);
-      root.position.y=RIDE_HEIGHT*.55+chassisState.heave;
-      root.rotation.x=-vehicle.bodyPitch+chassisState.pitch;
-      root.rotation.z=vehicle.bodyRoll+chassisState.roll;
-      chassisState.lastSpeed=vehicle.speed;
-    };
+    /* --- 2. Suspension / chassis visual model ---
+       Core suspension remains authoritative. Do not replace the private
+       updateVehiclePresentation() function from this external IIFE. */
+    window.__scorpioV40={loaded:true};
 
-    /* --- 3. Better low-speed manoeuvring, traction and braking feel. --- */
-    if(typeof V17_REALISM!=='undefined'){
-      V17_REALISM.steering.responseLowSpeed=7.2;
-      V17_REALISM.steering.responseHighSpeed=4.9;
-      V17_REALISM.steering.highSpeedDamping=.72;
-      V17_REALISM.drivetrain.throttleRise=4.2;
-      V17_REALISM.drivetrain.throttleFall=6.8;
-      V17_REALISM.drivetrain.brakeRise=14.5;
-      V17_REALISM.suspension.spring=92;
-      V17_REALISM.suspension.damping=17;
-      V17_REALISM.suspension.bodyRoll=.085;
-      V17_REALISM.suspension.bodyPitch=.095;
-    }
-    if(typeof V17_SURFACE_PROFILES!=='undefined'){
-      V17_SURFACE_PROFILES.asphalt.grip=.98;
-      V17_SURFACE_PROFILES.dirt.grip=.74;
-      V17_SURFACE_PROFILES.mud.grip=.43;
-      V17_SURFACE_PROFILES.grass.grip=.56;
-    }
-    /* Slightly stronger 2nd–4th gear pull, without turning the village SUV into a racer. */
-    if(typeof GEAR_DATA!=='undefined'){
-      GEAR_DATA[0].force=12.9; GEAR_DATA[1].force=10.1; GEAR_DATA[2].force=8.0;
-      GEAR_DATA[3].force=6.2; GEAR_DATA[4].force=4.9; GEAR_DATA[5].force=3.7;
-    }
+    /* --- 3. Better low-speed manoeuvring, traction and braking feel. ---
+       Keep physics changes conservative; the core simulator owns the drivetrain. */
+    const C=window.__scorpioCore;
+    if(C && C.vehicle){ C.vehicle.steerAngle=Math.max(-.585,Math.min(.585,C.vehicle.steerAngle)); }
 
     /* --- 4. Lightweight dynamic shadow + performance-safe quality controller. --- */
-    const shadow=document.querySelector('[name="V35_CAR_CONTACT_SHADOW"]');
-    if(shadow) shadow.visible=false;
+    const core=window.__scorpioCore;
+    if(!core) throw new Error('Scorpio core bridge unavailable');
+    const scene=core.scene, car=core.car, vehicle=core.vehicle, renderer=core.renderer;
     const v40ShadowMat=new T.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.24,depthWrite:false});
     const v40Shadow=new T.Mesh(new T.CircleGeometry(1,40),v40ShadowMat);
     v40Shadow.rotation.x=-Math.PI/2; v40Shadow.name='V40_DYNAMIC_CAR_SHADOW'; scene.add(v40Shadow);
@@ -21621,49 +21619,35 @@ console.log('SCORPIO UNIVERSE V28: next-level environment, materials and atmosph
       v40Shadow.scale.set(2.0+Math.min(.65,Math.abs(vehicle.speed)*.008),.86,1);
       v40Shadow.rotation.z=car.rotation.y;
     }
-    const baseResize=resize;
-    resize=function(){baseResize();syncV40Shadow();};
-
-    /* Avoid repeated per-frame expensive geometry work on low-end phones. */
-    const qState={level:'auto',lastFps:60,lastChange:0}; window.__scorpioV40Quality=qState;
+    const qState={lastFps:60,lastChange:0,frames:0,lastSample:performance.now()};
+    window.__scorpioV40Quality=qState;
     function v40Quality(now){
-      if(now-qState.lastChange<3500)return;
-      const fps=perfFrames/Math.max(.001,(now-perfCheck)/1000);
-      qState.lastFps=fps;
+      if(now-qState.lastSample<2500)return;
+      const fps=qState.frames/Math.max(.001,(now-qState.lastSample)/1000);
+      qState.frames=0;qState.lastSample=now;qState.lastFps=fps;
       const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       if(!mobile)return;
       const current=renderer.getPixelRatio();
       let next=current;
-      if(fps<36)next=Math.max(.82,current-.12);
-      else if(fps<45)next=Math.max(.92,current-.06);
-      else if(fps>57)next=Math.min(1.35,current+.04);
-      if(Math.abs(next-current)>.01){renderer.setPixelRatio(next);resize();qState.lastChange=now;}
+      if(fps<36)next=Math.max(.82,current-.10);
+      else if(fps<45)next=Math.max(.92,current-.05);
+      else if(fps>58)next=Math.min(1.35,current+.03);
+      if(Math.abs(next-current)>.01){renderer.setPixelRatio(next);core.resize();qState.lastChange=now;}
     }
-    const oldFrame=frame;
-    /* Keep the existing game loop intact; just add a cheap adaptive hook. */
-    window.__scorpioV40FrameHook=v40Quality;
-
-    /* Lighting: richer daylight while retaining mobile-safe shadow cost. */
-    if(renderer){
-      renderer.outputColorSpace = renderer.outputColorSpace || undefined;
-      renderer.toneMapping=T.ACESFilmicToneMapping;
-      renderer.toneMappingExposure=1.06;
-      renderer.shadowMap.enabled=true;
-      renderer.shadowMap.type=T.PCFSoftShadowMap;
-    }
-    if(sun){sun.intensity=1.35;sun.castShadow=true;}
-    if(hemi)hemi.intensity=.82;
-    if(scene.fog){scene.fog.near=70;scene.fog.far=300;}
-
-    /* Add the quality hook to the current animation frame without replacing it. */
-    const nativeRAF=window.requestAnimationFrame;
-    /* Main loop already schedules itself; v40Quality is called from a tiny timer. */
     if(!window.__scorpioV40Timer){
-      window.__scorpioV40Timer=setInterval(()=>{try{v40Quality(performance.now());syncV40Shadow();}catch(e){}},900);
+      window.__scorpioV40Timer=setInterval(()=>{
+        try{qState.frames++;v40Quality(performance.now());syncV40Shadow();}catch(e){}
+      },120);
     }
+    renderer.toneMapping=T.ACESFilmicToneMapping;
+    renderer.toneMappingExposure=1.08;
+    renderer.shadowMap.enabled=true;
+    renderer.shadowMap.type=T.PCFSoftShadowMap;
+    if(core.sun){core.sun.intensity=1.30;core.sun.castShadow=true;}
+    if(core.hemi)core.hemi.intensity=.78;
+    if(scene.fog){scene.fog.near=70;scene.fog.far=310;}
+    syncV40Shadow();
 
-    /* Fix a reliability footgun from older layers: never assume console.log exists. */
-    try{window.console && typeof window.console.log==='function' && window.console.log('SCORPIO UNIVERSE V40: S11 shell, chassis feel, adaptive quality and environment pass loaded');}catch(e){}
   }catch(err){
     try{window.console && typeof window.console.warn==='function' && window.console.warn('SCORPIO V40 realism pass warning',err);}catch(e){}
   }
@@ -21840,71 +21824,94 @@ console.log('SCORPIO UNIVERSE V28: next-level environment, materials and atmosph
     });
 
     /* --------------------------------------------------------------------
-       Reliable free camera. It replaces the stacked camera wrappers from
-       previous versions so later realism layers cannot overwrite orbiting.
+       Reliable free camera. The core updateCamera() calls this override only
+       while the actual camera mode is FREE, so no stacked wrappers are needed.
        -------------------------------------------------------------------- */
+    const C=window.__scorpioCore;
+    if(!C) throw new Error('Scorpio core bridge unavailable');
     let freeYaw=0.0, freePitch=.24, freeDistance=8.2;
-    let drag=false,pid=-1,lastX=0,lastY=0;
-    const target=new T.Vector3(), desired=new T.Vector3(), fwd=new T.Vector3(), right=new T.Vector3();
-    const canvasEl=window.canvas || document.getElementById('gameCanvas') || document.querySelector('canvas');
-    const wrap=document.getElementById('canvasWrap') || canvasEl;
-    function isFree(){ return typeof CAM_MODES!=='undefined' && CAM_MODES[camIndex]==='free'; }
+    let dragging=false,pointerId=-1,lastX=0,lastY=0;
+    const target=new T.Vector3(),desired=new T.Vector3();
+    const canvasEl=document.getElementById('gameCanvas');
+    const wrap=document.getElementById('canvasWrap')||canvasEl;
+    function isFree(){return C.camModes[C.camIndex]==='free';}
     function setFreeUI(){
-      const free=isFree(); document.body.classList.toggle('free-camera',free);
-      const b=document.getElementById('v27Cam'); if(b){b.classList.toggle('free-active',free);b.textContent=free?'FREE':'CAM';}
+      const free=isFree();
+      document.body.classList.toggle('free-camera',free);
+      const b=document.getElementById('v27Cam');
+      if(b){b.classList.toggle('free-active',free);b.textContent=free?'FREE':'CAM';}
     }
-    function pointerDown(e){ if(!isFree())return; if(e.button!==undefined && e.button!==0 && e.pointerType==='mouse')return; drag=true;pid=e.pointerId;lastX=e.clientX;lastY=e.clientY;wrap.setPointerCapture?.(e.pointerId);e.preventDefault(); }
-    function pointerMove(e){ if(!drag||e.pointerId!==pid||!isFree())return; const dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;freeYaw-=dx*.008;freePitch=clamp(freePitch-dy*.005,-.62,1.12);e.preventDefault(); }
-    function pointerUp(e){ if(e.pointerId!==pid)return;drag=false;pid=-1; }
+    function pointerDown(e){
+      if(!isFree())return;
+      if(e.pointerType==='mouse' && e.button!==0)return;
+      dragging=true;pointerId=e.pointerId;lastX=e.clientX;lastY=e.clientY;
+      wrap.setPointerCapture?.(e.pointerId);e.preventDefault();
+    }
+    function pointerMove(e){
+      if(!dragging||e.pointerId!==pointerId||!isFree())return;
+      const dx=e.clientX-lastX,dy=e.clientY-lastY;
+      lastX=e.clientX;lastY=e.clientY;
+      freeYaw-=dx*.008;freePitch=clamp(freePitch-dy*.005,-.58,1.05);e.preventDefault();
+    }
+    function pointerUp(e){
+      if(e.pointerId!==pointerId)return;
+      dragging=false;pointerId=-1;
+    }
     if(wrap){
       wrap.style.touchAction='none';
       wrap.addEventListener('pointerdown',pointerDown,{passive:false});
       wrap.addEventListener('pointermove',pointerMove,{passive:false});
       wrap.addEventListener('pointerup',pointerUp,{passive:false});
       wrap.addEventListener('pointercancel',pointerUp,{passive:false});
-      wrap.addEventListener('wheel',e=>{if(!isFree())return;e.preventDefault();freeDistance=clamp(freeDistance+e.deltaY*.012,3.2,18);},{passive:false});
-      wrap.addEventListener('dblclick',e=>{if(!isFree())return;e.preventDefault();freeYaw=0;freePitch=.24;freeDistance=8.2;});
+      wrap.addEventListener('wheel',e=>{
+        if(!isFree())return;e.preventDefault();
+        freeDistance=clamp(freeDistance+e.deltaY*.012,3.0,18);
+      },{passive:false});
+      wrap.addEventListener('dblclick',e=>{
+        if(!isFree())return;e.preventDefault();
+        freeYaw=0;freePitch=.24;freeDistance=8.2;
+      });
     }
     window.addEventListener('keydown',e=>{
       if(!isFree())return;
-      if(e.code==='KeyQ')freeDistance=clamp(freeDistance-.45,3.2,18);
-      if(e.code==='KeyE')freeDistance=clamp(freeDistance+.45,3.2,18);
+      if(e.code==='KeyQ')freeDistance=clamp(freeDistance-.45,3.0,18);
+      if(e.code==='KeyE')freeDistance=clamp(freeDistance+.45,3.0,18);
     });
-
-    /* Ensure camera mode changes reset/enable the controller. */
-    const oldCycle=cycleCamera;
-    window.cycleCamera=function(){ oldCycle(); setFreeUI(); };
-    setFreeUI();
-
-    /* Single authoritative camera update. Non-free modes keep the existing
-       camera result; free mode is calculated here and cannot be overwritten. */
-    const previousUpdateCamera=updateCamera;
-    updateCamera=function(dt){
-      if(!isFree()) { previousUpdateCamera(dt); return; }
-      fwd.set(Math.sin(vehicle.heading),0,Math.cos(vehicle.heading));
-      const a=vehicle.heading+freeYaw;
+    function syncAfterCoreCameraCycle(){
+      if(isFree()){freeYaw=0;freePitch=.24;freeDistance=8.2;}
+      setFreeUI();
+    }
+    window.__scorpioCycleCameraHook=syncAfterCoreCameraCycle;
+    const camButton=document.getElementById('v27Cam');
+    if(camButton) camButton.style.touchAction='manipulation';
+    C.setCameraOverride(function(dt){
+      if(!isFree())return;
+      const v=C.vehicle;
+      const a=v.heading+freeYaw;
       const cp=Math.cos(freePitch),sp=Math.sin(freePitch);
       desired.set(Math.sin(a)*cp,sp,Math.cos(a)*cp).multiplyScalar(-freeDistance);
-      desired.add(vehicle.pos); desired.y=vehicle.pos.y+1.35+sp*freeDistance;
-      const floor=heightAt(desired.x,desired.z)+.55; if(desired.y<floor)desired.y=floor;
-      target.copy(vehicle.pos);target.y+=1.02;
-      camPos.lerp(desired,1-Math.exp(-7.5*dt));
-      camLook.lerp(target,1-Math.exp(-10.0*dt));
-      camera.position.copy(camPos);camera.lookAt(camLook);
-      camera.fov=damp(camera.fov,60+Math.min(6,Math.abs(vehicle.speed)*.18),4.5,dt);camera.updateProjectionMatrix();
-    };
-
-    /* Make sure free mode is not accidentally disabled by older UI sync. */
-    const oldSync=syncFreeCameraUI;
-    syncFreeCameraUI=function(){ oldSync(); setFreeUI(); };
+      desired.add(v.pos);
+      desired.y=v.pos.y+1.25+sp*freeDistance;
+      const floor=C.heightAt(desired.x,desired.z)+.55;
+      if(desired.y<floor)desired.y=floor;
+      target.copy(v.pos);target.y+=1.05;
+      C.camPos.lerp(desired,1-Math.exp(-8.5*dt));
+      C.camLook.lerp(target,1-Math.exp(-11*dt));
+      C.camera.position.copy(C.camPos);
+      C.camera.lookAt(C.camLook);
+      C.camera.fov=damp(C.camera.fov,60+Math.min(6,Math.abs(v.speed)*.18),5,dt);
+      C.camera.updateProjectionMatrix();
+    });
+    setFreeUI();
 
     /* Add a compact FPS-safe body shadow. */
     const shMat=new T.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.20,depthWrite:false});
-    const sh=new T.Mesh(new T.CircleGeometry(1,32),shMat);sh.name='V41_CAR_GROUND_SHADOW';sh.rotation.x=-Math.PI/2;scene.add(sh);
-    const oldFrameHook=window.__scorpioV41ShadowHook;
-    window.__scorpioV41ShadowHook=()=>{sh.position.set(car.position.x,car.position.y+.045,car.position.z);sh.scale.set(2.15,.82,1);sh.rotation.z=car.rotation.y;};
+    const sh=new T.Mesh(new T.CircleGeometry(1,32),shMat);sh.name='V41_CAR_GROUND_SHADOW';sh.rotation.x=-Math.PI/2;C.scene.add(sh);
+    window.__scorpioV41ShadowHook=()=>{sh.position.set(C.car.position.x,C.car.position.y+.045,C.car.position.z);sh.scale.set(2.15,.82,1);sh.rotation.z=C.car.rotation.y;};
     if(!window.__scorpioV41ShadowTimer) window.__scorpioV41ShadowTimer=setInterval(()=>{try{window.__scorpioV41ShadowHook?.();}catch(e){}},80);
 
+    const steeringBtn=document.getElementById('steeringHorn');
+    if(steeringBtn){steeringBtn.textContent='p';steeringBtn.setAttribute('aria-label','Press');steeringBtn.setAttribute('title','Press');}
     if(window.console && typeof console.log==='function') console.log('SCORPIO UNIVERSE V41: S11 silhouette + reliable free camera loaded');
   }catch(err){
     try{if(window.console&&typeof console.warn==='function')console.warn('SCORPIO V41 patch warning',err);}catch(e){}
