@@ -3223,6 +3223,9 @@ function updateVehicle(dt){
 }
 
 function updateHUD(info,throttle){
+  /* HUD is visual-only; update it at 30Hz instead of forcing DOM/layout work every physics frame. */
+  window.__scorpioHudTick=(window.__scorpioHudTick||0)+1;
+  if((window.__scorpioHudTick&1)!==0)return;
   const kmh=Math.abs(vehicle.speed)*3.6;
   const speedEl=document.getElementById('speedVal'); if(speedEl){const old=Number(speedEl.textContent)||0; speedEl.textContent=Math.round(lerp(old,kmh,0.32));}
   document.getElementById('gearBadge').textContent=vehicle.gear;
@@ -3721,13 +3724,31 @@ document.getElementById('btnScreenScale')?.addEventListener('click',()=>{screenS
 
 /* ---------------- Main loop ---------------- */
 let lastT=performance.now(), running=false, paused=false;
+let __perfFrame=0, __perfWindowStart=performance.now(), __perfFps=60, __perfLastDpr=0, __perfLastResize=0;
+function __scorpioPerformanceTick(now){
+  __perfFrame++;
+  if(now-__perfWindowStart<2000)return;
+  __perfFps=__perfFrame/((now-__perfWindowStart)/1000);
+  __perfFrame=0; __perfWindowStart=now;
+  const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const target=mobile ? (__perfFps<38?0.82:__perfFps<48?0.92:__perfFps>57?1.08:1.0) : (__perfFps<40?0.95:__perfFps>58?1.18:1.05);
+  const current=renderer.getPixelRatio();
+  const next=Math.max(mobile?0.78:0.90,Math.min(mobile?1.12:1.25,target));
+  if(Math.abs(next-current)>.035 && now-__perfLastResize>1800){ renderer.setPixelRatio(next); resize(); __perfLastResize=now; __perfLastDpr=next; }
+  // Shadow maps are a major GPU cost on phones. Keep a useful car shadow but use a smaller map.
+  if(sun.shadow && sun.shadow.mapSize){
+    const shadowSize=mobile?512:1024;
+    if(sun.shadow.mapSize.x!==shadowSize){sun.shadow.mapSize.set(shadowSize,shadowSize);sun.shadow.map?.dispose?.();}
+  }
+}
 function frame(now){
   requestAnimationFrame(frame);
   adaptiveRenderQuality(now);
+  __scorpioPerformanceTick(now);
   const dt = Math.min(0.05,(now-lastT)/1000); lastT=now;
   if(!running || paused) return;
   timeOfDay = (timeOfDay + DAY_SPEED*dt) % 24;
-  updateSky();
+  if((__perfFrame&3)===0) updateSky();
   updateVehicle(dt);
   const realismInfo=terrainInfoAt(vehicle.pos.x,vehicle.pos.z);
   emitDust(dt,realismInfo);
@@ -3747,8 +3768,8 @@ function frame(now){
   sky.position.set(camera.position.x, 0, camera.position.z); // keep the sky dome centered on the viewer
   updateSteeringWheelVisual(dt);
   v14ApplyCurveToSteering(dt);
-  // cow wander
-  cows.forEach(c=>{ c.userData.wander+=dt; c.position.y = heightAt(c.position.x,c.position.z); });
+  // Low-cost environment animation: update every other render frame.
+  if((__perfFrame&1)===0) cows.forEach(c=>{ c.userData.wander+=dt*2; c.position.y = heightAt(c.position.x,c.position.z); });
   if(rain.visible){
     const posAttr = rainGeo.attributes.position;
     for(let i=0;i<rainCount;i++){
@@ -3759,7 +3780,7 @@ function frame(now){
     posAttr.needsUpdate=true;
     rain.position.set(vehicle.pos.x, 0, vehicle.pos.z);
   }
-  drawMinimap();
+  if((__perfFrame&1)===0) drawMinimap();
   renderer.render(scene, camera);
 }
 requestAnimationFrame(frame);
@@ -21916,6 +21937,208 @@ window.__scorpioCore = {
   }catch(err){
     try{if(window.console&&typeof console.warn==='function')console.warn('SCORPIO V41 patch warning',err);}catch(e){}
   }
+})();
+</script>
+
+<script>
+/* ========================================================================
+   SCORPIO UNIVERSE V43 — PERFORMANCE + TRUE S11 BODY + FREE CAM STABILITY
+   ------------------------------------------------------------------------
+   Goals:
+   1) Remove frame-rate killers from stacked realism patches.
+   2) Replace the box-heavy V41 exterior with a low-mesh, bevelled S11 body.
+   3) Make FREE camera independent of private core functions.
+   4) Keep the existing physics, wheels, lights and environment systems alive.
+   ======================================================================== */
+(function V43StableS11(){
+  try{
+    const T=window.THREE, C=window.__scorpioCore;
+    if(!T||!C) throw new Error('Scorpio core bridge unavailable');
+    const scene=C.scene, car=C.car, bodyTilt=C.bodyTilt, renderer=C.renderer;
+    const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+    const damp=(a,b,r,dt)=>a+(b-a)*(1-Math.exp(-r*dt));
+    const add=(g,m,cast=false,recv=true)=>{m.castShadow=cast;m.receiveShadow=recv;g.add(m);return m;};
+
+    /* ---- Stop duplicated background timers from earlier realism layers. ---- */
+    if(window.__scorpioV40Timer){clearInterval(window.__scorpioV40Timer);window.__scorpioV40Timer=null;}
+    if(window.__scorpioV41ShadowTimer){clearInterval(window.__scorpioV41ShadowTimer);window.__scorpioV41ShadowTimer=null;}
+    const oldV41=bodyTilt.getObjectByName('V41_S11_REFERENCE_BODY'); if(oldV41) oldV41.visible=false;
+    const oldV40=bodyTilt.getObjectByName('V40_SCORPIO_CLASSIC_S11_SHELL'); if(oldV40) oldV40.visible=false;
+
+    /* V34 duplicate exterior/detail groups cost draw calls and overlap the new body. */
+    ['V34_S11_REAR_SPARE','V34_WHEEL_SIDEWALL_DETAIL','V34_S11_INTERIOR'].forEach(n=>{
+      const o=bodyTilt.getObjectByName(n); if(o)o.visible=false;
+    });
+
+    /* ---- New low-mesh S11 body. ---- */
+    const root=new T.Group(); root.name='V43_S11_REALISTIC_BODY'; bodyTilt.add(root);
+    const paint=new T.MeshPhysicalMaterial({color:0xf1f2ee,metalness:.56,roughness:.22,clearcoat:1,clearcoatRoughness:.055,reflectivity:.86});
+    const trim=new T.MeshPhysicalMaterial({color:0x25282a,metalness:.22,roughness:.45,clearcoat:.25});
+    const black=new T.MeshStandardMaterial({color:0x070808,roughness:.88,metalness:.05});
+    const chrome=new T.MeshPhysicalMaterial({color:0xc6cbca,metalness:.97,roughness:.13,clearcoat:.65});
+    const glass=new T.MeshPhysicalMaterial({color:0x162a31,metalness:.04,roughness:.075,transparent:true,opacity:.76,clearcoat:1,clearcoatRoughness:.035,side:T.DoubleSide});
+    const head=new T.MeshStandardMaterial({color:0xeef7ff,emissive:0xbddcff,emissiveIntensity:.9,roughness:.13});
+    const red=new T.MeshStandardMaterial({color:0x180204,emissive:0xff1010,emissiveIntensity:.75,roughness:.24});
+    const amber=new T.MeshStandardMaterial({color:0x4a2300,emissive:0xff8a10,emissiveIntensity:.85,roughness:.25});
+    const rubber=new T.MeshStandardMaterial({color:0x070808,roughness:.97});
+
+    function sideExtrude(name,pts,depth,mat,bevel=.055,z=0){
+      const sh=new T.Shape(); pts.forEach((p,i)=>i?sh.lineTo(p[0],p[1]):sh.moveTo(p[0],p[1])); sh.closePath();
+      const geo=new T.ExtrudeGeometry(sh,{depth,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:bevel,bevelThickness:bevel,curveSegments:5});
+      geo.translate(0,0,-depth/2);
+      const m=add(root,new T.Mesh(geo,mat),true,true);m.name=name;m.position.z=z;return m;
+    }
+    function box(name,x,y,z,sx,sy,sz,mat,cast=false){const m=add(root,new T.Mesh(new T.BoxGeometry(sx,sy,sz),mat),cast,true);m.name=name;m.position.set(x,y,z);return m;}
+    function planeShape(name,pts,z,mat){
+      const sh=new T.Shape();pts.forEach((p,i)=>i?sh.lineTo(p[0],p[1]):sh.moveTo(p[0],p[1]));sh.closePath();
+      const m=add(root,new T.Mesh(new T.ShapeGeometry(sh),mat),false,false);m.name=name;m.position.z=z;return m;
+    }
+
+    /* Real S11 proportions: 4456 x 1820 x 1995 mm, 2680 mm wheelbase.
+       The game wheelbase is already 2.68, so this shell is scaled around it. */
+    sideExtrude('V43_MAIN_BODY',[
+      [-2.24,.46],[-2.24,.72],[-2.10,.84],[-1.91,.91],[-1.72,.98],
+      [-1.55,1.29],[-1.25,1.49],[-.92,1.58],[.68,1.58],[1.08,1.52],
+      [1.38,1.38],[1.70,1.17],[1.96,.96],[2.17,.82],[2.28,.62],[2.28,.46]
+    ],1.78,paint,.095);
+
+    /* Softer lower shoulder gives the body volume instead of a rectangular slab. */
+    sideExtrude('V43_LOWER_SHOULDER',[
+      [-2.20,.44],[-2.17,.82],[-1.60,.94],[1.60,.91],[2.20,.70],[2.27,.44]
+    ],1.84,paint,.075);
+
+    /* Black painted cladding + running boards. */
+    box('V43_CLADDING_L',-.10,.63,.925,3.65,.16,.11,trim);
+    box('V43_CLADDING_R',-.10,.63,-.925,3.65,.16,.11,trim);
+    box('V43_RUNNING_L',-.12,.43,.99,3.05,.12,.18,black);
+    box('V43_RUNNING_R',-.12,.43,-.99,3.05,.12,.18,black);
+
+    /* Hood and S11 scoop, integrated into the front rather than floating boxes. */
+    sideExtrude('V43_BONNET',[[.86,1.34],[1.10,1.50],[1.85,1.43],[2.20,1.20],[2.24,1.04],[.86,1.04]],1.55,paint,.045);
+    box('V43_HOOD_SCOOP',1.43,1.49,0,.60,.105,.38,black);
+    box('V43_SCOOP_CHROME',1.43,1.545,0,.36,.018,.24,chrome);
+
+    /* Narrow roof + rails. */
+    box('V43_ROOF',-.22,2.00,0,2.18,.075,1.48,paint);
+    [-.61,.61].forEach(z=>{
+      box('V43_ROOF_RAIL',-.20,2.075,z,2.35,.04,.055,chrome);
+      box('V43_RAIL_F1',-.92,2.02,z,.11,.07,.10,black);
+      box('V43_RAIL_F2',.70,2.02,z,.11,.07,.10,black);
+    });
+
+    /* Side windows follow the reference drawing's three-part greenhouse. */
+    [-1,1].forEach(side=>{
+      const z=side*.895;
+      planeShape('V43_FRONT_SIDE_GLASS',[[.42,1.57],[1.02,1.54],[.86,1.82],[.50,1.84]],z,glass);
+      planeShape('V43_REAR_SIDE_GLASS',[[-.36,1.55],[.36,1.57],[.30,1.84],[-.28,1.84]],z,glass);
+      planeShape('V43_QUARTER_GLASS',[[-1.25,1.53],[-.48,1.55],[-.40,1.84],[-1.16,1.81]],z,glass);
+      box('V43_PILLAR_A',.36,1.70,z*1.012,.055,.57,.055,black);
+      box('V43_PILLAR_B',-.42,1.70,z*1.012,.055,.57,.055,black);
+      box('V43_PILLAR_C',-1.20,1.68,z*1.012,.05,.52,.05,black);
+      box('V43_BELT',-.28,1.46,z*1.02,2.45,.04,.04,black);
+      box('V43_HANDLE_F',.76,1.30,z*1.02,.16,.035,.035,chrome);
+      box('V43_HANDLE_R',-.22,1.30,z*1.02,.16,.035,.035,chrome);
+      /* sculpted door lower highlight */
+      box('V43_DOOR_SCULPT',-.12,.83,z*1.02,2.25,.035,.025,paint);
+    });
+
+    /* Windshield and rear glass. */
+    const windshield=add(root,new T.Mesh(new T.PlaneGeometry(1.15,.55),glass),false,false);windshield.position.set(1.18,1.68,0);windshield.rotation.y=Math.PI/2;windshield.rotation.z=-.23;
+    const rearGlass=add(root,new T.Mesh(new T.PlaneGeometry(.82,.52),glass),false,false);rearGlass.position.set(-1.58,1.67,0);rearGlass.rotation.y=Math.PI/2;rearGlass.rotation.z=.06;
+
+    /* Wheel arch rings — only four lightweight curved meshes. */
+    [-1.52,1.52].forEach(x=>[-1,1].forEach(side=>{
+      const geo=new T.TorusGeometry(.54,.075,8,28,Math.PI*1.08);
+      const m=add(root,new T.Mesh(geo,black),false,false);m.position.set(x,.70,side*.94);m.rotation.x=Math.PI/2;m.rotation.z=Math.PI/2;
+    }));
+
+    /* Front: S11 chrome vertical grille, projector lamps, fog lamps and skid plate. */
+    const grille=box('V43_GRILLE',2.285,1.08,0,.10,.56,1.22,black);
+    for(let i=0;i<7;i++)box('V43_GRILLE_BAR',2.35,1.09,-.48+i*.16,.045,.47,.045,chrome);
+    box('V43_GRILLE_TOP',2.37,1.37,0,.055,.05,1.28,chrome);
+    const badge=add(root,new T.Mesh(new T.CylinderGeometry(.105,.105,.055,24),chrome),false,false);badge.rotation.z=Math.PI/2;badge.position.set(2.405,1.10,0);
+    [-.64,.64].forEach(z=>{
+      box('V43_HEADLAMP_HOUSING',2.22,1.25,z,.10,.30,.43,black);
+      box('V43_PROJECTOR',2.30,1.26,z,.045,.20,.28,head);
+      const drl=box('V43_DRL',2.335,1.43,z,.035,.035,.32,head,false);
+      box('V43_FOG_HOUSING',2.31,.73,z*.98,.08,.18,.26,black);
+      const fog=box('V43_FOG',2.36,.73,z*.98,.035,.10,.17,head,false);
+    });
+    box('V43_LOWER_BUMPER',2.25,.65,0,.25,.25,1.72,black);
+    box('V43_SKID',2.39,.52,0,.10,.10,1.48,chrome);
+
+    /* Mirrors. */
+    [-1,1].forEach(side=>{
+      box('V43_MIRROR',1.03,1.54,side*1.04,.27,.18,.30,paint);
+      box('V43_MIRROR_GLASS',1.16,1.55,side*1.075,.08,.10,.22,glass);
+      box('V43_MIRROR_IND',1.18,1.50,side*1.095,.035,.025,.13,amber,false);
+    });
+
+    /* Rear: vertical tower lamps, spoiler and spare wheel. */
+    box('V43_REAR_GATE',-2.27,1.05,0,.12,1.15,1.55,paint);
+    [-1,1].forEach(side=>{
+      box('V43_TAIL_TOWER',-2.35,1.20,side*.79,.07,.72,.22,red,false);
+      box('V43_TAIL_AMBER',-2.395,1.38,side*.79,.035,.10,.21,amber,false);
+      box('V43_TAIL_CLEAR',-2.395,.99,side*.79,.035,.12,.21,head,false);
+      box('V43_REAR_REFLECTOR',-2.38,.70,side*.86,.035,.07,.18,red,false);
+    });
+    box('V43_REAR_BUMPER',-2.42,.55,0,.20,.20,1.78,black);
+    box('V43_REAR_STEP',-2.50,.49,0,.12,.09,1.50,chrome);
+    box('V43_SPOILER',-1.92,1.98,0,.40,.075,1.56,black);
+    const spare=add(root,new T.Mesh(new T.TorusGeometry(.45,.12,12,32),rubber),false,false);spare.position.set(-2.50,.91,0);spare.rotation.x=Math.PI/2;
+    const spareHub=add(root,new T.Mesh(new T.CylinderGeometry(.20,.20,.07,20),chrome),false,false);spareHub.position.set(-2.51,.91,0);spareHub.rotation.x=Math.PI/2;
+
+    /* ---- Free camera: replace both UI camera buttons with a single reliable bridge. ---- */
+    let freeYaw=0,freePitch=.24,freeDistance=8.2,dragging=false,pid=-1,lx=0,ly=0;
+    const target=new T.Vector3(),desired=new T.Vector3();
+    const canvas=document.getElementById('gameCanvas');
+    function isFree(){return C.camModes[C.camIndex]==='free';}
+    function sync(){
+      const free=isFree();
+      const b1=document.getElementById('v27Cam'),b2=document.getElementById('btnCam');
+      [b1,b2].forEach(b=>{if(b){b.textContent=free?'FREE':'CAM';b.classList.toggle('free-active',free);}});
+      document.body.classList.toggle('free-camera',free);
+    }
+    function advanceCamera(){C.setCameraIndex(C.camIndex+1);if(isFree()){freeYaw=0;freePitch=.24;freeDistance=8.2;}sync();}
+    ['v27Cam','btnCam'].forEach(id=>{
+      const b=document.getElementById(id); if(!b)return;
+      const n=b.cloneNode(true);b.replaceWith(n);n.addEventListener('click',advanceCamera,{passive:true});n.addEventListener('pointerup',e=>{e.stopPropagation();},{passive:true});
+    });
+    function down(e){if(!isFree())return;if(e.pointerType==='mouse'&&e.button!==0)return;dragging=true;pid=e.pointerId;lx=e.clientX;ly=e.clientY;canvas.setPointerCapture?.(pid);e.preventDefault();}
+    function move(e){if(!dragging||e.pointerId!==pid||!isFree())return;const dx=e.clientX-lx,dy=e.clientY-ly;lx=e.clientX;ly=e.clientY;freeYaw-=dx*.0075;freePitch=clamp(freePitch-dy*.0045,-.55,1.0);e.preventDefault();}
+    function up(e){if(e.pointerId!==pid)return;dragging=false;pid=-1;}
+    canvas.style.touchAction='none';canvas.addEventListener('pointerdown',down,{passive:false});canvas.addEventListener('pointermove',move,{passive:false});canvas.addEventListener('pointerup',up,{passive:false});canvas.addEventListener('pointercancel',up,{passive:false});
+    canvas.addEventListener('wheel',e=>{if(!isFree())return;e.preventDefault();freeDistance=clamp(freeDistance+e.deltaY*.012,3.2,16);},{passive:false});
+    canvas.addEventListener('dblclick',e=>{if(!isFree())return;e.preventDefault();freeYaw=0;freePitch=.24;freeDistance=8.2;});
+    window.addEventListener('keydown',e=>{if(!isFree())return;if(e.code==='KeyQ')freeDistance=clamp(freeDistance-.45,3.2,16);if(e.code==='KeyE')freeDistance=clamp(freeDistance+.45,3.2,16);});
+    C.setCameraOverride(function(dt){
+      if(!isFree())return;
+      const v=C.vehicle,a=v.heading+freeYaw,cp=Math.cos(freePitch),sp=Math.sin(freePitch);
+      desired.set(Math.sin(a)*cp,sp,Math.cos(a)*cp).multiplyScalar(-freeDistance).add(v.pos);
+      desired.y=Math.max(desired.y,C.heightAt(desired.x,desired.z)+.65);
+      target.copy(v.pos);target.y+=1.02;
+      C.camPos.lerp(desired,1-Math.exp(-9*dt));C.camLook.lerp(target,1-Math.exp(-12*dt));
+      C.camera.position.copy(C.camPos);C.camera.lookAt(C.camLook);C.camera.fov=damp(C.camera.fov,59+Math.min(5,Math.abs(v.speed)*.16),5.5,dt);C.camera.updateProjectionMatrix();
+    });
+    sync();
+
+    /* ---- GPU performance pass. ---- */
+    const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    renderer.setPixelRatio(mobile?Math.min(renderer.getPixelRatio(),1.0):Math.min(renderer.getPixelRatio(),1.18));
+    if(renderer.shadowMap){renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFShadowMap;}
+    if(C.sun?.shadow){C.sun.shadow.mapSize.set(mobile?512:1024,mobile?512:1024);C.sun.shadow.map?.dispose?.();}
+    /* Environment meshes do not need to cast shadows individually; this cuts a large number of shadow draw calls. */
+    scene.traverse(o=>{if(o.isMesh && o!==car && !root.getObjectById(o.id)){o.castShadow=false;}});
+    root.traverse(o=>{if(o.isMesh)o.castShadow=true;});
+    /* Keep the car body reflective without expensive transparent shadow casters. */
+    root.traverse(o=>{if(o.isMesh && o.material && o.material.transparent)o.castShadow=false;});
+
+    /* Replace the visible text on the steering center with the requested small p. */
+    ['steeringHorn','v27Horn','btnHorn'].forEach(id=>{const b=document.getElementById(id);if(b){b.textContent='p';b.setAttribute('aria-label','p');b.setAttribute('title','p');}});
+
+    window.__scorpioV43={root,performance:'stable',freeCamera:true};
+    console.log('SCORPIO UNIVERSE V43: performance + realistic S11 body + stable free camera loaded');
+  }catch(err){console.warn('SCORPIO V43 patch warning',err);}
 })();
 </script>
 
